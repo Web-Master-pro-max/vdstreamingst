@@ -23,3 +23,4 @@ backend/bin/
 # Uploads or local storage files
 uploads/
 backend/uploads/
+frontend/vercel.json
