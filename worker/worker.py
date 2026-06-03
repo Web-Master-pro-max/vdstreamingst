@@ -8,10 +8,24 @@ from dotenv import load_dotenv
 from converter_helper import transcode_and_upload
 
 # Load environment variables
-load_dotenv()
+script_dir = os.path.dirname(os.path.abspath(__file__))
+possible_paths = [
+    os.path.join(os.getcwd(), '.env'),
+    os.path.join(script_dir, '.env'),
+    os.path.join(script_dir, '..', '.env'),
+    os.path.join(script_dir, '..', 'backend', '.env')
+]
+loaded = False
+for path in possible_paths:
+    if os.path.exists(path):
+        load_dotenv(path)
+        loaded = True
+        break
+if not loaded:
+    load_dotenv()
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
-BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:5000")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
 WEBHOOK_SECRET = os.getenv("WORKER_WEBHOOK_SECRET", "infinx_webhook_shared_secret_2026")
 
 def send_webhook_status(episode_id, status, video_url=None, error_msg=None):
