@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: infinx_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: infinx_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: infinx_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DATABASE_URL=mysql://root:${MYSQL_PASSWORD}@db:3306/${MYSQL_DB}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - WORKER_WEBHOOK_SECRET=${WORKER_WEBHOOK_SECRET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - shared_uploads:/app/uploads
+      - ./frontend:/app/frontend
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: infinx_worker
+    restart: always
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=mysql://root:${MYSQL_PASSWORD}@db:3306/${MYSQL_DB}
+      - WORKER_WEBHOOK_SECRET=${WORKER_WEBHOOK_SECRET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - BACKEND_URL=http://backend:5000
+    depends_on:
+      - redis
+    volumes:
+      - shared_uploads:/app/uploads
+
+volumes:
+  mysql_data:
+  shared_uploads:

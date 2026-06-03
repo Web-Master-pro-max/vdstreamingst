@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+worker/node_modules/
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs and database/system files
+*.log
+.DS_Store
+Thumbs.db
+*.db
+*.sqlite
+*.exe
+*.dll
+backend/bin/
+
+# Uploads or local storage files
+uploads/
+backend/uploads/

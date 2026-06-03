@@ -1,0 +1,27 @@
+{
+  "name": "infinx-backend",
+  "version": "1.0.0",
+  "description": "Backend API and orchestration server for Infinx Anime",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:prod": "npx prisma db push && node prisma/seed.js && node server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.500.0",
+    "@prisma/client": "^5.10.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.10.2"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}

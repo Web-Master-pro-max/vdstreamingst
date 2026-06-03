@@ -1,0 +1,128 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  passwordHash String
+  role         String         @default("USER") // USER, ADMIN
+  isBanned     Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  watchlist    Watchlist[]
+  watchHistory WatchHistory[]
+  comments     Comment[]
+  commentLikes CommentLike[]
+}
+
+model Category {
+  id    Int              @id @default(autoincrement())
+  name  String
+  slug  String           @unique // e.g. "action", "anime", "hollywood"
+  shows CategoryOnShow[]
+}
+
+model Show {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String           @db.Text
+  type        String           @default("movie") // "movie" or "series"
+  rating      Float            @default(0.0)
+  poster      String           // S3 poster URL
+  banner      String?          // S3 banner URL
+  year        String
+  runtime     String           // e.g. "120 min" or "24 Ep"
+  badge       String           @default("HD") // "HD", "4K", "NEW"
+  dubsub      Boolean          @default(false)
+  views       Int              @default(0)
+  isFeatured  Boolean          @default(false)
+  categories  CategoryOnShow[]
+  episodes    Episode[]
+  watchlist   Watchlist[]
+  comments    Comment[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model CategoryOnShow {
+  showId     Int
+  categoryId Int
+  show       Show     @relation(fields: [showId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([showId, categoryId])
+}
+
+model Episode {
+  id              Int            @id @default(autoincrement())
+  showId          Int
+  show            Show           @relation(fields: [showId], references: [id], onDelete: Cascade)
+  title           String
+  episodeNumber   Int
+  description     String? @db.Text
+  duration        String?        // optional string format (e.g. "23:40")
+  videoUrl        String?        // URL of the master.m3u8 file on AWS S3
+  transcodeStatus String         @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  views           Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  watchHistory    WatchHistory[]
+  comments        Comment[]
+}
+
+model WatchHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episodeId Int
+  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  progress  Float    @default(0.0) // seconds watched
+  duration  Float    @default(0.0) // total duration of the episode/video
+  watchedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, episodeId])
+}
+
+model Watchlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  showId    Int
+  show      Show     @relation(fields: [showId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, showId])
+}
+
+model Comment {
+  id        Int           @id @default(autoincrement())
+  showId    Int
+  show      Show          @relation(fields: [showId], references: [id], onDelete: Cascade)
+  episodeId Int
+  episode   Episode       @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String        @db.Text
+  isPinned  Boolean       @default(false)
+  parentId  Int?
+  parent    Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]     @relation("CommentReplies")
+  likes     CommentLike[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model CommentLike {
+  commentId Int
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+}
