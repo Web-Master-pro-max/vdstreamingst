@@ -256,10 +256,10 @@ if __name__ == "__main__":
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     possible_paths = [
-        os.path.join(os.getcwd(), '.env'),
-        os.path.join(script_dir, '.env'),
+        os.path.join(script_dir, '..', 'backend', '.env'),
         os.path.join(script_dir, '..', '.env'),
-        os.path.join(script_dir, '..', 'backend', '.env')
+        os.path.join(script_dir, '.env'),
+        os.path.join(os.getcwd(), '.env')
     ]
     loaded = False
     for path in possible_paths:
