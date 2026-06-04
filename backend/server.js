@@ -38,6 +38,42 @@ app.use('/api/admin', adminRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/comments', commentsRouter);
 
+// Settings Endpoint
+// Resolve uploads directory for persistent settings storage
+const settingsPath = fs.existsSync('/app/uploads') 
+    ? '/app/uploads/settings.json' 
+    : path.join(__dirname, '../uploads/settings.json');
+
+app.get('/api/settings', (req, res) => {
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const data = fs.readFileSync(settingsPath, 'utf8');
+      res.json(JSON.parse(data));
+    } else {
+      res.json({ bannerSlideTime: 6000 });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read settings' });
+  }
+});
+
+app.post('/api/settings', (req, res) => {
+  try {
+    const { bannerSlideTime } = req.body;
+    let settings = { bannerSlideTime: 6000 };
+    if (fs.existsSync(settingsPath)) {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    }
+    if (bannerSlideTime) {
+      settings.bannerSlideTime = parseInt(bannerSlideTime, 10) || 6000;
+    }
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to write settings' });
+  }
+});
+
 // Resolve directories dynamically (supports both Docker and native system execution)
 const uploadsPath = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
 const frontendPath = fs.existsSync('/app/frontend') ? '/app/frontend' : path.join(__dirname, '../frontend');
