@@ -122,8 +122,11 @@ def main():
                 r = redis.Redis.from_url(REDIS_URL)
             except Exception:
                 pass
+        except redis.exceptions.TimeoutError:
+            pass # Ignore normal blocking pop socket timeouts
         except Exception as e:
-            print(f"⚠️ Worker main loop warning: {e}")
+            if "Timeout reading from socket" not in str(e):
+                print(f"⚠️ Worker main loop warning: {e}")
             time.sleep(2)
 
 if __name__ == "__main__":
