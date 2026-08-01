@@ -969,6 +969,7 @@
     <!-- ====== SCRIPTS ====== -->
     <script>
         const API_BASE = '/api';
+        let taskPollInterval = null;
 
         // Authorization & Guards
         document.addEventListener('DOMContentLoaded', function () {
@@ -992,30 +993,26 @@
 
                     this.classList.add('active');
                     const targetPanel = this.dataset.target;
-                    document.getElementById(targetPanel).classList.add('active');
-                });
-            });
+                    const targetEl = document.getElementById(targetPanel);
+                    if (targetEl) targetEl.classList.add('active');
 
-            // Periodically refresh active lists for real-time progress updates
-            setInterval(() => {
-                loadDashboardStats();
-                const activePanel = document.querySelector('.content-panel.active');
-                if (activePanel) {
-                    if (activePanel.id === 'taskPanel') {
-                        fetchTasks();
-                    } else if (activePanel.id === 'managePanel') {
+                    loadDashboardStats();
+
+                    if (targetPanel === 'uploadEpisodePanel') {
+                        loadShowsList();
+                    } else if (targetPanel === 'addShowPanel') {
+                        loadCategoriesList();
+                    } else if (targetPanel === 'managePanel') {
                         fetchManageShows();
-                        const modal = document.getElementById('episodeManagerModal');
-                        if (modal && modal.style.display === 'flex' && currentActiveShowId) {
-                            fetchShowEpisodesList(currentActiveShowId);
-                        }
-                    } else if (activePanel.id === 'bannerPanel') {
+                    } else if (targetPanel === 'taskPanel') {
+                        fetchTasks();
+                    } else if (targetPanel === 'bannerPanel') {
                         loadBannerCustomizer();
-                    } else if (activePanel.id === 'usersPanel') {
+                    } else if (targetPanel === 'usersPanel') {
                         fetchUsers();
                     }
-                }
-            }, 4000);
+                });
+            });
 
             // File selection label mapping
             document.getElementById('showPosterFile').addEventListener('change', function () {
@@ -1098,7 +1095,6 @@
 
             // Form Submissions
             document.getElementById('createShowForm').addEventListener('submit', handleCreateShow);
-            document.getElementById('uploadEpisodeForm').addEventListener('submit', handleUploadEpisode);
             document.getElementById('customizeBannerForm').addEventListener('submit', handleCustomizeBanner);
             document.getElementById('editShowForm').addEventListener('submit', handleEditShow);
 
@@ -1252,7 +1248,6 @@
         }
 
         // Handle raw episode uploads with XMLHttpRequest to track upload progress bar
-        let taskPollInterval = null;
 
         function formatEtaText(sec) {
             if (!sec || sec <= 0) return '';
@@ -1400,14 +1395,20 @@
                 try {
                     stageObj = typeof task.stageDetails === 'string' ? JSON.parse(task.stageDetails) : task.stageDetails;
                 } catch (e) {}
+            }
+
+            if (overallStatus === 'PROCESSING') {
+                if (stageObj.transcoding.status === 'PENDING') {
+                    stageObj.transcoding.status = 'PROCESSING';
+                }
             } else if (overallStatus === 'COMPLETED') {
-                stageObj.transcoding = { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' };
-                stageObj.uploadS3 = { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' };
-            } else if (overallStatus === 'PROCESSING') {
-                stageObj.transcoding.status = 'PROCESSING';
+                stageObj.transcoding.status = 'COMPLETED';
+                stageObj.transcoding.percent = 100;
+                stageObj.uploadS3.status = 'COMPLETED';
+                stageObj.uploadS3.percent = 100;
             } else if (overallStatus === 'FAILED') {
-                stageObj.transcoding.status = stageObj.transcoding.status === 'PROCESSING' ? 'FAILED' : stageObj.transcoding.status;
-                stageObj.uploadS3.status = stageObj.uploadS3.status === 'PROCESSING' ? 'FAILED' : stageObj.uploadS3.status;
+                if (stageObj.transcoding.status === 'PROCESSING') stageObj.transcoding.status = 'FAILED';
+                if (stageObj.uploadS3.status === 'PROCESSING') stageObj.uploadS3.status = 'FAILED';
             }
 
             function renderBar(label, icon, data, activeGradient) {
@@ -1505,10 +1506,13 @@
                         return;
                     }
 
+                    const activePanel = document.querySelector('.content-panel.active');
+                    const isTaskPanelActive = activePanel && activePanel.id === 'taskPanel';
                     const hasActiveTasks = data.some(t => t.transcodeStatus === 'PENDING' || t.transcodeStatus === 'PROCESSING');
-                    if (hasActiveTasks && !taskPollInterval) {
+
+                    if (isTaskPanelActive && hasActiveTasks && !taskPollInterval) {
                         taskPollInterval = setInterval(fetchTasks, 2000);
-                    } else if (!hasActiveTasks && taskPollInterval) {
+                    } else if ((!isTaskPanelActive || !hasActiveTasks) && taskPollInterval) {
                         clearInterval(taskPollInterval);
                         taskPollInterval = null;
                     }

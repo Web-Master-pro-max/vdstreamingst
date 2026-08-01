@@ -46,7 +46,7 @@ def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCES
     }
     
     payload = {
-        "episodeId": episode_id,
+        "episodeId": int(episode_id) if str(episode_id).isdigit() else episode_id,
         "status": status,
         "secret": secret,
         "stageDetails": stage_details
@@ -56,7 +56,8 @@ def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCES
 
     try:
         import requests
-        requests.post(url, json=payload, timeout=5)
+        res = requests.post(url, json=payload, timeout=5)
+        print(f"📡 Webhook progress report sent: Ep #{episode_id} {stage} {percent:.1f}% ({speed}) -> {res.status_code}")
     except Exception as e:
         print(f"Progress webhook notification warning: {e}", file=sys.stderr)
 
@@ -151,7 +152,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
     ]
 
     print(f"\nRunning: {' '.join(cmd)}")
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
     
     start_time = time.time()
     last_report_time = 0.0
@@ -170,7 +171,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
             key = parts[0].strip()
             val = parts[1].strip()
             
-            if key == "out_time_ms":
+            if key == "out_time_us" or key == "out_time_ms":
                 try:
                     current_out_time_sec = float(val) / 1000000.0
                 except ValueError:
@@ -182,10 +183,10 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
                 except Exception:
                     pass
             elif key == "speed":
-                speed_val = val
+                speed_val = val.strip()
                 
             now = time.time()
-            if key == "progress" or (now - last_report_time) >= 1.5:
+            if key == "progress" or (now - last_report_time) >= 1.0:
                 last_report_time = now
                 if total_duration > 0:
                     percent = min(99.0, max(0.0, (current_out_time_sec / total_duration) * 100))
@@ -203,8 +204,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
 
     rc = process.poll()
     if rc != 0:
-        stderr_out = process.stderr.read()
-        raise Exception(f"FFmpeg transcode command failed (exit code {rc}). Error: {stderr_out}")
+        raise Exception(f"FFmpeg transcode command failed (exit code {rc}).")
 
 def create_audio_hls(input_file, audio_streams, output_dir):
     for i, audio in enumerate(audio_streams):
