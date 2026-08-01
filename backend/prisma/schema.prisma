@@ -69,6 +69,7 @@ model Episode {
   duration        String?        // optional string format (e.g. "23:40")
   videoUrl        String?        // URL of the master.m3u8 file on AWS S3
   transcodeStatus String         @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  stageDetails    String?        @db.Text
   views           Int            @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt

@@ -191,6 +191,11 @@ const episodeUploadHandler = async (req, res) => {
         description: description || '',
         duration: duration || '',
         transcodeStatus: 'PENDING',
+        stageDetails: JSON.stringify({
+          uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+          transcoding: { percent: 0, speed: '0x', eta: 0, status: 'PENDING' },
+          uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+        })
       }
     });
 
@@ -233,6 +238,7 @@ const episodeUploadHandler = async (req, res) => {
 
       const binPath = path.join(__dirname, '../bin');
       const customEnv = { ...process.env };
+      customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
       const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
       const originalPath = customEnv[pathKey] || '';
       customEnv[pathKey] = `${binPath};${originalPath}`;

@@ -9,7 +9,7 @@ const WEBHOOK_SECRET = process.env.WORKER_WEBHOOK_SECRET || 'infinx_webhook_shar
 // POST /api/webhooks/transcode-status - Worker status update webhook
 router.post('/transcode-status', async (req, res) => {
   try {
-    const { episodeId, status, videoUrl, secret, error } = req.body;
+    const { episodeId, status, videoUrl, secret, stageDetails, error } = req.body;
 
     if (!episodeId || !status || !secret) {
       return res.status(400).json({ error: 'Missing required parameters: episodeId, status, secret.' });
@@ -30,6 +30,16 @@ router.post('/transcode-status', async (req, res) => {
     const updateData = { transcodeStatus: status };
     if (videoUrl) {
       updateData.videoUrl = videoUrl;
+    }
+
+    if (stageDetails) {
+      updateData.stageDetails = typeof stageDetails === 'string' ? stageDetails : JSON.stringify(stageDetails);
+    } else if (status === 'COMPLETED') {
+      updateData.stageDetails = JSON.stringify({
+        uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+        transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+        uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+      });
     }
 
     const episode = await prisma.episode.update({

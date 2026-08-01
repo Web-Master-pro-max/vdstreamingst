@@ -6,6 +6,7 @@ import json
 import boto3
 import mimetypes
 import io
+import time
 
 # Force UTF-8 encoding on standard output/error to prevent charmap encoding crashes on Windows
 if sys.platform == 'win32':
@@ -21,12 +22,66 @@ for p in local_bin_paths:
     if os.path.exists(p) and p not in os.environ.get("PATH", ""):
         os.environ["PATH"] = p + os.pathsep + os.environ.get("PATH", "")
 
+def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCESSING", video_url=None):
+    if not episode_id:
+        return
+    backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
+    secret = os.getenv("WORKER_WEBHOOK_SECRET", "infinx_webhook_shared_secret_2026")
+    url = f"{backend_url}/api/webhooks/transcode-status"
+    
+    stage_details = {
+        "uploadServer": { "percent": 100, "speed": "Done", "eta": 0, "status": "COMPLETED" },
+        "transcoding": {
+            "percent": round(percent, 1) if stage == "TRANSCODING" else (100 if stage in ["UPLOADING_S3", "COMPLETED"] else 0),
+            "speed": str(speed) if stage == "TRANSCODING" else ("Done" if stage in ["UPLOADING_S3", "COMPLETED"] else "0x"),
+            "eta": eta if stage == "TRANSCODING" else 0,
+            "status": "PROCESSING" if stage == "TRANSCODING" else ("COMPLETED" if stage in ["UPLOADING_S3", "COMPLETED"] else "PENDING")
+        },
+        "uploadS3": {
+            "percent": round(percent, 1) if stage == "UPLOADING_S3" else (100 if stage == "COMPLETED" else 0),
+            "speed": str(speed) if stage == "UPLOADING_S3" else ("Done" if stage == "COMPLETED" else "0 MB/s"),
+            "eta": eta if stage == "UPLOADING_S3" else 0,
+            "status": "PROCESSING" if stage == "UPLOADING_S3" else ("COMPLETED" if stage == "COMPLETED" else "PENDING")
+        }
+    }
+    
+    payload = {
+        "episodeId": episode_id,
+        "status": status,
+        "secret": secret,
+        "stageDetails": stage_details
+    }
+    if video_url:
+        payload["videoUrl"] = video_url
+
+    try:
+        import requests
+        requests.post(url, json=payload, timeout=5)
+    except Exception as e:
+        print(f"Progress webhook notification warning: {e}", file=sys.stderr)
+
 def run_cmd(cmd):
     print(f"\nRunning: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"❌ Command failed: {result.stderr}")
         raise Exception(f"Subprocess command failed with code {result.returncode}. Error: {result.stderr}")
+
+def get_video_duration(input_file):
+    cmd = [
+        "ffprobe",
+        "-v", "quiet",
+        "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        input_file
+    ]
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0 and res.stdout.strip():
+            return float(res.stdout.strip())
+    except Exception as e:
+        print(f"Warning: Failed to probe total video duration: {e}")
+    return 0.0
 
 def probe_streams(input_file):
     cmd = [
@@ -76,9 +131,11 @@ def extract_subtitles(input_file, subtitle_streams, output_dir):
             output
         ])
 
-def create_video_hls(input_file, output_dir):
-    run_cmd([
+def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None):
+    cmd = [
         "ffmpeg",
+        "-progress", "pipe:1",
+        "-nostats",
         "-i", input_file,
         "-map", "0:v:0",
         "-c:v", "libx264",
@@ -89,8 +146,65 @@ def create_video_hls(input_file, output_dir):
         "-hls_playlist_type", "vod",
         "-hls_segment_filename",
         os.path.join(output_dir, "video_%03d.ts"),
+        "-y",
         os.path.join(output_dir, "video.m3u8")
-    ])
+    ]
+
+    print(f"\nRunning: {' '.join(cmd)}")
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+    
+    start_time = time.time()
+    last_report_time = 0.0
+    current_out_time_sec = 0.0
+    speed_val = "1.0x"
+    
+    while True:
+        line = process.stdout.readline()
+        if not line and process.poll() is not None:
+            break
+        if not line:
+            continue
+        line = line.strip()
+        if "=" in line:
+            parts = line.split("=", 1)
+            key = parts[0].strip()
+            val = parts[1].strip()
+            
+            if key == "out_time_ms":
+                try:
+                    current_out_time_sec = float(val) / 1000000.0
+                except ValueError:
+                    pass
+            elif key == "out_time":
+                try:
+                    h, m, s = val.split(":")
+                    current_out_time_sec = float(h)*3600 + float(m)*60 + float(s)
+                except Exception:
+                    pass
+            elif key == "speed":
+                speed_val = val
+                
+            now = time.time()
+            if key == "progress" or (now - last_report_time) >= 1.5:
+                last_report_time = now
+                if total_duration > 0:
+                    percent = min(99.0, max(0.0, (current_out_time_sec / total_duration) * 100))
+                    elapsed = max(0.1, now - start_time)
+                    calc_speed = current_out_time_sec / elapsed if elapsed > 0 else 1.0
+                    eta = max(0, int((total_duration - current_out_time_sec) / calc_speed)) if calc_speed > 0 else 0
+                    speed_display = speed_val if speed_val != "N/A" else f"{calc_speed:.1f}x"
+                else:
+                    percent = 50.0
+                    speed_display = "1.0x"
+                    eta = 0
+                    
+                if episode_id:
+                    report_progress(episode_id, stage="TRANSCODING", percent=percent, speed=speed_display, eta=eta)
+
+    rc = process.poll()
+    if rc != 0:
+        stderr_out = process.stderr.read()
+        raise Exception(f"FFmpeg transcode command failed (exit code {rc}). Error: {stderr_out}")
 
 def create_audio_hls(input_file, audio_streams, output_dir):
     for i, audio in enumerate(audio_streams):
@@ -106,6 +220,7 @@ def create_audio_hls(input_file, audio_streams, output_dir):
             "-hls_playlist_type", "vod",
             "-hls_segment_filename",
             os.path.join(output_dir, f"audio{i}_%03d.ts"),
+            "-y",
             os.path.join(output_dir, f"audio{i}.m3u8")
         ])
 
@@ -161,7 +276,7 @@ def get_mime_type(filename):
     mime, _ = mimetypes.guess_type(filename)
     return mime or 'binary/octet-stream'
 
-def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_key, region):
+def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_key, region, episode_id=None):
     s3 = boto3.client(
         's3',
         region_name=region,
@@ -169,30 +284,61 @@ def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_k
         aws_secret_access_key=aws_secret_key
     )
 
-    print(f"Uploading files from {local_dir} to s3://{bucket_name}/{s3_prefix} ...")
+    all_files = []
+    total_bytes = 0
     for root, _, files in os.walk(local_dir):
         for file in files:
             local_path = os.path.join(root, file)
-            # Create S3 Key
-            relative_path = os.path.relpath(local_path, local_dir)
-            s3_key = os.path.join(s3_prefix, relative_path).replace('\\', '/')
-            
-            content_type = get_mime_type(file)
-            
-            s3.upload_file(
-                local_path,
-                bucket_name,
-                s3_key,
-                ExtraArgs={'ContentType': content_type}
-            )
-            print(f"Uploaded {file} as {content_type}")
+            size = os.path.getsize(local_path)
+            total_bytes += size
+            all_files.append((local_path, file, size))
+
+    uploaded_bytes = [0]
+    start_time = time.time()
+    last_report_time = [0.0]
+
+    print(f"Uploading {len(all_files)} files ({total_bytes / (1024*1024):.2f} MB) from {local_dir} to s3://{bucket_name}/{s3_prefix} ...")
+    
+    if episode_id:
+        report_progress(episode_id, stage="UPLOADING_S3", percent=0.1, speed="0 MB/s", eta=0)
+
+    for local_path, file, file_size in all_files:
+        relative_path = os.path.relpath(local_path, local_dir)
+        s3_key = os.path.join(s3_prefix, relative_path).replace('\\', '/')
+        content_type = get_mime_type(file)
+
+        def make_callback(ep_id, tot_b, up_b_ref, st_t, last_rep_ref):
+            def callback(bytes_amount):
+                up_b_ref[0] += bytes_amount
+                now = time.time()
+                if now - last_rep_ref[0] >= 1.0 or up_b_ref[0] >= tot_b:
+                    last_rep_ref[0] = now
+                    elapsed = max(0.1, now - st_t)
+                    speed_bps = up_b_ref[0] / elapsed
+                    speed_mbps = speed_bps / (1024 * 1024)
+                    percent = min(99.0, (up_b_ref[0] / max(1, tot_b)) * 100)
+                    rem_bytes = max(0, tot_b - up_b_ref[0])
+                    eta = int(rem_bytes / speed_bps) if speed_bps > 0 else 0
+                    speed_str = f"{speed_mbps:.1f} MB/s" if speed_mbps >= 1.0 else f"{(speed_bps / 1024):.0f} KB/s"
+                    if ep_id:
+                        report_progress(ep_id, stage="UPLOADING_S3", percent=percent, speed=speed_str, eta=eta)
+            return callback
+
+        s3.upload_file(
+            local_path,
+            bucket_name,
+            s3_key,
+            ExtraArgs={'ContentType': content_type},
+            Callback=make_callback(episode_id, total_bytes, uploaded_bytes, start_time, last_report_time)
+        )
+        print(f"Uploaded {file} as {content_type}")
 
 def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
     """
     Executes the full pipeline:
-    1. Probes streams
-    2. Transcodes video, audio, and subtitles to temp dir
-    3. Uploads generated files to S3
+    1. Probes video duration & streams
+    2. Transcodes video, audio, and subtitles to temp dir with progress reporting
+    3. Uploads generated files to S3 with progress reporting
     4. Cleans up local temp files
     """
     uploads_dir = "/app/uploads" if os.path.exists("/app/uploads") else os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
@@ -203,11 +349,13 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
     os.makedirs(temp_output_dir, exist_ok=True)
     
     try:
-        print(f"🔍 Probing source video: {source_path}")
+        print(f"🔍 Probing source video duration & streams: {source_path}")
+        duration = get_video_duration(source_path)
         audio_streams, subtitle_streams = probe_streams(source_path)
         
-        print(f"🎵 Transcoding video to HLS...")
-        create_video_hls(source_path, temp_output_dir)
+        print(f"🎵 Transcoding video to HLS (Duration: {duration:.1f}s)...")
+        report_progress(episode_id, stage="TRANSCODING", percent=0.1, speed="1.0x", eta=0)
+        create_video_hls(source_path, temp_output_dir, total_duration=duration, episode_id=episode_id)
         
         print(f"🔊 Transcoding audio tracks ({len(audio_streams)} found)...")
         create_audio_hls(source_path, audio_streams, temp_output_dir)
@@ -219,6 +367,9 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
         print(f"🔗 Creating master playlist...")
         create_master(audio_streams, subtitle_streams, temp_output_dir)
         
+        # Report Transcoding completed, moving to S3 Upload
+        report_progress(episode_id, stage="TRANSCODING", percent=100, speed="Done", eta=0)
+        
         # AWS S3 Settings from environment
         bucket = os.getenv("AWS_S3_BUCKET")
         access_key = os.getenv("AWS_ACCESS_KEY_ID")
@@ -228,13 +379,17 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
         if not bucket or access_key == "YOUR_AWS_ACCESS_KEY_ID" or not access_key:
             raise Exception("AWS S3 Credentials or Bucket not configured in .env file.")
             
-        # Upload
-        upload_to_s3(temp_output_dir, s3_folder_key, bucket, access_key, secret_key, region)
+        # Upload to S3 with progress tracking
+        upload_to_s3(temp_output_dir, s3_folder_key, bucket, access_key, secret_key, region, episode_id=episode_id)
         
         # Build master manifest URL
         playback_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_folder_key}master.m3u8"
+        report_progress(episode_id, stage="COMPLETED", percent=100, speed="Done", eta=0, status="COMPLETED", video_url=playback_url)
         return playback_url
         
+    except Exception as e:
+        report_progress(episode_id, stage="FAILED", percent=0, speed="0", eta=0, status="FAILED")
+        raise e
     finally:
         # Cleanup temp transcode directory
         if os.path.exists(temp_output_dir):
