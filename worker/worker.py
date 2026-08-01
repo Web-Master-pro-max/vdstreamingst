@@ -25,7 +25,7 @@ if not loaded:
     load_dotenv()
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 WEBHOOK_SECRET = os.getenv("WORKER_WEBHOOK_SECRET", "infinx_webhook_shared_secret_2026")
 
 def send_webhook_status(episode_id, status, video_url=None, error_msg=None):

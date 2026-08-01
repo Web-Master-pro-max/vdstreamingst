@@ -6,7 +6,7 @@ This guide walks you through deploying the Infinx Anime application. Following y
 
 ## Phase 1: Deploying to AWS EC2 (Runs Both Backend & Frontend Locally)
 
-On your AWS EC2 instance, the backend Express server will run and serve the static files from the `frontend/` folder directly. Visiting `http://<YOUR_EC2_IP>:5000/` will load the application.
+On your AWS EC2 instance, the backend Express server will run and serve the static files from the `frontend/` folder directly. Visiting `http://<YOUR_EC2_IP>:8000/` will load the application.
 
 ### 1. Launch & Configure your AWS EC2 Instance
 - **OS**: Ubuntu Server 22.04 LTS (recommended) or any modern Linux AMI.
@@ -14,7 +14,7 @@ On your AWS EC2 instance, the backend Express server will run and serve the stat
 - **Security Group (Inbound Rules)**:
   - Allow **SSH** (Port 22) from your IP.
   - Allow **HTTP** (Port 80) and **HTTPS** (Port 443).
-  - Allow **Custom TCP** (Port `5000`) for the backend Express API server.
+  - Allow **Custom TCP** (Port `8000`) for the backend Express API server.
   - Allow **Custom TCP** (Port `3306`) only if you need direct external access to MySQL (Docker Compose maps this, but internal communication is secure).
 
 ### 2. Install Docker & Docker Compose on the EC2 Instance
@@ -48,7 +48,7 @@ MYSQL_DB=infinx
 DATABASE_URL="mysql://root:9981@db:3306/infinx"
 
 # Server Configuration
-PORT=5000
+PORT=8000
 JWT_SECRET=your_production_jwt_secret_key_here
 WORKER_WEBHOOK_SECRET=your_worker_shared_secret_here
 
@@ -73,7 +73,7 @@ Navigate to your project root folder on the EC2 instance and run:
 docker-compose up --build -d
 ```
 Docker Compose will download dependencies, push the Prisma schema migrations, seed the initial database, and serve your app.
-Access the web dashboard at `http://<YOUR_EC2_IP>:5000/`.
+Access the web dashboard at `http://<YOUR_EC2_IP>:8000/`.
 
 ---
 
@@ -88,7 +88,7 @@ Before pushing to Vercel, open `frontend/vercel.json` and replace `<YOUR_EC2_IP_
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://<YOUR_EC2_IP_OR_DNS_OR_DOMAIN>:5000/api/:path*"
+      "destination": "http://<YOUR_EC2_IP_OR_DNS_OR_DOMAIN>:8000/api/:path*"
     }
   ]
 }

@@ -12,7 +12,7 @@ RUN npm install
 COPY . .
 
 # Expose port
-EXPOSE 5000
+EXPOSE 8000
 
 # Start script running migrations and seeding on boot
 CMD ["npm", "run", "start:prod"]
