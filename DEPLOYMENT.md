@@ -23,8 +23,8 @@ Run the following commands on your EC2 terminal:
 # Update package database
 sudo apt update -y && sudo apt upgrade -y
 
-# Install Docker
-sudo apt install docker.io -y
+# Install Docker, Git & FFmpeg (for video transcoding)
+sudo apt install docker.io git ffmpeg -y
 sudo systemctl start docker
 sudo systemctl enable docker
 

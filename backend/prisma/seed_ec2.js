@@ -48,7 +48,7 @@ const usersData = [
     "role": "ADMIN",
     "isBanned": false,
     "createdAt": "2026-06-02T15:06:54.422Z",
-    "updatedAt": "2026-06-03T08:40:04.139Z"
+    "updatedAt": "2026-08-01T09:25:40.602Z"
   },
   {
     "id": 2,
@@ -57,7 +57,7 @@ const usersData = [
     "role": "USER",
     "isBanned": false,
     "createdAt": "2026-06-03T05:15:02.887Z",
-    "updatedAt": "2026-06-10T17:18:03.003Z"
+    "updatedAt": "2026-08-01T09:25:40.610Z"
   }
 ];
 const showsData = [
@@ -105,12 +105,12 @@ const showsData = [
         "episodeNumber": 2,
         "description": "",
         "duration": "",
-        "videoUrl": "",
-        "transcodeStatus": "PROCESSING",
-        "stageDetails": "{\"uploadServer\":{\"percent\":100,\"speed\":\"Done\",\"eta\":0,\"status\":\"COMPLETED\"},\"transcoding\":{\"percent\":100,\"speed\":\"Done\",\"eta\":0,\"status\":\"COMPLETED\"},\"uploadS3\":{\"percent\":80.2,\"speed\":\"364 KB/s\",\"eta\":488,\"status\":\"PROCESSING\"}}",
+        "videoUrl": "https://serverbuket-12.s3.ap-south-1.amazonaws.com/videos/show_14/ep_328/master.m3u8",
+        "transcodeStatus": "COMPLETED",
+        "stageDetails": "{\"uploadServer\":{\"percent\":100,\"speed\":\"Done\",\"eta\":0,\"status\":\"COMPLETED\"},\"transcoding\":{\"percent\":100,\"speed\":\"Done\",\"eta\":0,\"status\":\"COMPLETED\"},\"uploadS3\":{\"percent\":100,\"speed\":\"Done\",\"eta\":0,\"status\":\"COMPLETED\"}}",
         "views": 2,
         "createdAt": "2026-08-01T08:21:43.221Z",
-        "updatedAt": "2026-08-01T09:25:32.095Z"
+        "updatedAt": "2026-08-01T09:33:02.816Z"
       }
     ]
   }

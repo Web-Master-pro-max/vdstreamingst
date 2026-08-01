@@ -1,32 +1,96 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/:path*",
-      "destination": "http://13.61.84.121:8000/api/:path*"
+      "src": "**/*.html",
+      "use": "@vercel/static"
     },
     {
-      "source": "/uploads/:path*",
-      "destination": "http://13.61.84.121:8000/uploads/:path*"
+      "src": "**/*.css",
+      "use": "@vercel/static"
     },
     {
-      "source": "/Postes/:path*",
-      "destination": "http://13.61.84.121:8000/Postes/:path*"
+      "src": "**/*.js",
+      "use": "@vercel/static"
     },
     {
-      "source": "/video-player/Postes/:path*",
-      "destination": "http://13.61.84.121:8000/Postes/:path*"
+      "src": "img/**/*",
+      "use": "@vercel/static"
     },
     {
-      "source": "/img/:path*",
-      "destination": "http://13.61.84.121:8000/img/:path*"
+      "src": "Postes/**/*",
+      "use": "@vercel/static"
     },
     {
-      "source": "/AMovies-Poster/:path*",
-      "destination": "http://13.61.84.121:8000/AMovies-Poster/:path*"
+      "src": "AMovies-Poster/**/*",
+      "use": "@vercel/static"
     },
     {
-      "source": "/Horror-poster/:path*",
-      "destination": "http://13.61.84.121:8000/Horror-poster/:path*"
+      "src": "Horror-poster/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "video-player/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "http://13.202.95.5:8000/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "continue": false
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "http://13.202.95.5:8000/uploads/$1",
+      "continue": false
+    },
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "http://13.202.95.5:8000/socket.io/$1",
+      "continue": false
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/download",
+      "dest": "/download.html"
+    },
+    {
+      "src": "/live_admin",
+      "dest": "/live_admin.html"
+    },
+    {
+      "src": "/view",
+      "dest": "/view.html"
+    },
+    {
+      "src": "/video-player",
+      "dest": "/video-player/index.html"
+    },
+    {
+      "src": "/video-player/(.*)",
+      "dest": "/video-player/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)\\.(css|js|png|jpg|jpeg|svg|ico|json|map|webp|avif|gif|ttf|woff2?|eot)",
+      "dest": "/$1.$2"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1.html"
     }
   ],
   "headers": [
@@ -35,73 +99,9 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, must-revalidate"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        }
-      ]
-    },
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
-    },
-    {
-      "source": "/Posts/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        },
-        {
-          "key": "Content-Type",
-          "value": "image/jpeg"
-        }
-      ]
-    },
-    {
-      "source": "/AMovies-Poster/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/Horror-poster/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/img/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/(.*\\.(jpg|jpeg|png|gif|webp|svg|ico|css|js))",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 }
