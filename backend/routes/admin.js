@@ -334,6 +334,104 @@ router.get('/tasks', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// POST /api/admin/tasks/:id/retry - Retry a failed transcode task
+router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const episodeId = parseInt(req.params.id);
+    const episode = await prisma.episode.findUnique({
+      where: { id: episodeId },
+      include: { show: true }
+    });
+
+    if (!episode) {
+      return res.status(404).json({ error: 'Episode not found.' });
+    }
+
+    // Find raw source video file in uploads directory
+    const uploadsDir = path.join(__dirname, '../uploads');
+    let rawVideoPath = null;
+
+    if (fs.existsSync(uploadsDir)) {
+      const files = fs.readdirSync(uploadsDir);
+      const matchFile = files.find(f => f.startsWith(`raw-`) || f.includes(episodeId.toString()));
+      if (matchFile) {
+        rawVideoPath = path.join(uploadsDir, matchFile);
+      }
+    }
+
+    if (!rawVideoPath || !fs.existsSync(rawVideoPath)) {
+      return res.status(400).json({ error: 'Source raw video file not found in uploads folder. Please re-upload the episode video.' });
+    }
+
+    const s3FolderKey = `videos/show_${episode.showId}/ep_${episode.id}/`;
+
+    // Reset status to PROCESSING with reset stageDetails
+    const updatedEpisode = await prisma.episode.update({
+      where: { id: episodeId },
+      data: {
+        transcodeStatus: 'PROCESSING',
+        stageDetails: JSON.stringify({
+          uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+          transcoding: { percent: 0.1, speed: '1.0x', eta: 0, status: 'PROCESSING' },
+          uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+        })
+      }
+    });
+
+    const isRedisConnected = redis.status === 'ready';
+
+    if (isRedisConnected) {
+      const transcodeTask = {
+        episodeId: episode.id,
+        showId: episode.showId,
+        showTitle: episode.show ? episode.show.title : `Show #${episode.showId}`,
+        episodeNumber: episode.episodeNumber,
+        sourceVideoPath: rawVideoPath,
+        s3FolderKey: s3FolderKey,
+      };
+
+      console.log(`Enqueueing retry transcode job to Redis for Episode ${episode.id}...`);
+      await redis.lpush('transcode_tasks', JSON.stringify(transcodeTask));
+
+      return res.json({
+        message: 'Transcode task queued for retry via Redis.',
+        episode: updatedEpisode
+      });
+    } else {
+      console.log(`⚠️ Redis is offline. Spawning background child process to retry transcoding Episode ${episode.id} natively...`);
+      const { spawn } = require('child_process');
+      const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
+      const scriptPath = path.join(__dirname, '../../worker/converter_helper.py');
+
+      const binPath = path.join(__dirname, '../bin');
+      const customEnv = { ...process.env };
+      customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
+      const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
+      const originalPath = customEnv[pathKey] || '';
+      customEnv[pathKey] = `${binPath};${originalPath}`;
+
+      spawn(pythonExecutable, [
+        scriptPath,
+        rawVideoPath,
+        episode.id.toString(),
+        episode.showId.toString(),
+        s3FolderKey
+      ], {
+        env: customEnv,
+        shell: true
+      });
+
+      return res.json({
+        message: 'Transcode task retry launched natively in background.',
+        episode: updatedEpisode
+      });
+    }
+  } catch (error) {
+    console.error('Error retrying task:', error);
+    res.status(500).json({ error: 'Internal server error attempting retry.' });
+  }
+});
+
 // DELETE /api/admin/shows/:id - Delete a show and all its episodes
 router.delete('/shows/:id', authenticate, requireAdmin, async (req, res) => {
   try {

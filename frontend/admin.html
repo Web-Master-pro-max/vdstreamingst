@@ -1518,10 +1518,18 @@
                     }
 
                     tbody.innerHTML = data.map(task => {
-                        const statusClass = (task.transcodeStatus || 'PENDING').toLowerCase();
+                        const statusUpper = (task.transcodeStatus || 'PENDING').toUpperCase();
+                        const statusClass = statusUpper.toLowerCase();
                         const timeText = new Date(task.updatedAt).toLocaleString();
                         const showTitle = task.show ? task.show.title : `Show #${task.showId}`;
                         const masterLink = task.videoUrl ? `<a href="${task.videoUrl}" target="_blank" style="color: var(--secondary); text-decoration: none; font-weight: 500;"><i class="fas fa-external-link-alt"></i> master.m3u8</a>` : `<span style="color: var(--gray-text);">Not ready</span>`;
+
+                        const retryBtnHtml = statusUpper === 'FAILED' ? `
+                            <br>
+                            <button onclick="retryTask(${task.id})" style="margin-top: 8px; padding: 4px 10px; font-size: 0.85rem; background: linear-gradient(135deg, #e74c3c, #c0392b); border: none; color: #fff; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(231,76,60,0.3);">
+                                <i class="fas fa-redo"></i> Retry Transcode
+                            </button>
+                        ` : '';
 
                         return `
                             <tr>
@@ -1531,6 +1539,7 @@
                                 </td>
                                 <td>
                                     <span class="status-badge ${statusClass}">${task.transcodeStatus || 'PENDING'}</span>
+                                    ${retryBtnHtml}
                                 </td>
                                 <td>
                                     ${renderTranscodeProgress(task)}
@@ -1550,6 +1559,27 @@
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Connection error fetching tasks pipeline.</td></tr>`;
+            }
+        }
+
+        // Retry failed transcode task
+        async function retryTask(taskId) {
+            if (!confirm(`Are you sure you want to retry transcoding for Task #${taskId}?`)) return;
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/tasks/${taskId}/retry`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Transcode task retry launched successfully!');
+                    fetchTasks();
+                } else {
+                    alert(data.error || 'Failed to retry transcode task.');
+                }
+            } catch (e) {
+                alert('Connection error submitting task retry.');
             }
         }
 

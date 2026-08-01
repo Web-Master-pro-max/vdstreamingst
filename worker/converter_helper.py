@@ -407,23 +407,25 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
 if __name__ == "__main__":
     import sys
     import os
-    from dotenv import load_dotenv
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    possible_paths = [
-        os.path.join(script_dir, '..', 'backend', '.env'),
-        os.path.join(script_dir, '..', '.env'),
-        os.path.join(script_dir, '.env'),
-        os.path.join(os.getcwd(), '.env')
-    ]
-    loaded = False
-    for path in possible_paths:
-        if os.path.exists(path):
-            load_dotenv(path)
-            loaded = True
-            break
-    if not loaded:
-        load_dotenv()
+    try:
+        from dotenv import load_dotenv
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        possible_paths = [
+            os.path.join(script_dir, '..', 'backend', '.env'),
+            os.path.join(script_dir, '..', '.env'),
+            os.path.join(script_dir, '.env'),
+            os.path.join(os.getcwd(), '.env')
+        ]
+        loaded = False
+        for path in possible_paths:
+            if os.path.exists(path):
+                load_dotenv(path)
+                loaded = True
+                break
+        if not loaded:
+            load_dotenv()
+    except ImportError:
+        pass
     
     if len(sys.argv) < 5:
         print("Usage: python converter_helper.py <source_path> <episode_id> <show_id> <s3_folder_key>")
