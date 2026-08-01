@@ -4,8 +4,27 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
-// Load environment variables
+// Load environment variables from current directory, parent root directory, or working directory
+const possibleEnvPaths = [
+  path.join(__dirname, '.env'),
+  path.join(__dirname, '..', '.env'),
+  path.join(process.cwd(), '.env')
+];
+for (const envPath of possibleEnvPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+}
 dotenv.config();
+
+if (!process.env.DATABASE_URL) {
+  const dbHost = process.env.MYSQL_HOST || 'localhost';
+  const dbPort = process.env.MYSQL_PORT || '3306';
+  const dbUser = process.env.MYSQL_USER || 'root';
+  const dbPass = process.env.MYSQL_PASSWORD || '9981';
+  const dbName = process.env.MYSQL_DB || 'infinx';
+  process.env.DATABASE_URL = `mysql://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}`;
+}
 
 const authRouter = require('./routes/auth');
 const showsRouter = require('./routes/shows');

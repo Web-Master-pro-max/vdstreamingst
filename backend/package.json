@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "start:prod": "npx prisma db push && node prisma/seed.js && node server.js"
+    "start:prod": "npx prisma db push && node prisma/seed_ec2.js && node server.js",
+    "seed": "node prisma/seed.js",
+    "seed:ec2": "node prisma/seed_ec2.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.500.0",
@@ -22,6 +24,6 @@
     "prisma": "^5.10.2"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed_ec2.js"
   }
 }
