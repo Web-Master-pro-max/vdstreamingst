@@ -791,8 +791,10 @@
                         <p class="panel-desc">Monitor background workers parsing audio tracks and uploading HLS master
                             playlists to AWS S3</p>
                     </div>
-                    <button class="btn-back" onclick="fetchTasks()" style="cursor: pointer;"><i class="fas fa-sync"></i>
-                        Refresh Tasks</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-back" onclick="cleanOldUploadsManual()" style="cursor: pointer; background: rgba(231,76,60,0.15); border-color: #e74c3c; color: #ff6b6b;"><i class="fas fa-broom"></i> Clean Storage (>2 Days)</button>
+                        <button class="btn-back" onclick="fetchTasks()" style="cursor: pointer;"><i class="fas fa-sync"></i> Refresh Tasks</button>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -1690,6 +1692,26 @@
                 }
             } catch (e) {
                 alert('Connection error submitting task retry.');
+            }
+        }
+
+        // Manual trigger to clean raw upload files & abandoned chunk folders older than 2 days
+        async function cleanOldUploadsManual() {
+            if (!confirm('Run storage cleanup now to purge raw video files & temporary chunks older than 2 days?')) return;
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/clean-uploads`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Storage cleanup completed successfully!');
+                } else {
+                    alert(data.error || 'Storage cleanup failed.');
+                }
+            } catch (err) {
+                alert('Connection error performing storage cleanup.');
             }
         }
 

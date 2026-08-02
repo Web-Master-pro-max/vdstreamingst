@@ -128,3 +128,56 @@ server.timeout = 0; // Unlimited
 server.requestTimeout = 0; // Unlimited
 server.keepAliveTimeout = 120000; // 2 minutes
 server.headersTimeout = 125000; // 2 minutes
+
+// Automated 48-hour (2 days) storage cleanup job for raw videos & abandoned upload chunks
+function cleanupOldUploads() {
+  try {
+    if (!fs.existsSync(uploadsPath)) return;
+
+    const files = fs.readdirSync(uploadsPath);
+    const now = Date.now();
+    const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000; // 48 hours
+
+    let deletedFilesCount = 0;
+    let freedBytes = 0;
+
+    files.forEach(file => {
+      const filePath = path.join(uploadsPath, file);
+      try {
+        const stats = fs.statSync(filePath);
+        const ageMs = now - stats.mtimeMs;
+
+        if (ageMs > TWO_DAYS_MS) {
+          const isRawVideo = file.startsWith('raw-') || /\.(mkv|mp4|avi|mov|ts|m3u8)$/i.test(file);
+          const isChunkDir = stats.isDirectory() && file.startsWith('chunks_');
+          const isTranscodeDir = stats.isDirectory() && file.startsWith('transcode_');
+
+          if (isRawVideo || isChunkDir || isTranscodeDir) {
+            if (stats.isDirectory()) {
+              fs.rmSync(filePath, { recursive: true, force: true });
+              console.log(`🧹 Deleted old temp directory (>2 days): ${file}`);
+            } else {
+              freedBytes += stats.size;
+              fs.unlinkSync(filePath);
+              console.log(`🧹 Deleted old raw video file (>2 days): ${file}`);
+            }
+            deletedFilesCount++;
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not check/delete file ${file}:`, err.message);
+      }
+    });
+
+    if (deletedFilesCount > 0) {
+      const freedMB = (freedBytes / (1024 * 1024)).toFixed(1);
+      console.log(`✅ Automated cleanup finished: Removed ${deletedFilesCount} old item(s) (>2 days), freed ~${freedMB} MB disk space.`);
+    }
+  } catch (err) {
+    console.error('Error running 2-day upload cleanup job:', err.message);
+  }
+}
+
+// Run cleanup immediately on server boot, then scheduled every 6 hours
+cleanupOldUploads();
+setInterval(cleanupOldUploads, 6 * 60 * 60 * 1000);

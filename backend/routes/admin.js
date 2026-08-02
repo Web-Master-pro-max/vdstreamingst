@@ -706,6 +706,56 @@ router.post('/episodes/manual', authenticate, requireAdmin, async (req, res) => 
   }
 });
 
+// POST /api/admin/clean-uploads - Manual trigger to purge raw video files & temp chunk folders > 2 days old
+router.post('/clean-uploads', authenticate, requireAdmin, (req, res) => {
+  try {
+    if (!fs.existsSync(uploadsDir)) {
+      return res.json({ message: 'Uploads directory is empty.', deletedCount: 0, freedMB: 0 });
+    }
+
+    const files = fs.readdirSync(uploadsDir);
+    const now = Date.now();
+    const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000; // 48 hours
+
+    let deletedCount = 0;
+    let freedBytes = 0;
+
+    files.forEach(file => {
+      const filePath = path.join(uploadsDir, file);
+      try {
+        const stats = fs.statSync(filePath);
+        const ageMs = now - stats.mtimeMs;
+
+        if (ageMs > TWO_DAYS_MS) {
+          const isRawVideo = file.startsWith('raw-') || /\.(mkv|mp4|avi|mov|ts|m3u8)$/i.test(file);
+          const isChunkDir = stats.isDirectory() && file.startsWith('chunks_');
+          const isTranscodeDir = stats.isDirectory() && file.startsWith('transcode_');
+
+          if (isRawVideo || isChunkDir || isTranscodeDir) {
+            if (stats.isDirectory()) {
+              fs.rmSync(filePath, { recursive: true, force: true });
+            } else {
+              freedBytes += stats.size;
+              fs.unlinkSync(filePath);
+            }
+            deletedCount++;
+          }
+        }
+      } catch (err) {}
+    });
+
+    const freedMB = (freedBytes / (1024 * 1024)).toFixed(1);
+    return res.json({
+      message: `Storage cleanup complete. Removed ${deletedCount} item(s) older than 2 days, freed ~${freedMB} MB.`,
+      deletedCount,
+      freedMB: parseFloat(freedMB)
+    });
+  } catch (err) {
+    console.error('Manual cleanup error:', err);
+    res.status(500).json({ error: 'Internal server error performing storage cleanup.' });
+  }
+});
+
 // DELETE /api/admin/episodes/:id - Delete a single episode
 router.delete('/episodes/:id', authenticate, requireAdmin, async (req, res) => {
   try {
