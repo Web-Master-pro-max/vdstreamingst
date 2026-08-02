@@ -30,6 +30,8 @@ redis.on('error', (err) => {
   }
 });
 
+const uploadsDir = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
+
 // Multer config for image and video files (posters/banners) - in-memory
 const imageUpload = multer({
   storage: multer.memoryStorage(),
@@ -312,6 +314,208 @@ router.post('/shows/:id/episodes', authenticate, requireAdmin, videoUpload.singl
 // POST /api/admin/upload-episode-video - Add episode & upload raw video file (Frontend Path Alias)
 router.post('/upload-episode-video', authenticate, requireAdmin, videoUpload.single('video'), episodeUploadHandler);
 
+// GET /api/admin/upload-chunk-status - Check already uploaded chunk indices for resumability
+router.get('/upload-chunk-status', authenticate, requireAdmin, (req, res) => {
+  try {
+    const { uploadId } = req.query;
+    if (!uploadId) {
+      return res.status(400).json({ error: 'uploadId is required.' });
+    }
+
+    const safeUploadId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const chunksDir = path.join(uploadsDir, `chunks_${safeUploadId}`);
+
+    if (!fs.existsSync(chunksDir)) {
+      return res.json({ uploadedChunks: [] });
+    }
+
+    const files = fs.readdirSync(chunksDir);
+    const uploadedChunks = files
+      .filter(f => f.startsWith('chunk_'))
+      .map(f => parseInt(f.replace('chunk_', ''), 10))
+      .filter(n => !isNaN(n));
+
+    return res.json({ uploadedChunks });
+  } catch (error) {
+    console.error('Error getting chunk status:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/admin/upload-chunk - Upload individual 5MB chunk with resume support
+router.post('/upload-chunk', authenticate, requireAdmin, videoUpload.single('chunk'), (req, res) => {
+  try {
+    const { uploadId, chunkIndex } = req.body;
+    if (!uploadId || chunkIndex === undefined || !req.file) {
+      return res.status(400).json({ error: 'uploadId, chunkIndex, and chunk file are required.' });
+    }
+
+    const safeUploadId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const chunksDir = path.join(uploadsDir, `chunks_${safeUploadId}`);
+
+    if (!fs.existsSync(chunksDir)) {
+      fs.mkdirSync(chunksDir, { recursive: true });
+    }
+
+    const targetChunkPath = path.join(chunksDir, `chunk_${chunkIndex}`);
+    if (fs.existsSync(targetChunkPath)) {
+      fs.unlinkSync(targetChunkPath);
+    }
+    fs.renameSync(req.file.path, targetChunkPath);
+
+    return res.json({ success: true, chunkIndex: parseInt(chunkIndex, 10) });
+  } catch (error) {
+    console.error('Error saving chunk:', error);
+    res.status(500).json({ error: 'Failed to save chunk.' });
+  }
+});
+
+// POST /api/admin/upload-chunk-finalize - Reassemble all chunks into final raw video & trigger transcoding
+router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { uploadId, showId, title, episodeNumber, description, duration, totalChunks, fileName } = req.body;
+    if (!uploadId || !showId || !title || !episodeNumber || !totalChunks) {
+      return res.status(400).json({ error: 'Missing required parameters for finalization.' });
+    }
+
+    const parsedShowId = parseInt(showId, 10);
+    const parsedEpNum = parseInt(episodeNumber, 10);
+    const parsedTotalChunks = parseInt(totalChunks, 10);
+
+    const safeUploadId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const chunksDir = path.join(uploadsDir, `chunks_${safeUploadId}`);
+
+    if (!fs.existsSync(chunksDir)) {
+      return res.status(404).json({ error: 'Chunk folder not found. Please upload chunks again.' });
+    }
+
+    for (let i = 0; i < parsedTotalChunks; i++) {
+      const cPath = path.join(chunksDir, `chunk_${i}`);
+      if (!fs.existsSync(cPath)) {
+        return res.status(400).json({ error: `Missing chunk ${i} of ${parsedTotalChunks}. Please resume upload.` });
+      }
+    }
+
+    const cleanFileName = (fileName || 'video.mkv').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const finalRawFileName = `raw-${Date.now()}-${cleanFileName}`;
+    const finalRawPath = path.join(uploadsDir, finalRawFileName);
+
+    const writeStream = fs.createWriteStream(finalRawPath);
+    for (let i = 0; i < parsedTotalChunks; i++) {
+      const cPath = path.join(chunksDir, `chunk_${i}`);
+      const chunkBuffer = fs.readFileSync(cPath);
+      writeStream.write(chunkBuffer);
+      fs.unlinkSync(cPath);
+    }
+    writeStream.end();
+
+    try {
+      fs.rmdirSync(chunksDir);
+    } catch(e) {}
+
+    const show = await prisma.show.findUnique({ where: { id: parsedShowId } });
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found.' });
+    }
+
+    const episode = await prisma.episode.create({
+      data: {
+        showId: parsedShowId,
+        title,
+        episodeNumber: parsedEpNum,
+        description: description || '',
+        duration: duration || '',
+        transcodeStatus: 'PENDING',
+        stageDetails: JSON.stringify({
+          uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+          transcoding: { percent: 0, speed: '0x', eta: 0, status: 'PENDING' },
+          uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+        })
+      }
+    });
+
+    const s3FolderKey = `videos/show_${parsedShowId}/ep_${episode.id}/`;
+    const isRedisConnected = redis.status === 'ready';
+
+    if (isRedisConnected) {
+      const transcodeTask = {
+        episodeId: episode.id,
+        showId: parsedShowId,
+        showTitle: show.title,
+        episodeNumber: episode.episodeNumber,
+        sourceVideoPath: finalRawPath,
+        s3FolderKey: s3FolderKey,
+      };
+
+      console.log(`Enqueueing transcode job to Redis for Episode ${episode.id}...`);
+      await redis.lpush('transcode_tasks', JSON.stringify(transcodeTask));
+
+      return res.status(201).json({
+        message: 'Resumable upload finalized! Episode created and transcode task queued.',
+        episode,
+      });
+    } else {
+      console.log(`⚠️ Redis is offline. Spawning background child process to transcode Episode ${episode.id} natively...`);
+      const { spawn } = require('child_process');
+      const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
+      const scriptPath = path.join(__dirname, '../../worker/converter_helper.py');
+
+      await prisma.episode.update({
+        where: { id: episode.id },
+        data: { transcodeStatus: 'PROCESSING' }
+      });
+
+      const binPath = path.join(__dirname, '../bin');
+      const customEnv = { ...process.env };
+      customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
+      const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
+      const originalPath = customEnv[pathKey] || '';
+      customEnv[pathKey] = `${binPath};${originalPath}`;
+
+      const child = spawn(pythonExecutable, [
+        scriptPath,
+        finalRawPath,
+        episode.id.toString(),
+        parsedShowId.toString(),
+        s3FolderKey
+      ], {
+        env: customEnv,
+        shell: true
+      });
+
+      let stdoutData = '';
+      let stderrData = '';
+      child.stdout.on('data', (d) => stdoutData += d.toString());
+      child.stderr.on('data', (d) => stderrData += d.toString());
+
+      child.on('close', async (code) => {
+        if (code === 0) {
+          const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(https?:\/\/\S+)/);
+          if (match && match[1]) {
+            await prisma.episode.update({
+              where: { id: episode.id },
+              data: { transcodeStatus: 'COMPLETED', videoUrl: match[1] }
+            });
+            return;
+          }
+        }
+        await prisma.episode.update({
+          where: { id: episode.id },
+          data: { transcodeStatus: 'FAILED' }
+        });
+      });
+
+      return res.status(201).json({
+        message: 'Resumable upload finalized! Episode created and native transcoding started.',
+        episode,
+      });
+    }
+  } catch (error) {
+    console.error('Error finalizing chunked upload:', error);
+    res.status(500).json({ error: 'Internal server error finalizing upload.' });
+  }
+});
+
 // GET /api/admin/tasks - Retrieve transcode statuses
 router.get('/tasks', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -456,6 +660,49 @@ router.delete('/shows/:id', authenticate, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error deleting show:', error);
     res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/admin/episodes/manual - Add episode manually without raw video upload
+router.post('/episodes/manual', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { showId, title, episodeNumber, description, duration, videoUrl, transcodeStatus } = req.body;
+
+    if (!showId || !title || !episodeNumber) {
+      return res.status(400).json({ error: 'Show ID, title, and episode number are required.' });
+    }
+
+    const parsedShowId = parseInt(showId, 10);
+    const parsedEpNum = parseInt(episodeNumber, 10);
+
+    const show = await prisma.show.findUnique({ where: { id: parsedShowId } });
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found.' });
+    }
+
+    const status = transcodeStatus || (videoUrl ? 'COMPLETED' : 'PENDING');
+
+    const episode = await prisma.episode.create({
+      data: {
+        showId: parsedShowId,
+        title,
+        episodeNumber: parsedEpNum,
+        description: description || '',
+        duration: duration || '',
+        videoUrl: videoUrl || null,
+        transcodeStatus: status,
+        stageDetails: JSON.stringify({
+          uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+          transcoding: { percent: videoUrl ? 100 : 0, speed: 'Done', eta: 0, status: videoUrl ? 'COMPLETED' : 'PENDING' },
+          uploadS3: { percent: videoUrl ? 100 : 0, speed: 'Done', eta: 0, status: videoUrl ? 'COMPLETED' : 'PENDING' }
+        })
+      }
+    });
+
+    res.status(201).json({ message: 'Episode created manually successfully.', episode });
+  } catch (error) {
+    console.error('Error creating episode manually:', error);
+    res.status(500).json({ error: 'Internal server error creating episode.' });
   }
 });
 

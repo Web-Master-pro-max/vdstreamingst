@@ -123,7 +123,8 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Infinx Streaming API Server running on port ${PORT}`);
 });
 
-// Configure larger timeouts for heavy HLS raw video uploads (prevents early termination on 1GB+ uploads)
-server.timeout = 20 * 60 * 1000; // 20 minutes
-server.keepAliveTimeout = 65000;
-server.headersTimeout = 66000;
+// Configure unlimited/extended timeouts for heavy HLS raw video uploads (prevents ERR_CONNECTION_RESET on 1GB+ uploads)
+server.timeout = 0; // Unlimited
+server.requestTimeout = 0; // Unlimited
+server.keepAliveTimeout = 120000; // 2 minutes
+server.headersTimeout = 125000; // 2 minutes
