@@ -26,8 +26,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     const playPauseBtn = document.querySelector('.play-pause');
     const volumeBtn = document.querySelector('.volume-btn');
     const volumeSlider = document.querySelector('.volume-range');
-    const progressBar = document.querySelector('.progress');
-    const progressBarContainer = document.querySelector('.progress-bar');
+    const progressBarContainer = document.querySelector('.progress-bar-container') || document.querySelector('.progress-bar');
+    const progressBar = document.querySelector('.progress-bar');
+    const progressEl = document.querySelector('.progress');
+    const progressBufferedEl = document.querySelector('.progress-buffered');
     const progressHoverTime = document.querySelector('.progress-hover-time');
     const currentTimeEl = document.querySelector('.current-time');
     const durationEl = document.querySelector('.duration');
@@ -779,32 +781,61 @@ document.addEventListener('DOMContentLoaded', async function() {
       return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
     
-    // Update video time
+    // Timeline Scrubbing & Buffer Management
+    let isScrubbing = false;
+
+    function getTimelineFraction(e) {
+      if (!progressBarContainer || isNaN(mainVideo.duration) || mainVideo.duration <= 0) return 0;
+      const rect = progressBarContainer.getBoundingClientRect();
+      const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+      const offsetX = clientX - rect.left;
+      return Math.min(Math.max(offsetX / rect.width, 0), 1);
+    }
+
+    function updateBufferBar() {
+      if (!mainVideo || !progressBufferedEl || isNaN(mainVideo.duration) || mainVideo.duration <= 0) return;
+      try {
+        if (mainVideo.buffered.length > 0) {
+          const bufferedEnd = mainVideo.buffered.end(mainVideo.buffered.length - 1);
+          const percent = Math.min((bufferedEnd / mainVideo.duration) * 100, 100);
+          progressBufferedEl.style.width = `${percent}%`;
+        }
+      } catch (e) {}
+    }
+
+    // Update video time & timeline bar
     function updateTime() {
       if (!isNaN(mainVideo.duration) && mainVideo.duration > 0) {
         currentTimeEl.textContent = formatTime(mainVideo.currentTime);
         durationEl.textContent = formatTime(mainVideo.duration);
-        
-        const progressPercent = (mainVideo.currentTime / mainVideo.duration) * 100;
-        progressBar.style.width = `${progressPercent}%`;
-        
-        // Report progress to DB
+
+        if (!isScrubbing && progressEl) {
+          const progressPercent = (mainVideo.currentTime / mainVideo.duration) * 100;
+          progressEl.style.width = `${progressPercent}%`;
+        }
+
+        updateBufferBar();
         reportPlaybackProgress();
       }
     }
-    
-    // Update hover time on progress bar
-    function updateHoverTime(e) {
+
+    function handleScrubMove(e) {
       if (isNaN(mainVideo.duration) || mainVideo.duration <= 0) return;
-      
-      const progressBarWidth = progressBarContainer.clientWidth;
-      const rect = progressBarContainer.getBoundingClientRect();
-      const clickPosition = e.clientX - rect.left;
-      const hoverTime = (clickPosition / progressBarWidth) * mainVideo.duration;
-      
-      progressHoverTime.textContent = formatTime(hoverTime);
-      const percent = Math.min(Math.max((clickPosition / progressBarWidth) * 100, 0), 100);
-      progressHoverTime.style.left = `clamp(30px, ${percent}%, calc(100% - 30px))`;
+
+      const fraction = getTimelineFraction(e);
+      const targetTime = fraction * mainVideo.duration;
+
+      if (progressHoverTime) {
+        progressHoverTime.textContent = formatTime(targetTime);
+        const percent = fraction * 100;
+        progressHoverTime.style.left = `clamp(30px, ${percent}%, calc(100% - 30px))`;
+      }
+
+      if (isScrubbing) {
+        if (progressEl) progressEl.style.width = `${fraction * 100}%`;
+        if (currentTimeEl) currentTimeEl.textContent = formatTime(targetTime);
+        mainVideo.currentTime = targetTime;
+      }
     }
     
     // Play/Pause functionality
@@ -971,92 +1002,43 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     mainVideo.addEventListener('volumechange', updateVolumeUI);
     
-    // Progress bar events
+    // Ultra-Smooth Drag Scrubbing & Buffer Listeners
+    function startScrubbing(e) {
+      if (isNaN(mainVideo.duration) || mainVideo.duration <= 0) return;
+      isScrubbing = true;
+
+      if (progressBarContainer) progressBarContainer.classList.add('scrubbing');
+      handleScrubMove(e);
+
+      document.addEventListener('mousemove', handleScrubMove);
+      document.addEventListener('mouseup', stopScrubbing);
+      document.addEventListener('touchmove', handleScrubMove, { passive: false });
+      document.addEventListener('touchend', stopScrubbing);
+    }
+
+    function stopScrubbing(e) {
+      if (!isScrubbing) return;
+      isScrubbing = false;
+
+      if (progressBarContainer) progressBarContainer.classList.remove('scrubbing');
+
+      document.removeEventListener('mousemove', handleScrubMove);
+      document.removeEventListener('mouseup', stopScrubbing);
+      document.removeEventListener('touchmove', handleScrubMove);
+      document.removeEventListener('touchend', stopScrubbing);
+
+      if (e) handleScrubMove(e);
+    }
+
     if (progressBarContainer) {
-      progressBarContainer.addEventListener('mousemove', updateHoverTime);
-      progressBarContainer.addEventListener('touchmove', function(e) {
-        if (isMobile) {
-          const touch = e.touches[0];
-          const fakeMouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-          });
-          updateHoverTime(fakeMouseEvent);
-        }
-      });
-      progressBarContainer.addEventListener('click', function(e) {
-        if (isNaN(mainVideo.duration) || mainVideo.duration <= 0) return;
-        const progressBarWidth = this.clientWidth;
-        const rect = this.getBoundingClientRect();
-        const clickPosition = (e.clientX || (e.touches && e.touches[0].clientX) || 0) - rect.left;
-        const seekTime = (clickPosition / progressBarWidth) * mainVideo.duration;
-        mainVideo.currentTime = seekTime;
-      });
-      progressBarContainer.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const fakeMouseEvent = new MouseEvent('click', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        this.dispatchEvent(fakeMouseEvent);
-      });
+      progressBarContainer.addEventListener('mousedown', startScrubbing);
+      progressBarContainer.addEventListener('mousemove', handleScrubMove);
+      progressBarContainer.addEventListener('touchstart', startScrubbing, { passive: false });
     }
+
+    mainVideo.addEventListener('progress', updateBufferBar);
+    mainVideo.addEventListener('loadedmetadata', updateBufferBar);
     
-    // Screen Fit / Notch Fill Mode logic
-    const fitScreenBtn = document.querySelector('.fit-screen-btn');
-    const fitModes = ['cover', 'contain', 'fill'];
-    let currentFitMode = localStorage.getItem('infinx_video_fit_mode') || 'cover';
-
-    function setFitMode(mode) {
-      if (!fitModes.includes(mode)) mode = 'cover';
-      currentFitMode = mode;
-      localStorage.setItem('infinx_video_fit_mode', mode);
-
-      if (videoPlayer) {
-        videoPlayer.classList.remove('fit-contain', 'fit-cover', 'fit-fill');
-        videoPlayer.classList.add(`fit-${mode}`);
-      }
-
-      if (fitScreenBtn) {
-        if (mode === 'cover') {
-          fitScreenBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
-          fitScreenBtn.title = 'Fill Notch Screen (Cover)';
-        } else if (mode === 'fill') {
-          fitScreenBtn.innerHTML = '<i class="fas fa-arrows-alt"></i>';
-          fitScreenBtn.title = 'Stretch Video';
-        } else {
-          fitScreenBtn.innerHTML = '<i class="fas fa-compress-arrows-alt"></i>';
-          fitScreenBtn.title = 'Fit to Screen (Contain)';
-        }
-      }
-
-      document.querySelectorAll('.fit-option').forEach(option => {
-        option.classList.toggle('active', option.getAttribute('data-fit') === mode);
-      });
-    }
-
-    setFitMode(currentFitMode);
-
-    if (fitScreenBtn) {
-      fitScreenBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const currentIndex = fitModes.indexOf(currentFitMode);
-        const nextIndex = (currentIndex + 1) % fitModes.length;
-        setFitMode(fitModes[nextIndex]);
-      });
-    }
-
-    document.querySelectorAll('.fit-option').forEach(option => {
-      option.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const mode = this.getAttribute('data-fit');
-        setFitMode(mode);
-        closeAllDropdowns();
-        closeSettingsDropdown();
-      });
-    });
-
     // Toast Feedback function
     function showPlayerToast(message) {
       let toast = document.querySelector('.player-toast');
@@ -1070,7 +1052,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       }, 1800);
     }
 
-    // Aspect Ratio & Crop Management
+    // Unified Scaling, Aspect Ratio & Crop Manager
+    const fitScreenBtn = document.querySelector('.fit-screen-btn');
+    const fitModes = ['cover', 'contain', 'fill'];
+    let currentFitMode = localStorage.getItem('infinx_video_fit_mode') || 'cover';
     let currentAspectRatio = localStorage.getItem('infinx_video_aspect_ratio') || 'default';
     let currentCropMode = localStorage.getItem('infinx_video_crop') || 'default';
 
@@ -1083,84 +1068,147 @@ document.addEventListener('DOMContentLoaded', async function() {
       return ratioStr.replace(':1', ' / 1');
     }
 
-    function setAspectRatio(ratio, showToast = true) {
-      currentAspectRatio = ratio;
-      localStorage.setItem('infinx_video_aspect_ratio', ratio);
+    function applyVideoTransform() {
+      if (!mainVideo) return;
 
-      if (mainVideo) {
-        if (ratio === 'default') {
-          mainVideo.style.aspectRatio = '';
-          mainVideo.style.objectFit = '';
+      // Clear previous inline styling overrides
+      mainVideo.style.removeProperty('aspect-ratio');
+      mainVideo.style.removeProperty('object-fit');
+      mainVideo.style.removeProperty('width');
+      mainVideo.style.removeProperty('height');
+
+      // 1. If explicit Crop is active
+      if (currentCropMode !== 'default') {
+        const parsedRatio = parseRatioString(currentCropMode);
+        if (parsedRatio) {
+          mainVideo.style.setProperty('aspect-ratio', parsedRatio, 'important');
+        }
+        mainVideo.style.setProperty('object-fit', 'cover', 'important');
+        mainVideo.style.setProperty('width', '100%', 'important');
+        mainVideo.style.setProperty('height', '100%', 'important');
+      }
+      // 2. If explicit Aspect Ratio is active
+      else if (currentAspectRatio !== 'default') {
+        const parsedRatio = parseRatioString(currentAspectRatio);
+        if (parsedRatio) {
+          mainVideo.style.setProperty('aspect-ratio', parsedRatio, 'important');
+          mainVideo.style.setProperty('width', 'auto', 'important');
+          mainVideo.style.setProperty('height', 'auto', 'important');
+          mainVideo.style.setProperty('max-width', '100%', 'important');
+          mainVideo.style.setProperty('max-height', '100%', 'important');
+        }
+        mainVideo.style.setProperty('object-fit', 'contain', 'important');
+      }
+      // 3. Fallback to Screen Fit Mode (fit-screen-btn / notch fill mode)
+      else {
+        mainVideo.style.setProperty('object-fit', currentFitMode, 'important');
+        mainVideo.style.setProperty('width', '100%', 'important');
+        mainVideo.style.setProperty('height', '100%', 'important');
+      }
+
+      // Update Screen Fit Button icon & title
+      if (fitScreenBtn) {
+        if (currentFitMode === 'cover') {
+          fitScreenBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+          fitScreenBtn.title = 'Fill Notch Screen (Cover)';
+        } else if (currentFitMode === 'fill') {
+          fitScreenBtn.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+          fitScreenBtn.title = 'Stretch Video (Fill)';
         } else {
-          mainVideo.style.aspectRatio = parseRatioString(ratio);
-          mainVideo.style.objectFit = 'contain';
+          fitScreenBtn.innerHTML = '<i class="fas fa-compress-arrows-alt"></i>';
+          fitScreenBtn.title = 'Fit to Screen (Contain)';
         }
       }
 
-      document.querySelectorAll('.aspect-option').forEach(option => {
-        option.classList.toggle('active', option.getAttribute('data-aspect') === ratio);
+      // Update Settings UI active states
+      document.querySelectorAll('.fit-option').forEach(opt => {
+        opt.classList.toggle('active', opt.getAttribute('data-fit') === currentFitMode);
       });
-
-      if (showToast) showPlayerToast(`Aspect Ratio: ${ratio === 'default' ? 'Default' : ratio}`);
+      document.querySelectorAll('.aspect-option').forEach(opt => {
+        opt.classList.toggle('active', opt.getAttribute('data-aspect') === currentAspectRatio);
+      });
+      document.querySelectorAll('.crop-option').forEach(opt => {
+        opt.classList.toggle('active', opt.getAttribute('data-crop') === currentCropMode);
+      });
     }
 
-    function setCropMode(crop, showToast = true) {
-      currentCropMode = crop;
-      localStorage.setItem('infinx_video_crop', crop);
+    // Handler for Screen Fit Button (`.fit-screen-btn`)
+    function cycleFitMode(showToast = true) {
+      currentAspectRatio = 'default';
+      currentCropMode = 'default';
+      localStorage.setItem('infinx_video_aspect_ratio', 'default');
+      localStorage.setItem('infinx_video_crop', 'default');
 
-      if (mainVideo) {
-        if (crop === 'default') {
-          mainVideo.style.aspectRatio = '';
-          mainVideo.style.objectFit = '';
-        } else {
-          mainVideo.style.aspectRatio = parseRatioString(crop);
-          mainVideo.style.objectFit = 'cover';
-        }
+      const currentIndex = fitModes.indexOf(currentFitMode);
+      currentFitMode = fitModes[(currentIndex + 1) % fitModes.length];
+      localStorage.setItem('infinx_video_fit_mode', currentFitMode);
+
+      applyVideoTransform();
+
+      if (showToast) {
+        let label = 'Fit to Screen (Contain)';
+        if (currentFitMode === 'cover') label = 'Fill Notch Screen (Cover)';
+        if (currentFitMode === 'fill') label = 'Stretch Video (Fill)';
+        showPlayerToast(`Screen Fit: ${label}`);
       }
+    }
 
-      document.querySelectorAll('.crop-option').forEach(option => {
-        option.classList.toggle('active', option.getAttribute('data-crop') === crop);
+    if (fitScreenBtn) {
+      fitScreenBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        cycleFitMode(true);
       });
-
-      if (showToast) showPlayerToast(`Crop: ${crop === 'default' ? 'Default' : crop}`);
     }
 
-    // Initialize saved Aspect Ratio / Crop
-    if (currentCropMode !== 'default') {
-      setCropMode(currentCropMode, false);
-    } else if (currentAspectRatio !== 'default') {
-      setAspectRatio(currentAspectRatio, false);
-    }
+    document.querySelectorAll('.fit-option').forEach(option => {
+      option.addEventListener('click', function(e) {
+        e.stopPropagation();
+        currentAspectRatio = 'default';
+        currentCropMode = 'default';
+        localStorage.setItem('infinx_video_aspect_ratio', 'default');
+        localStorage.setItem('infinx_video_crop', 'default');
 
-    // Aspect Ratio option click listener
+        currentFitMode = this.getAttribute('data-fit');
+        localStorage.setItem('infinx_video_fit_mode', currentFitMode);
+        applyVideoTransform();
+        showPlayerToast(`Screen Fit: ${currentFitMode}`);
+        closeAllDropdowns();
+        closeSettingsDropdown();
+      });
+    });
+
     document.querySelectorAll('.aspect-option').forEach(option => {
       option.addEventListener('click', function(e) {
         e.stopPropagation();
-        const ratio = this.getAttribute('data-aspect');
         currentCropMode = 'default';
         localStorage.setItem('infinx_video_crop', 'default');
-        document.querySelectorAll('.crop-option').forEach(o => o.classList.toggle('active', o.getAttribute('data-crop') === 'default'));
-        
-        setAspectRatio(ratio);
+
+        currentAspectRatio = this.getAttribute('data-aspect');
+        localStorage.setItem('infinx_video_aspect_ratio', currentAspectRatio);
+        applyVideoTransform();
+        showPlayerToast(`Aspect Ratio: ${currentAspectRatio === 'default' ? 'Default' : currentAspectRatio}`);
         closeAllDropdowns();
         closeSettingsDropdown();
       });
     });
 
-    // Crop option click listener
     document.querySelectorAll('.crop-option').forEach(option => {
       option.addEventListener('click', function(e) {
         e.stopPropagation();
-        const crop = this.getAttribute('data-crop');
         currentAspectRatio = 'default';
         localStorage.setItem('infinx_video_aspect_ratio', 'default');
-        document.querySelectorAll('.aspect-option').forEach(o => o.classList.toggle('active', o.getAttribute('data-aspect') === 'default'));
 
-        setCropMode(crop);
+        currentCropMode = this.getAttribute('data-crop');
+        localStorage.setItem('infinx_video_crop', currentCropMode);
+        applyVideoTransform();
+        showPlayerToast(`Crop: ${currentCropMode === 'default' ? 'Default' : currentCropMode}`);
         closeAllDropdowns();
         closeSettingsDropdown();
       });
     });
+
+    // Initial application of saved transform settings
+    applyVideoTransform();
 
     // Screen Orientation API & Auto-Rotate logic for Mobile
     async function lockLandscapeOrientation() {
