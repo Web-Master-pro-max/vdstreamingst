@@ -57,10 +57,7 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   height: 100%;
-  padding-top: var(--safe-area-top);
-  padding-bottom: var(--safe-area-bottom);
-  padding-left: var(--safe-area-left);
-  padding-right: var(--safe-area-right);
+  padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   contain: layout style paint;
@@ -732,7 +729,8 @@ video::cue,
 
 .speed-options,
 .quality-options,
-.subtitle-options {
+.subtitle-options,
+.screen-fit-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -740,7 +738,8 @@ video::cue,
 
 .speed-option,
 .quality-option,
-.subtitle-option {
+.subtitle-option,
+.fit-option {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.8);
   padding: 6px 12px;
@@ -755,7 +754,8 @@ video::cue,
 
 .speed-option:hover,
 .quality-option:hover,
-.subtitle-option:hover {
+.subtitle-option:hover,
+.fit-option:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.15);
@@ -763,7 +763,8 @@ video::cue,
 
 .speed-option.active,
 .quality-option.active,
-.subtitle-option.active {
+.subtitle-option.active,
+.fit-option.active {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
@@ -1937,15 +1938,78 @@ video::cue,
   /* Removed forced fullscreen sizing so default CSS sizing applies on Android */
 }
 
+/* Screen Fit & Notch Display Modes */
+.video-player.fit-cover #main-video,
+.video-player.fit-cover:fullscreen #main-video,
+.video-player.fit-cover:-webkit-full-screen #main-video,
+.video-player.fit-cover:-moz-full-screen #main-video,
+.video-player.fit-cover:-ms-fullscreen #main-video {
+  object-fit: cover !important;
+}
+
+.video-player.fit-fill #main-video,
+.video-player.fit-fill:fullscreen #main-video,
+.video-player.fit-fill:-webkit-full-screen #main-video,
+.video-player.fit-fill:-moz-full-screen #main-video,
+.video-player.fit-fill:-ms-fullscreen #main-video {
+  object-fit: fill !important;
+}
+
+.video-player.fit-contain #main-video,
+.video-player.fit-contain:fullscreen #main-video,
+.video-player.fit-contain:-webkit-full-screen #main-video,
+.video-player.fit-contain:-moz-full-screen #main-video,
+.video-player.fit-contain:-ms-fullscreen #main-video {
+  object-fit: contain !important;
+}
+
+/* Fullscreen sizing for Notch Screens */
+.video-player:fullscreen,
+.video-player:-webkit-full-screen,
+.video-player:-moz-full-screen,
+.video-player:-ms-fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  background: #000 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.video-player:fullscreen #main-video,
+.video-player:-webkit-full-screen #main-video,
+.video-player:-moz-full-screen #main-video,
+.video-player:-ms-fullscreen #main-video {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
 /* Android device styles and notch support */
 @supports (padding: max(0px, env(safe-area-inset-bottom))) {
 
-  /* Devices with notch or safe areas */
+  /* Ensure player container extends edge-to-edge over notch */
   .video-player {
-    padding-top: max(0px, env(safe-area-inset-top, 0px));
-    padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
-    padding-left: max(0px, env(safe-area-inset-left, 0px));
-    padding-right: max(0px, env(safe-area-inset-right, 0px));
+    padding: 0 !important;
+  }
+
+  /* Padding for interactive controls so they stay clear of notch & rounded corners */
+  .custom-controls,
+  .video-player:fullscreen .custom-controls,
+  .video-player:-webkit-full-screen .custom-controls {
+    padding-left: max(15px, env(safe-area-inset-left, 15px)) !important;
+    padding-right: max(15px, env(safe-area-inset-right, 15px)) !important;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important;
+  }
+
+  .video-overlay,
+  .video-player:fullscreen .video-overlay,
+  .video-player:-webkit-full-screen .video-overlay {
+    padding-top: max(15px, env(safe-area-inset-top, 15px)) !important;
+    padding-left: max(15px, env(safe-area-inset-left, 15px)) !important;
+    padding-right: max(15px, env(safe-area-inset-right, 15px)) !important;
   }
 }
 

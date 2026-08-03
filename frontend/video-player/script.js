@@ -987,6 +987,60 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     }
     
+    // Screen Fit / Notch Fill Mode logic
+    const fitScreenBtn = document.querySelector('.fit-screen-btn');
+    const fitModes = ['cover', 'contain', 'fill'];
+    let currentFitMode = localStorage.getItem('infinx_video_fit_mode') || 'cover';
+
+    function setFitMode(mode) {
+      if (!fitModes.includes(mode)) mode = 'cover';
+      currentFitMode = mode;
+      localStorage.setItem('infinx_video_fit_mode', mode);
+
+      if (videoPlayer) {
+        videoPlayer.classList.remove('fit-contain', 'fit-cover', 'fit-fill');
+        videoPlayer.classList.add(`fit-${mode}`);
+      }
+
+      if (fitScreenBtn) {
+        if (mode === 'cover') {
+          fitScreenBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+          fitScreenBtn.title = 'Fill Notch Screen (Cover)';
+        } else if (mode === 'fill') {
+          fitScreenBtn.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+          fitScreenBtn.title = 'Stretch Video';
+        } else {
+          fitScreenBtn.innerHTML = '<i class="fas fa-compress-arrows-alt"></i>';
+          fitScreenBtn.title = 'Fit to Screen (Contain)';
+        }
+      }
+
+      document.querySelectorAll('.fit-option').forEach(option => {
+        option.classList.toggle('active', option.getAttribute('data-fit') === mode);
+      });
+    }
+
+    setFitMode(currentFitMode);
+
+    if (fitScreenBtn) {
+      fitScreenBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const currentIndex = fitModes.indexOf(currentFitMode);
+        const nextIndex = (currentIndex + 1) % fitModes.length;
+        setFitMode(fitModes[nextIndex]);
+      });
+    }
+
+    document.querySelectorAll('.fit-option').forEach(option => {
+      option.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const mode = this.getAttribute('data-fit');
+        setFitMode(mode);
+        closeAllDropdowns();
+        closeSettingsDropdown();
+      });
+    });
+
     // Fullscreen toggles
     if (fullscreenBtn) fullscreenBtn.addEventListener('click', function() {
       if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
