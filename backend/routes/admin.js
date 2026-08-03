@@ -370,6 +370,51 @@ router.post('/upload-chunk', authenticate, requireAdmin, videoUpload.single('chu
   }
 });
 
+// Stream reassemble chunks to disk safely with backpressure handling (prevents writev ERR_SYSTEM_ERROR on 3GB+ files)
+function reassembleChunks(chunksDir, totalChunks, finalRawPath) {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(finalRawPath);
+    let index = 0;
+
+    function appendNext() {
+      if (index >= totalChunks) {
+        writeStream.end();
+        return;
+      }
+
+      const cPath = path.join(chunksDir, `chunk_${index}`);
+      if (!fs.existsSync(cPath)) {
+        writeStream.destroy();
+        return reject(new Error(`Missing chunk ${index} of ${totalChunks}`));
+      }
+
+      const readStream = fs.createReadStream(cPath);
+      readStream.on('error', (err) => {
+        writeStream.destroy();
+        reject(err);
+      });
+
+      readStream.on('end', () => {
+        try { fs.unlinkSync(cPath); } catch (e) {}
+        index++;
+        appendNext();
+      });
+
+      readStream.pipe(writeStream, { end: false });
+    }
+
+    writeStream.on('finish', () => {
+      resolve();
+    });
+
+    writeStream.on('error', (err) => {
+      reject(err);
+    });
+
+    appendNext();
+  });
+}
+
 // POST /api/admin/upload-chunk-finalize - Reassemble all chunks into final raw video & trigger transcoding
 router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -400,14 +445,8 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
     const finalRawFileName = `raw-${Date.now()}-${cleanFileName}`;
     const finalRawPath = path.join(uploadsDir, finalRawFileName);
 
-    const writeStream = fs.createWriteStream(finalRawPath);
-    for (let i = 0; i < parsedTotalChunks; i++) {
-      const cPath = path.join(chunksDir, `chunk_${i}`);
-      const chunkBuffer = fs.readFileSync(cPath);
-      writeStream.write(chunkBuffer);
-      fs.unlinkSync(cPath);
-    }
-    writeStream.end();
+    // Reassemble chunks safely with stream piping
+    await reassembleChunks(chunksDir, parsedTotalChunks, finalRawPath);
 
     try {
       fs.rmdirSync(chunksDir);
@@ -480,13 +519,23 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
         s3FolderKey
       ], {
         env: customEnv,
-        shell: true
+        shell: false
       });
 
       let stdoutData = '';
       let stderrData = '';
       child.stdout.on('data', (d) => stdoutData += d.toString());
       child.stderr.on('data', (d) => stderrData += d.toString());
+
+      child.on('error', async (err) => {
+        console.error(`Native transcoding process error for Episode ${episode.id}:`, err);
+        try {
+          await prisma.episode.update({
+            where: { id: episode.id },
+            data: { transcodeStatus: 'FAILED' }
+          });
+        } catch(e) {}
+      });
 
       child.on('close', async (code) => {
         if (code === 0) {
