@@ -32,6 +32,10 @@ const userRouter = require('./routes/user');
 const adminRouter = require('./routes/admin');
 const webhooksRouter = require('./routes/webhooks');
 const commentsRouter = require('./routes/comments');
+const transcodeQueueManager = require('./services/TranscodeQueueManager');
+
+// Auto-sync any unfinished transcode tasks from DB into sequential queue
+transcodeQueueManager.syncPendingFromDB();
 
 const app = express();
 const PORT = process.env.PORT || 8000;

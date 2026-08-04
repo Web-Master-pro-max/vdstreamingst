@@ -3,8 +3,7 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  SafeAreaView, 
-  StatusBar, 
+  StatusBar,
   Animated, 
   Easing, 
   ActivityIndicator, 
@@ -109,8 +108,8 @@ export default function App() {
   }, [canGoBack]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
 
       {/* Web View Container rendering exact site clean fullscreen */}
       <View style={styles.webContainer}>
@@ -120,6 +119,7 @@ export default function App() {
           style={styles.webview}
           originWhitelist={['*']}
           allowsInlineMediaPlayback={true}
+          allowsFullscreenVideo={true}
           mediaPlaybackRequiresUserAction={false}
           javaScriptEnabled={true}
           domStorageEnabled={true}
@@ -127,6 +127,9 @@ export default function App() {
           allowUniversalAccessFromFileURLs={true}
           allowFileAccessFromFileURLs={true}
           scalesPageToFit={true}
+          androidHardwareAccelerationDisabled={false}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack);
           }}
@@ -163,7 +166,7 @@ export default function App() {
           </Animated.View>
         </Animated.View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

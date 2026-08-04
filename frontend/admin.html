@@ -1900,6 +1900,9 @@
 
                     tbody.innerHTML = eps.map(ep => {
                         const statusClass = (ep.transcodeStatus || 'COMPLETED').toLowerCase();
+                        const isTranscoding = ep.transcodeStatus === 'PROCESSING';
+                        const isPaused = ep.transcodeStatus === 'PAUSED';
+                        const isPending = ep.transcodeStatus === 'PENDING';
 
                         return `
                             <tr>
@@ -1907,7 +1910,10 @@
                                 <td>${ep.title}</td>
                                 <td><span class="status-badge ${statusClass}">${ep.transcodeStatus || 'COMPLETED'}</span></td>
                                 <td>
-                                    <div style="display: flex; gap: 8px;">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        ${isTranscoding ? `<button onclick="pauseTranscodeTask(${ep.id})" style="background: rgba(241, 196, 15, 0.15); border: 1px solid var(--warning); color: var(--warning); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-pause"></i> Pause</button>` : ''}
+                                        ${isPaused ? `<button onclick="resumeTranscodeTask(${ep.id})" style="background: rgba(46, 204, 113, 0.15); border: 1px solid var(--success); color: var(--success); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-play"></i> Resume</button>` : ''}
+                                        ${(isTranscoding || isPending || isPaused) ? `<button onclick="stopTranscodeTask(${ep.id})" style="background: rgba(231, 76, 60, 0.15); border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-stop"></i> Stop</button>` : ''}
                                         <button onclick="openEditEpisodeModal(${ep.id}, '${ep.title.replace(/'/g, "\\'")}', ${ep.episodeNumber}, '${(ep.duration || '').replace(/'/g, "\\'")}', '${(ep.videoUrl || '').replace(/'/g, "\\'")}', '${ep.transcodeStatus}')" style="background: rgba(0, 168, 255, 0.1); border: 1px solid var(--secondary); color: var(--secondary); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-edit"></i> Edit</button>
                                         <button onclick="deleteEpisode(${ep.id}, ${ep.episodeNumber})" style="background: rgba(231, 76, 60, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-trash-alt"></i> Delete</button>
                                     </div>
@@ -1926,6 +1932,46 @@
 
         function closeEpisodeModal() {
             document.getElementById('episodeManagerModal').style.display = 'none';
+        }
+
+        async function pauseTranscodeTask(epId) {
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/tasks/${epId}/pause`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    if (currentActiveShowId) fetchShowEpisodesList(currentActiveShowId);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function resumeTranscodeTask(epId) {
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/tasks/${epId}/resume`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    if (currentActiveShowId) fetchShowEpisodesList(currentActiveShowId);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function stopTranscodeTask(epId) {
+            if (!confirm('Are you sure you want to stop/cancel this transcoding task?')) return;
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/tasks/${epId}/stop`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    if (currentActiveShowId) fetchShowEpisodesList(currentActiveShowId);
+                }
+            } catch(e) { console.error(e); }
         }
 
         // Delete single episode

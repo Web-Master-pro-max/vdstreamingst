@@ -981,8 +981,9 @@ video::cue,
 
 .quality-selector,
 .audio-selector,
+.subtitle-selector,
 .playback-speed-selector {
-  position: relative;
+  position: relative !important;
 }
 
 .quality-selector.active .quality-dropdown,
@@ -996,27 +997,28 @@ video::cue,
 .audio-dropdown,
 .subtitle-dropdown,
 .speed-dropdown {
-  position: absolute;
-  top: 100%;
+  position: absolute !important;
+  bottom: calc(100% + 8px);
+  top: auto;
   left: 0;
   background: rgba(10, 10, 18, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--medium-gray);
   border-radius: 12px;
-  margin-top: 8px;
-  min-width: clamp(120px, 20vw, 160px);
+  min-width: clamp(130px, 20vw, 170px);
   display: none;
-  z-index: 10;
-  box-shadow: var(--shadow);
+  z-index: 10000 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   padding: 5px 0;
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .quality-option,
 .audio-option,
+.subtitle-option,
 .speed-option {
   padding: clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 18px);
   cursor: pointer;
@@ -1025,17 +1027,22 @@ video::cue,
   user-select: none;
   white-space: nowrap;
   color: var(--light-gray);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .quality-option:hover,
 .audio-option:hover,
+.subtitle-option:hover,
 .speed-option:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 0, 85, 0.15);
   color: var(--white);
 }
 
 .quality-option.active,
 .audio-option.active,
+.subtitle-option.active,
 .speed-option.active {
   background: var(--primary);
   color: var(--white);
@@ -2116,17 +2123,37 @@ video::cue,
   .custom-controls,
   .video-player:fullscreen .custom-controls,
   .video-player:-webkit-full-screen .custom-controls {
-    padding-left: max(15px, env(safe-area-inset-left, 15px)) !important;
-    padding-right: max(15px, env(safe-area-inset-right, 15px)) !important;
-    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important;
+    padding-left: max(24px, env(safe-area-inset-left, 24px)) !important;
+    padding-right: max(24px, env(safe-area-inset-right, 24px)) !important;
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 14px)) !important;
   }
 
   .video-overlay,
   .video-player:fullscreen .video-overlay,
   .video-player:-webkit-full-screen .video-overlay {
-    padding-top: max(15px, env(safe-area-inset-top, 15px)) !important;
-    padding-left: max(15px, env(safe-area-inset-left, 15px)) !important;
-    padding-right: max(15px, env(safe-area-inset-right, 15px)) !important;
+    padding-top: max(18px, env(safe-area-inset-top, 18px)) !important;
+    padding-left: max(38px, env(safe-area-inset-left, 38px)) !important;
+    padding-right: max(38px, env(safe-area-inset-right, 38px)) !important;
+  }
+}
+
+/* Landscape notch adaptation for mobile phones */
+@media (orientation: landscape) {
+  .video-overlay,
+  .video-player:fullscreen .video-overlay,
+  .video-player:-webkit-full-screen .video-overlay {
+    padding-top: max(16px, env(safe-area-inset-top, 16px)) !important;
+    padding-left: max(42px, env(safe-area-inset-left, 42px)) !important;
+    padding-right: max(42px, env(safe-area-inset-right, 42px)) !important;
+  }
+
+  .custom-controls,
+  .video-player:fullscreen .custom-controls,
+  .video-player:-webkit-full-screen .custom-controls {
+    margin-left: max(20px, env(safe-area-inset-left, 20px)) !important;
+    margin-right: max(20px, env(safe-area-inset-right, 20px)) !important;
+    padding-left: max(20px, env(safe-area-inset-left, 20px)) !important;
+    padding-right: max(20px, env(safe-area-inset-right, 20px)) !important;
   }
 }
 

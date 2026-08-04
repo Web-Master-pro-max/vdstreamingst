@@ -559,8 +559,29 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.querySelector('.current-audio-display').innerHTML = `<i class="fas fa-volume-up"></i> ${trackName}`;
     }
     
-    // Set audio track
-    function setAudioTrack(trackIndex) {
+    // Set audio track (supports numeric index and language strings like "Hindi", "English", "Japanese")
+    function setAudioTrack(trackVal) {
+      let trackIndex = -1;
+
+      if (typeof trackVal === 'number' && !isNaN(trackVal)) {
+        trackIndex = trackVal;
+      } else if (typeof trackVal === 'string') {
+        const parsed = parseInt(trackVal, 10);
+        if (!isNaN(parsed)) {
+          trackIndex = parsed;
+        } else if (audioTracks && audioTracks.length > 0) {
+          const targetStr = trackVal.toLowerCase().trim();
+          const foundIdx = audioTracks.findIndex((t) => {
+            const name = (t.name || '').toLowerCase();
+            const lang = (t.lang || t.language || '').toLowerCase();
+            return name.includes(targetStr) || lang.includes(targetStr) || targetStr.includes(name) || targetStr.includes(lang);
+          });
+          if (foundIdx !== -1) trackIndex = foundIdx;
+        }
+      }
+
+      if (trackIndex < 0) trackIndex = 0;
+
       if (hls && hls.audioTracks && hls.audioTracks.length > 0) {
         if (trackIndex < hls.audioTracks.length) {
           hls.audioTrack = trackIndex;
@@ -576,12 +597,17 @@ document.addEventListener('DOMContentLoaded', async function() {
           currentAudioTrack = trackIndex;
           updateAudioDisplay(trackIndex);
         }
+      } else {
+        currentAudioTrack = trackIndex;
+        updateAudioDisplay(trackIndex);
       }
       
-      document.querySelectorAll('.audio-option').forEach(option => {
+      document.querySelectorAll('.audio-option').forEach((option, idx) => {
         option.classList.remove('active');
-        const optionIndex = parseInt(option.getAttribute('data-audio-index'));
-        if (optionIndex === trackIndex) {
+        const optionIndexAttr = option.getAttribute('data-audio-index');
+        const optionAudioAttr = option.getAttribute('data-audio') || option.getAttribute('data-lang');
+        const optIndex = optionIndexAttr !== null ? parseInt(optionIndexAttr, 10) : idx;
+        if (optIndex === trackIndex || (optionAudioAttr && typeof trackVal === 'string' && optionAudioAttr.toLowerCase() === trackVal.toLowerCase())) {
           option.classList.add('active');
         }
       });
@@ -1304,6 +1330,33 @@ document.addEventListener('DOMContentLoaded', async function() {
         exitFullscreen();
       }
     });
+
+    // Notch Fit Screen (Contain -> Cover / Notch Fill -> Fill) Toggle
+    const fitScreenBtn = document.querySelector('.fit-screen-btn');
+    if (fitScreenBtn) {
+      let fitModeIndex = 0;
+      const fitModes = ['fit-cover', 'fit-fill', 'fit-contain'];
+      const fitModeNames = ['Notch Cover Fill', 'Stretch Fill', 'Original Contain'];
+
+      fitScreenBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        fitModeIndex = (fitModeIndex + 1) % fitModes.length;
+        const currentMode = fitModes[fitModeIndex];
+        
+        videoPlayer.classList.remove('fit-cover', 'fit-fill', 'fit-contain');
+        videoPlayer.classList.add(currentMode);
+
+        if (currentMode === 'fit-cover') {
+          mainVideo.style.objectFit = 'cover';
+        } else if (currentMode === 'fit-fill') {
+          mainVideo.style.objectFit = 'fill';
+        } else {
+          mainVideo.style.objectFit = 'contain';
+        }
+
+        showPlayerToast(`Screen Aspect: ${fitModeNames[fitModeIndex]}`);
+      });
+    }
     
     function hideControls() {
       if (isFullscreen) {
@@ -1438,23 +1491,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     function setupAudioEventListeners() {
+      function handleAudioClick(e) {
+        const option = e.target.closest('.audio-option');
+        if (!option) return;
+        e.stopPropagation();
+        const indexAttr = option.getAttribute('data-audio-index');
+        const audioAttr = option.getAttribute('data-audio') || option.getAttribute('data-lang');
+        if (indexAttr !== null && !isNaN(parseInt(indexAttr, 10))) {
+          setAudioTrack(parseInt(indexAttr, 10));
+        } else if (audioAttr) {
+          setAudioTrack(audioAttr);
+        } else {
+          const allOptions = Array.from(document.querySelectorAll('.audio-option'));
+          const idx = allOptions.indexOf(option);
+          setAudioTrack(idx >= 0 ? idx : 0);
+        }
+      }
+
       const audioContainer = document.getElementById('audio-track-list');
       if (audioContainer) {
-        audioContainer.addEventListener('click', function(e) {
-          const option = e.target.closest('.audio-option');
-          if (!option) return;
-          e.stopPropagation();
-          setAudioTrack(parseInt(option.getAttribute('data-audio-index')));
-        });
+        audioContainer.addEventListener('click', handleAudioClick);
       }
       const audioDropdown = document.getElementById('audio-dropdown');
       if (audioDropdown) {
-        audioDropdown.addEventListener('click', function(e) {
-          const option = e.target.closest('.audio-option');
-          if (!option) return;
-          e.stopPropagation();
-          setAudioTrack(parseInt(option.getAttribute('data-audio-index')));
-        });
+        audioDropdown.addEventListener('click', handleAudioClick);
       }
     }
     

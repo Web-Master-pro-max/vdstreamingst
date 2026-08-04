@@ -6,6 +6,7 @@ const Redis = require('ioredis');
 const { PrismaClient } = require('@prisma/client');
 const { uploadToS3 } = require('../s3');
 const { authenticate, requireAdmin } = require('../middleware/auth');
+const transcodeQueueManager = require('../services/TranscodeQueueManager');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -225,80 +226,17 @@ const episodeUploadHandler = async (req, res) => {
         episode,
       });
     } else {
-      // Fallback: spawn background python child process to transcode natively on host
-      console.log(`⚠️ Redis is offline. Spawning background child process to transcode Episode ${episode.id} natively...`);
-      
-      const { spawn } = require('child_process');
-      const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
-      const scriptPath = path.join(__dirname, '../../worker/converter_helper.py');
-
-      // Update database to PROCESSING immediately to reflect in logs
-      await prisma.episode.update({
-        where: { id: episode.id },
-        data: { transcodeStatus: 'PROCESSING' }
-      });
-
-      const binPath = path.join(__dirname, '../bin');
-      const customEnv = { ...process.env };
-      customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
-      const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
-      const originalPath = customEnv[pathKey] || '';
-      customEnv[pathKey] = `${binPath};${originalPath}`;
-
-      const child = spawn(pythonExecutable, [
-        scriptPath,
-        rawVideoPath,
-        episode.id.toString(),
-        showId.toString(),
-        s3FolderKey
-      ], {
-        env: customEnv,
-        shell: true
-      });
-
-      let stdoutData = '';
-      let stderrData = '';
-
-      child.stdout.on('data', (data) => {
-        stdoutData += data.toString();
-        // Log clean stdout lines
-        const lines = data.toString().trim().split('\n');
-        lines.forEach(line => console.log(`[Transcoder stdout] ${line}`));
-      });
-
-      child.stderr.on('data', (data) => {
-        stderrData += data.toString();
-        const lines = data.toString().trim().split('\n');
-        lines.forEach(line => console.warn(`[Transcoder stderr] ${line}`));
-      });
-
-      child.on('close', async (code) => {
-        console.log(`[Transcoder] Process exited with code ${code}`);
-        if (code === 0) {
-          const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(https?:\/\/\S+)/);
-          if (match && match[1]) {
-            const playbackUrl = match[1];
-            console.log(`✅ Local host transcoder finished successfully! URL: ${playbackUrl}`);
-            await prisma.episode.update({
-              where: { id: episode.id },
-              data: {
-                transcodeStatus: 'COMPLETED',
-                videoUrl: playbackUrl
-              }
-            });
-            return;
-          }
-        }
-
-        console.error(`❌ Local host transcoder failed with code ${code}. Stderr: ${stderrData}`);
-        await prisma.episode.update({
-          where: { id: episode.id },
-          data: { transcodeStatus: 'FAILED' }
-        });
+      // Enqueue job into TranscodeQueueManager to transcode ONE BY ONE sequentially
+      console.log(`[Admin Upload] Enqueueing Episode ${episode.id} into sequential TranscodeQueueManager...`);
+      transcodeQueueManager.enqueueJob({
+        episodeId: episode.id,
+        showId: showId,
+        rawVideoPath: rawVideoPath,
+        s3FolderKey: s3FolderKey,
       });
 
       res.status(201).json({
-        message: 'Episode created and native host background transcoding dispatched successfully.',
+        message: 'Episode created and queued for sequential transcoding.',
         episode,
       });
     }
@@ -494,68 +432,17 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
         episode,
       });
     } else {
-      console.log(`⚠️ Redis is offline. Spawning background child process to transcode Episode ${episode.id} natively...`);
-      const { spawn } = require('child_process');
-      const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
-      const scriptPath = path.join(__dirname, '../../worker/converter_helper.py');
-
-      await prisma.episode.update({
-        where: { id: episode.id },
-        data: { transcodeStatus: 'PROCESSING' }
-      });
-
-      const binPath = path.join(__dirname, '../bin');
-      const customEnv = { ...process.env };
-      customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
-      const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
-      const originalPath = customEnv[pathKey] || '';
-      customEnv[pathKey] = `${binPath};${originalPath}`;
-
-      const child = spawn(pythonExecutable, [
-        scriptPath,
-        finalRawPath,
-        episode.id.toString(),
-        parsedShowId.toString(),
-        s3FolderKey
-      ], {
-        env: customEnv,
-        shell: false
-      });
-
-      let stdoutData = '';
-      let stderrData = '';
-      child.stdout.on('data', (d) => stdoutData += d.toString());
-      child.stderr.on('data', (d) => stderrData += d.toString());
-
-      child.on('error', async (err) => {
-        console.error(`Native transcoding process error for Episode ${episode.id}:`, err);
-        try {
-          await prisma.episode.update({
-            where: { id: episode.id },
-            data: { transcodeStatus: 'FAILED' }
-          });
-        } catch(e) {}
-      });
-
-      child.on('close', async (code) => {
-        if (code === 0) {
-          const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(https?:\/\/\S+)/);
-          if (match && match[1]) {
-            await prisma.episode.update({
-              where: { id: episode.id },
-              data: { transcodeStatus: 'COMPLETED', videoUrl: match[1] }
-            });
-            return;
-          }
-        }
-        await prisma.episode.update({
-          where: { id: episode.id },
-          data: { transcodeStatus: 'FAILED' }
-        });
+      // Enqueue job into TranscodeQueueManager to transcode ONE BY ONE sequentially
+      console.log(`[Admin Chunk Finalize] Enqueueing Episode ${episode.id} into sequential TranscodeQueueManager...`);
+      transcodeQueueManager.enqueueJob({
+        episodeId: episode.id,
+        showId: parsedShowId,
+        rawVideoPath: finalRawPath,
+        s3FolderKey: s3FolderKey,
       });
 
       return res.status(201).json({
-        message: 'Resumable upload finalized! Episode created and native transcoding started.',
+        message: 'Resumable upload finalized! Episode created and transcoding task queued.',
         episode,
       });
     }
@@ -651,37 +538,62 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
         episode: updatedEpisode
       });
     } else {
-      console.log(`⚠️ Redis is offline. Spawning background child process to retry transcoding Episode ${episode.id} natively...`);
-      const { spawn } = require('child_process');
-      const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
-      const scriptPath = path.join(__dirname, '../../worker/converter_helper.py');
-
-      const binPath = path.join(__dirname, '../bin');
-      const customEnv = { ...process.env };
-      customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
-      const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
-      const originalPath = customEnv[pathKey] || '';
-      customEnv[pathKey] = `${binPath};${originalPath}`;
-
-      spawn(pythonExecutable, [
-        scriptPath,
-        rawVideoPath,
-        episode.id.toString(),
-        episode.showId.toString(),
-        s3FolderKey
-      ], {
-        env: customEnv,
-        shell: true
+      console.log(`[Admin Retry] Enqueueing Episode ${episode.id} into sequential TranscodeQueueManager...`);
+      transcodeQueueManager.enqueueJob({
+        episodeId: episode.id,
+        showId: episode.showId,
+        rawVideoPath: rawVideoPath,
+        s3FolderKey: s3FolderKey,
       });
 
       return res.json({
-        message: 'Transcode task retry launched natively in background.',
+        message: 'Transcode task queued for retry.',
         episode: updatedEpisode
       });
     }
   } catch (error) {
     console.error('Error retrying task:', error);
     res.status(500).json({ error: 'Internal server error attempting retry.' });
+  }
+});
+
+// POST /api/admin/tasks/:id/pause - Pause a transcoding task
+router.post('/tasks/:id/pause', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await transcodeQueueManager.pauseJob(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/tasks/:id/resume - Resume a paused transcoding task
+router.post('/tasks/:id/resume', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await transcodeQueueManager.resumeJob(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/tasks/:id/stop - Stop/cancel a running or queued transcoding task
+router.post('/tasks/:id/stop', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await transcodeQueueManager.stopJob(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/tasks/:id - Delete a transcoding task & episode
+router.delete('/tasks/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await transcodeQueueManager.deleteJob(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

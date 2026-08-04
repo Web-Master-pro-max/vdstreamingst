@@ -42,8 +42,19 @@ router.post('/transcode-status', async (req, res) => {
       });
     }
 
+    const parsedId = parseInt(episodeId, 10);
+    if (isNaN(parsedId)) {
+      return res.status(400).json({ error: 'Invalid episodeId.' });
+    }
+
+    const existingEp = await prisma.episode.findUnique({ where: { id: parsedId } });
+    if (!existingEp) {
+      console.warn(`Webhook warning: Episode #${parsedId} not found in database.`);
+      return res.status(404).json({ error: `Episode ${parsedId} not found.` });
+    }
+
     const episode = await prisma.episode.update({
-      where: { id: parseInt(episodeId) },
+      where: { id: parsedId },
       data: updateData,
     });
 
