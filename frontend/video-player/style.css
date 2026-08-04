@@ -68,6 +68,7 @@ html,
 body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
+  user-select: none;
   touch-action: manipulation;
 }
 
@@ -333,6 +334,7 @@ body {
   border-radius: var(--border-radius) var(--border-radius) 0 0;
   object-fit: contain;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Styling for native WebVTT cues (modern browsers) */
@@ -2123,37 +2125,17 @@ video::cue,
   .custom-controls,
   .video-player:fullscreen .custom-controls,
   .video-player:-webkit-full-screen .custom-controls {
-    padding-left: max(24px, env(safe-area-inset-left, 24px)) !important;
-    padding-right: max(24px, env(safe-area-inset-right, 24px)) !important;
-    padding-bottom: max(14px, env(safe-area-inset-bottom, 14px)) !important;
+    padding-left: max(15px, env(safe-area-inset-left, 15px)) !important;
+    padding-right: max(15px, env(safe-area-inset-right, 15px)) !important;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important;
   }
 
   .video-overlay,
   .video-player:fullscreen .video-overlay,
   .video-player:-webkit-full-screen .video-overlay {
-    padding-top: max(18px, env(safe-area-inset-top, 18px)) !important;
-    padding-left: max(38px, env(safe-area-inset-left, 38px)) !important;
-    padding-right: max(38px, env(safe-area-inset-right, 38px)) !important;
-  }
-}
-
-/* Landscape notch adaptation for mobile phones */
-@media (orientation: landscape) {
-  .video-overlay,
-  .video-player:fullscreen .video-overlay,
-  .video-player:-webkit-full-screen .video-overlay {
-    padding-top: max(16px, env(safe-area-inset-top, 16px)) !important;
-    padding-left: max(42px, env(safe-area-inset-left, 42px)) !important;
-    padding-right: max(42px, env(safe-area-inset-right, 42px)) !important;
-  }
-
-  .custom-controls,
-  .video-player:fullscreen .custom-controls,
-  .video-player:-webkit-full-screen .custom-controls {
-    margin-left: max(20px, env(safe-area-inset-left, 20px)) !important;
-    margin-right: max(20px, env(safe-area-inset-right, 20px)) !important;
-    padding-left: max(20px, env(safe-area-inset-left, 20px)) !important;
-    padding-right: max(20px, env(safe-area-inset-right, 20px)) !important;
+    padding-top: max(15px, env(safe-area-inset-top, 15px)) !important;
+    padding-left: max(15px, env(safe-area-inset-left, 15px)) !important;
+    padding-right: max(15px, env(safe-area-inset-right, 15px)) !important;
   }
 }
 

@@ -8,11 +8,13 @@ import {
   Easing, 
   ActivityIndicator, 
   BackHandler, 
-  Platform 
+  Platform,
+  Dimensions
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { COLORS } from './src/theme/colors';
 
 const STORAGE_KEY_SITE_URL = '@infinx_site_url';
@@ -23,8 +25,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [canGoBack, setCanGoBack] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   const webViewRef = useRef(null);
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
   // Animations
   const logoScale = useRef(new Animated.Value(0.5)).current;
@@ -39,23 +43,25 @@ export default function App() {
       if (savedUrl) setSiteUrl(savedUrl);
     });
 
-    // 2. Start Launch Splash Screen Animation Sequence
+    // 2. Start Launch Splash Screen Animation Sequence (Smoother)
     Animated.parallel([
       Animated.timing(logoOpacity, {
         toValue: 1,
-        duration: 800,
+        duration: 600,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.spring(logoScale, {
         toValue: 1,
-        friction: 4,
-        tension: 40,
+        friction: 6,
+        tension: 50,
         useNativeDriver: true,
       }),
       Animated.timing(textOpacity, {
         toValue: 1,
-        duration: 1000,
-        delay: 300,
+        duration: 800,
+        delay: 200,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       })
     ]).start();
@@ -64,33 +70,53 @@ export default function App() {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.15,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
+          toValue: 1.1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
+          duration: 1200,
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
       ])
     ).start();
 
-    // 3. Fade out splash screen after 2.4 seconds
+    // 3. Fade out splash screen (Faster)
     const splashTimer = setTimeout(() => {
       Animated.timing(splashFade, {
         toValue: 0,
-        duration: 600,
+        duration: 400,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start(() => {
         setShowSplash(false);
       });
-    }, 2400);
+    }, 2000);
 
     return () => clearTimeout(splashTimer);
   }, []);
+
+  // Progress Bar Animation
+  useEffect(() => {
+    if (loading) {
+      Animated.timing(progressAnim, {
+        toValue: progress,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }).start(() => {
+        progressAnim.setValue(0);
+      });
+    }
+  }, [progress, loading]);
 
   // Handle hardware Android back button to navigate back in webview
   useEffect(() => {
@@ -106,6 +132,72 @@ export default function App() {
       return () => subscription.remove();
     }
   }, [canGoBack]);
+
+  // Handle Fullscreen Rotation logic
+  const onMessage = async (event) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'fullscreen') {
+        if (data.isFullscreen) {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        } else {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        }
+      }
+    } catch (e) {
+      // Not our message
+    }
+  };
+
+  const injectedJSBefore = `
+    (function() {
+      // 1. HARD SHIELD - Pre-declare conflicting variables BEFORE site scripts run
+      window.fitScreenBtn = window.fitScreenBtn || null;
+
+      // Prevent the site from blocking console or other vital APIs
+      const originalDefineProperty = Object.defineProperty;
+      window.defineProperty = originalDefineProperty;
+    })();
+    true;
+  `;
+
+  const injectedJS = `
+    (function() {
+      // 2. ACTIVE RECOVERY HEARTBEAT
+      // Scan for video elements every second and force them to play if they hang
+      setInterval(function() {
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+          if (v.paused && v.readyState >= 1) {
+            v.play().catch(e => {});
+          }
+        });
+      }, 1000);
+
+      try {
+        function emit(isFullscreen) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'fullscreen',
+            isFullscreen: isFullscreen
+          }));
+        }
+
+        document.addEventListener('fullscreenchange', function() {
+          emit(!!document.fullscreenElement);
+        });
+        document.addEventListener('webkitfullscreenchange', function() {
+          emit(!!document.webkitIsFullScreen);
+        });
+        document.addEventListener('mozfullscreenchange', function() {
+          emit(!!document.mozFullScreen);
+        });
+        document.addEventListener('msfullscreenchange', function() {
+          emit(!!document.msFullscreenElement);
+        });
+      } catch(e) {}
+    })();
+    true;
+  `;
 
   return (
     <View style={styles.container}>
@@ -123,6 +215,17 @@ export default function App() {
           mediaPlaybackRequiresUserAction={false}
           javaScriptEnabled={true}
           domStorageEnabled={true}
+          databaseEnabled={true}
+          cacheEnabled={true}
+          cacheMode="LOAD_DEFAULT"
+          mixedContentMode="always"
+          thirdPartyCookiesEnabled={true}
+          sharedCookiesEnabled={true}
+          allowsBackgroundMediaPlayback={true}
+          overScrollMode="never"
+          androidLayerType="hardware"
+          javaScriptCanOpenWindowsAutomatically={true}
+          userAgent="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
           allowFileAccess={true}
           allowUniversalAccessFromFileURLs={true}
           allowFileAccessFromFileURLs={true}
@@ -130,17 +233,38 @@ export default function App() {
           androidHardwareAccelerationDisabled={false}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
+          pullToRefreshEnabled={true}
+          injectedJavaScriptBeforeContentLoaded={injectedJSBefore}
+          injectedJavaScript={injectedJS}
+          onMessage={onMessage}
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack);
           }}
+          onRenderProcessGone={() => {
+            console.log('WebView process crashed. Reloading...');
+            webViewRef.current?.reload();
+          }}
+          onLoadProgress={({ nativeEvent }) => setProgress(nativeEvent.progress)}
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
+          onError={() => setLoading(false)}
+          onHttpError={() => setLoading(false)}
         />
 
-        {/* Minimal Subtle Loading Bar */}
+        {/* Improved Progress Loading Bar */}
         {loading && !showSplash && (
-          <View style={styles.miniLoadingBar}>
-            <ActivityIndicator size="small" color={COLORS.primary} />
+          <View style={styles.progressContainer}>
+            <Animated.View
+              style={[
+                styles.progressBar,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%']
+                  })
+                }
+              ]}
+            />
           </View>
         )}
       </View>
@@ -183,6 +307,24 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  progressContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    zIndex: 100,
+    backgroundColor: 'transparent',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
+    elevation: 5,
   },
   miniLoadingBar: {
     position: 'absolute',
