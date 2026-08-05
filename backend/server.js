@@ -61,6 +61,20 @@ app.use('/api/admin', adminRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/comments', commentsRouter);
 
+// Mobile APK Direct Download Endpoint
+app.get('/api/download/app', (req, res) => {
+  const possibleApkPaths = [
+    path.join(__dirname, '../uploads/infinx-app.apk'),
+    path.join(__dirname, '../mobile/android/app/build/outputs/apk/release/app-release.apk'),
+    path.join(__dirname, '../mobile/android/app/build/outputs/apk/debug/app-debug.apk')
+  ];
+  const apkFile = possibleApkPaths.find(p => fs.existsSync(p));
+  if (apkFile) {
+    return res.download(apkFile, 'infinx-anime.apk');
+  }
+  res.redirect('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500');
+});
+
 // Settings Endpoint
 // Resolve uploads directory for persistent settings storage
 const settingsPath = fs.existsSync('/app/uploads') 

@@ -22,6 +22,7 @@ const DEFAULT_SITE_URL = 'http://13.202.95.5:8000';
 
 export default function App() {
   const [siteUrl, setSiteUrl] = useState(DEFAULT_SITE_URL);
+  const [currentUri, setCurrentUri] = useState(DEFAULT_SITE_URL);
   const [loading, setLoading] = useState(true);
   const [canGoBack, setCanGoBack] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -40,7 +41,10 @@ export default function App() {
   useEffect(() => {
     // 1. Read stored site URL
     AsyncStorage.getItem(STORAGE_KEY_SITE_URL).then((savedUrl) => {
-      if (savedUrl) setSiteUrl(savedUrl);
+      if (savedUrl) {
+        setSiteUrl(savedUrl);
+        setCurrentUri(savedUrl);
+      }
     });
 
     // 2. Start Launch Splash Screen Animation Sequence (Smoother)
@@ -96,7 +100,15 @@ export default function App() {
       });
     }, 2000);
 
-    return () => clearTimeout(splashTimer);
+    // Safety fallback timer to hide progress bar if loading stalls
+    const fallbackTimer = setTimeout(() => {
+      setLoading(false);
+    }, 3500);
+
+    return () => {
+      clearTimeout(splashTimer);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   // Progress Bar Animation
@@ -145,69 +157,121 @@ export default function App() {
         }
       }
     } catch (e) {
-      // Not our message
+      // Silence parsing errors for non-app messages
     }
   };
 
   const injectedJSBefore = `
     (function() {
-      // 1. HARD SHIELD - Pre-declare conflicting variables BEFORE site scripts run
-      window.fitScreenBtn = window.fitScreenBtn || null;
+      try {
+        localStorage.setItem('infinx_server_url', '${siteUrl}');
+      } catch(e) {}
+      
+      try {
+        var style = document.createElement('style');
+        style.id = 'injected-header-fix';
+        style.innerHTML = \`
+          .site-header {
+            padding-top: 0px !important;
+            margin-top: 0px !important;
+            height: 52px !important;
+            min-height: 52px !important;
+            max-height: 52px !important;
+            box-sizing: border-box !important;
+          }
+          header {
+            padding-top: 0px !important;
+            margin-top: 0px !important;
+            height: 54px !important;
+            min-height: 54px !important;
+            max-height: 54px !important;
+            box-sizing: border-box !important;
+          }
+        \`;
+        if (document.head) {
+          document.head.appendChild(style);
+        } else {
+          document.addEventListener('DOMContentLoaded', function() {
+            if (document.head) document.head.appendChild(style);
+          });
+        }
+      } catch(e) {}
 
-      // Prevent the site from blocking console or other vital APIs
+      window.fitScreenBtn = window.fitScreenBtn || null;
       const originalDefineProperty = Object.defineProperty;
       window.defineProperty = originalDefineProperty;
     })();
     true;
   `;
 
+  const localBundleUri = Platform.OS === 'android' ? 'file:///android_asset/web/index.html' : siteUrl;
+
   const injectedJS = `
     (function() {
-      // 2. ACTIVE RECOVERY HEARTBEAT
-      // Scan for video elements every second and force them to play if they hang
-      setInterval(function() {
-        const videos = document.querySelectorAll('video');
-        videos.forEach(v => {
-          if (v.paused && v.readyState >= 1) {
-            v.play().catch(e => {});
-          }
-        });
-      }, 1000);
+      // 2. ACTIVE RECOVERY & FULLSCREEN DETECTION
+      let lastState = false;
 
-      try {
-        function emit(isFullscreen) {
+      function emit(isFullscreen) {
+        if (isFullscreen !== lastState) {
+          lastState = isFullscreen;
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'fullscreen',
             isFullscreen: isFullscreen
           }));
         }
+      }
 
-        document.addEventListener('fullscreenchange', function() {
-          emit(!!document.fullscreenElement);
+      // Track all video elements (including those added dynamically)
+      function attachVideoListeners() {
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+          if (!v._fsListenersAttached) {
+            v.addEventListener('webkitbeginfullscreen', () => emit(true));
+            v.addEventListener('webkitendfullscreen', () => emit(false));
+            v._fsListenersAttached = true;
+          }
         });
-        document.addEventListener('webkitfullscreenchange', function() {
-          emit(!!document.webkitIsFullScreen);
-        });
-        document.addEventListener('mozfullscreenchange', function() {
-          emit(!!document.mozFullScreen);
-        });
-        document.addEventListener('msfullscreenchange', function() {
-          emit(!!document.msFullscreenElement);
-        });
-      } catch(e) {}
+      }
+
+      // Generic listeners
+      document.addEventListener('fullscreenchange', () => emit(!!document.fullscreenElement));
+      document.addEventListener('webkitfullscreenchange', () => emit(!!document.webkitIsFullScreen));
+
+      // Continuous Heartbeat (Check every 1s)
+      setInterval(function() {
+        attachVideoListeners();
+
+        // Final fallback check
+        const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.querySelector('video:fullscreen'));
+        emit(isFS);
+      }, 1000);
+
     })();
     true;
   `;
 
+  const handleWebViewError = (syntheticEvent) => {
+    const { nativeEvent } = syntheticEvent;
+    console.warn('WebView load error: ', nativeEvent);
+    if (currentUri !== 'file:///android_asset/web/index.html' && Platform.OS === 'android') {
+      setCurrentUri('file:///android_asset/web/index.html');
+    } else if (currentUri !== DEFAULT_SITE_URL) {
+      setCurrentUri(DEFAULT_SITE_URL);
+    }
+    setLoading(false);
+  };
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" translucent={true} />
 
       {/* Web View Container rendering exact site clean fullscreen */}
       <View style={styles.webContainer}>
         <WebView
           ref={webViewRef}
-          source={{ uri: siteUrl }}
+          source={{ uri: currentUri }}
+          injectedJavaScriptBeforeContentLoaded={injectedJSBefore}
+          injectedJavaScript={injectedJS}
           style={styles.webview}
           originWhitelist={['*']}
           allowsInlineMediaPlayback={true}
@@ -224,6 +288,8 @@ export default function App() {
           allowsBackgroundMediaPlayback={true}
           overScrollMode="never"
           androidLayerType="hardware"
+          renderToHardwareTextureAndroid={true}
+          decelerationRate="normal"
           javaScriptCanOpenWindowsAutomatically={true}
           userAgent="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
           allowFileAccess={true}
@@ -234,8 +300,6 @@ export default function App() {
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           pullToRefreshEnabled={true}
-          injectedJavaScriptBeforeContentLoaded={injectedJSBefore}
-          injectedJavaScript={injectedJS}
           onMessage={onMessage}
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack);
@@ -247,8 +311,8 @@ export default function App() {
           onLoadProgress={({ nativeEvent }) => setProgress(nativeEvent.progress)}
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
-          onError={() => setLoading(false)}
-          onHttpError={() => setLoading(false)}
+          onError={handleWebViewError}
+          onHttpError={handleWebViewError}
         />
 
         {/* Improved Progress Loading Bar */}
@@ -303,6 +367,7 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
     backgroundColor: '#000000',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 30) : 0,
   },
   webview: {
     flex: 1,

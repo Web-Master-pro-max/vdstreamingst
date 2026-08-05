@@ -9,7 +9,10 @@ window.addEventListener('unhandledrejection', function (e) {
 
 document.addEventListener('DOMContentLoaded', async function () {
   try {
-    const API_BASE = '/api';
+    const SERVER_ORIGIN = (window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
+      ? (localStorage.getItem('infinx_server_url') || 'http://13.202.95.5:8000')
+      : '';
+    const API_BASE = `${SERVER_ORIGIN}/api`;
 
     // Get episode ID from URL params
     const urlParams = new URLSearchParams(window.location.search);
@@ -1380,10 +1383,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     });
 
-    document.querySelectorAll('.quality-btn, .audio-btn, .subtitle-btn, .speed-btn').forEach(btn => {
+    document.querySelectorAll('.quality-btn, .audio-btn, .speed-btn').forEach(btn => {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
         const dropdown = this.nextElementSibling;
+        if (!dropdown) return;
         const isVisible = dropdown.style.display === 'block';
 
         closeAllDropdowns();
@@ -1391,10 +1395,29 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (!isVisible) {
           dropdown.style.display = 'block';
-          this.closest('.quality-selector, .audio-selector, .subtitle-selector, .playback-speed-selector').classList.add('active');
+          const container = this.closest('.quality-selector, .audio-selector, .subtitle-selector, .playback-speed-selector');
+          if (container) container.classList.add('active');
         }
       });
     });
+
+    const subtitleBtn = document.querySelector('.subtitle-btn');
+    if (subtitleBtn) {
+      subtitleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!subtitleTracks || subtitleTracks.length === 0) {
+          showPlayerToast('No Subtitles Available');
+          return;
+        }
+        if (currentSubtitleTrack === -1) {
+          setSubtitle(0);
+        } else if (currentSubtitleTrack < subtitleTracks.length - 1) {
+          setSubtitle(currentSubtitleTrack + 1);
+        } else {
+          setSubtitle(-1);
+        }
+      });
+    }
 
     document.querySelectorAll('.speed-option').forEach(option => {
       option.addEventListener('click', function (e) {
@@ -1809,7 +1832,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         playlistItem.innerHTML = `
           <div class="item-thumbnail">
-            <img class="playlist-item-img" src="${fallbackPoster}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;">
+            <img class="playlist-item-img" src="${fallbackPoster}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';">
             <div class="item-overlay"><i class="fas fa-play"></i></div>
             <div class="item-duration">Ep ${ep.episodeNumber}</div>
           </div>

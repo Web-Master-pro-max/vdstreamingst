@@ -1,0 +1,107 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "img/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "Postes/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "AMovies-Poster/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "Horror-poster/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "video-player/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "http://13.202.95.5:8000/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "continue": false
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "http://13.202.95.5:8000/uploads/$1",
+      "continue": false
+    },
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "http://13.202.95.5:8000/socket.io/$1",
+      "continue": false
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/download",
+      "dest": "/download.html"
+    },
+    {
+      "src": "/live_admin",
+      "dest": "/live_admin.html"
+    },
+    {
+      "src": "/view",
+      "dest": "/view.html"
+    },
+    {
+      "src": "/video-player",
+      "dest": "/video-player/index.html"
+    },
+    {
+      "src": "/video-player/(.*)",
+      "dest": "/video-player/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)\\.(css|js|png|jpg|jpeg|svg|ico|json|map|webp|avif|gif|ttf|woff2?|eot)",
+      "dest": "/$1.$2"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
