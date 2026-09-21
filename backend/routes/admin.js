@@ -13,7 +13,8 @@ const prisma = new PrismaClient();
 
 // Connect to Redis for task queueing with clean native fallback retry behavior
 let lastRedisErrorTime = 0;
-const redis = new Redis(process.env.REDIS_URL || 'redis://redis:6379', {
+const defaultRedisUrl = fs.existsSync('/.dockerenv') ? 'redis://redis:6379' : 'redis://127.0.0.1:6379';
+const redis = new Redis(process.env.REDIS_URL || defaultRedisUrl, {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
   retryStrategy(times) {

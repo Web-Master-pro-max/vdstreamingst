@@ -9,9 +9,13 @@ window.addEventListener('unhandledrejection', function (e) {
 
 document.addEventListener('DOMContentLoaded', async function () {
   try {
-    const SERVER_ORIGIN = (window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
-      ? (localStorage.getItem('infinx_server_url') || 'http://13.202.95.5:8000')
-      : '';
+    const isHttps = window.location.protocol === 'https:';
+    const hasCustomServer = !!localStorage.getItem('infinx_server_url');
+    const SERVER_ORIGIN = (isHttps && !hasCustomServer)
+      ? ''
+      : ((window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
+        ? (localStorage.getItem('infinx_server_url') || 'http://13.202.95.5:8000')
+        : '');
     const API_BASE = `${SERVER_ORIGIN}/api`;
 
     // Get episode ID from URL params
