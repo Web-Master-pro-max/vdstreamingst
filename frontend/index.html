@@ -2125,7 +2125,15 @@
     <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
 
     <script>
-        const DEFAULT_BACKEND = localStorage.getItem('infinx_server_url') || 'http://13.202.95.5:8000';
+        const getLocalBackend = () => {
+            const saved = localStorage.getItem('infinx_server_url');
+            if (saved && !saved.startsWith('file:')) return saved.replace(/\/$/, '');
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return 'http://localhost:8000';
+            }
+            return 'http://13.202.95.5:8000';
+        };
+        const DEFAULT_BACKEND = getLocalBackend();
         const isHttps = window.location.protocol === 'https:';
         const hasCustomServer = !!localStorage.getItem('infinx_server_url');
         const SERVER_ORIGIN = (isHttps && !hasCustomServer)
@@ -2139,7 +2147,7 @@
             const fallback = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';
             if (!url) return fallback;
             if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-            return url.startsWith('/') ? `${DEFAULT_BACKEND}${url}` : `${DEFAULT_BACKEND}/${url}`;
+            return url.startsWith('/') ? `${SERVER_ORIGIN}${url}` : `${SERVER_ORIGIN}/${url}`;
         };
         let userWatchlist = [];
 

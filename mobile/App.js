@@ -18,7 +18,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { COLORS } from './src/theme/colors';
 
 const STORAGE_KEY_SITE_URL = '@infinx_site_url';
-const DEFAULT_SITE_URL = 'http://13.202.95.5:8000';
+const DEFAULT_SITE_URL = 'file:///android_asset/web/index.html';
 
 export default function App() {
   const [siteUrl, setSiteUrl] = useState(DEFAULT_SITE_URL);
@@ -165,19 +165,25 @@ export default function App() {
           pathOnly === 'file:///android_asset/web/index.html'
         );
 
-        // If strictly on Home page, return false to let Android exit app
-        if (isHomePage) {
-          return false;
+        // On sub-pages (video player, view, etc.): ALWAYS intercept and navigate back
+        if (isVideoPlayer || isViewPage || !isHomePage) {
+          if (navCanGoBack && webViewRef.current) {
+            webViewRef.current.goBack();
+          } else if (webViewRef.current) {
+            const homeUrl = siteUrl.endsWith('/') ? siteUrl + 'index.html' : siteUrl + '/index.html';
+            webViewRef.current.injectJavaScript(`window.location.href = '${homeUrl}'; true;`);
+          }
+          return true; // GUARANTEES APP DOES NOT CLOSE ON SUB-PAGES / VIDEO PLAYER!
         }
 
-        // On sub-pages (video player, view, etc.): ALWAYS intercept and navigate back
+        // If on Home page but WebView can go back
         if (navCanGoBack && webViewRef.current) {
           webViewRef.current.goBack();
-        } else if (webViewRef.current) {
-          const homeUrl = siteUrl.endsWith('/') ? siteUrl + 'index.html' : siteUrl + '/index.html';
-          webViewRef.current.injectJavaScript(`window.location.href = '${homeUrl}'; true;`);
+          return true;
         }
-        return true; // GUARANTEES APP DOES NOT CLOSE ON SUB-PAGES!
+
+        // If strictly on root Home page with empty stack, return false to let Android exit app
+        return false;
       };
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -196,11 +202,13 @@ export default function App() {
           await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
         }
       } else if (data.type === 'navigationState') {
-        // Force update back state if site emits custom navigation events
+        // Synchronously sync ref to prevent asynchronous state lag
         if (typeof data.canGoBack === 'boolean') {
+          navStateRef.current.canGoBack = data.canGoBack;
           setCanGoBack(data.canGoBack);
         }
         if (data.url) {
+          navStateRef.current.url = data.url;
           setCurrentUri(data.url);
         }
       }
@@ -212,7 +220,14 @@ export default function App() {
   const injectedJSBefore = `
     (function() {
       try {
-        localStorage.setItem('infinx_server_url', '${siteUrl}');
+        if ('${siteUrl}'.indexOf('file:') !== 0) {
+          localStorage.setItem('infinx_server_url', '${siteUrl}');
+        } else {
+          var existing = localStorage.getItem('infinx_server_url');
+          if (existing && existing.indexOf('file:') === 0) {
+            localStorage.removeItem('infinx_server_url');
+          }
+        }
       } catch(e) {}
       
       try {
@@ -258,15 +273,31 @@ export default function App() {
     (function() {
       // 1. NAVIGATION & HISTORY TRACKING
       function updateNavState() {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'navigationState',
-          canGoBack: window.history.length > 1 || window.location.hash !== '',
-          url: window.location.href
-        }));
+        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'navigationState',
+            canGoBack: window.history.length > 1 || window.location.hash !== '',
+            url: window.location.href
+          }));
+        }
       }
 
       window.addEventListener('hashchange', updateNavState);
       window.addEventListener('popstate', updateNavState);
+      window.addEventListener('DOMContentLoaded', updateNavState);
+      window.addEventListener('load', updateNavState);
+
+      const originalPushState = window.history.pushState;
+      window.history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        updateNavState();
+      };
+
+      const originalReplaceState = window.history.replaceState;
+      window.history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        updateNavState();
+      };
 
       // 2. ACTIVE RECOVERY & FULLSCREEN DETECTION
       let lastState = false;
@@ -320,8 +351,8 @@ export default function App() {
   const handleWebViewError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
     console.warn('WebView load error: ', nativeEvent);
-    if (currentUri !== 'file:///android_asset/web/index.html' && Platform.OS === 'android') {
-      setCurrentUri('file:///android_asset/web/index.html');
+    if (currentUri !== siteUrl && siteUrl) {
+      setCurrentUri(siteUrl);
     } else if (currentUri !== DEFAULT_SITE_URL) {
       setCurrentUri(DEFAULT_SITE_URL);
     }
@@ -369,8 +400,12 @@ export default function App() {
           pullToRefreshEnabled={true}
           onMessage={onMessage}
           onNavigationStateChange={(navState) => {
-            setCanGoBack(navState.canGoBack);
+            if (typeof navState.canGoBack === 'boolean') {
+              navStateRef.current.canGoBack = navState.canGoBack;
+              setCanGoBack(navState.canGoBack);
+            }
             if (navState.url) {
+              navStateRef.current.url = navState.url;
               setCurrentUri(navState.url);
             }
           }}
