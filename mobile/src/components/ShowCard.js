@@ -2,11 +2,13 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
+import { formatMediaUrl } from '../services/api';
 
 export const ShowCard = ({ show, onPress, width = 140, height = 200 }) => {
   const rating = show.rating ? parseFloat(show.rating).toFixed(1) : '4.8';
-  const categoryName = show.categories?.[0]?.category?.name || 'Anime';
-  const posterUrl = show.posterUrl || show.bannerUrl || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800';
+  const categoryName = show.categories?.[0]?.category?.name || show.badge || 'Anime';
+  const rawPoster = show.poster || show.posterUrl || show.banner || show.bannerUrl;
+  const posterUrl = formatMediaUrl(rawPoster);
 
   return (
     <TouchableOpacity 

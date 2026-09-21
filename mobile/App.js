@@ -3,44 +3,28 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  StatusBar,
+  StatusBar, 
   Animated, 
-  Easing, 
-  ActivityIndicator, 
-  BackHandler, 
-  Platform,
-  Dimensions
+  Easing 
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ScreenOrientation from 'expo-screen-orientation';
+
+import { HomeScreen } from './src/screens/HomeScreen';
+import { ShowDetailScreen } from './src/screens/ShowDetailScreen';
+import { PlayerScreen } from './src/screens/PlayerScreen';
+import { ExploreScreen } from './src/screens/ExploreScreen';
+import { LibraryScreen } from './src/screens/LibraryScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { COLORS } from './src/theme/colors';
 
-const STORAGE_KEY_SITE_URL = '@infinx_site_url';
-const DEFAULT_SITE_URL = 'file:///android_asset/web/index.html';
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [siteUrl, setSiteUrl] = useState(DEFAULT_SITE_URL);
-  const [currentUri, setCurrentUri] = useState(DEFAULT_SITE_URL);
-  const [loading, setLoading] = useState(true);
-  const [canGoBack, setCanGoBack] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [progress, setProgress] = useState(0);
 
-  const webViewRef = useRef(null);
-  const navStateRef = useRef({ url: DEFAULT_SITE_URL, canGoBack: false });
-  const progressAnim = useRef(new Animated.Value(0)).current;
-
-  // Sync ref with current state synchronously
-  useEffect(() => {
-    navStateRef.current = {
-      url: currentUri,
-      canGoBack: canGoBack,
-    };
-  }, [currentUri, canGoBack]);
-
-  // Animations
+  // Splash Screen Animations
   const logoScale = useRef(new Animated.Value(0.5)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
@@ -48,15 +32,6 @@ export default function App() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // 1. Read stored site URL
-    AsyncStorage.getItem(STORAGE_KEY_SITE_URL).then((savedUrl) => {
-      if (savedUrl) {
-        setSiteUrl(savedUrl);
-        setCurrentUri(savedUrl);
-      }
-    });
-
-    // 2. Start Launch Splash Screen Animation Sequence (Smoother)
     Animated.parallel([
       Animated.timing(logoOpacity, {
         toValue: 1,
@@ -79,7 +54,6 @@ export default function App() {
       })
     ]).start();
 
-    // Pulse animation loop for infinity logo
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -97,7 +71,6 @@ export default function App() {
       ])
     ).start();
 
-    // 3. Fade out splash screen (Faster)
     const splashTimer = setTimeout(() => {
       Animated.timing(splashFade, {
         toValue: 0,
@@ -109,338 +82,50 @@ export default function App() {
       });
     }, 2000);
 
-    // Safety fallback timer to hide progress bar if loading stalls
-    const fallbackTimer = setTimeout(() => {
-      setLoading(false);
-    }, 3500);
-
-    return () => {
-      clearTimeout(splashTimer);
-      clearTimeout(fallbackTimer);
-    };
+    return () => clearTimeout(splashTimer);
   }, []);
 
-  // Progress Bar Animation
-  useEffect(() => {
-    if (loading) {
-      Animated.timing(progressAnim, {
-        toValue: progress,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    } else {
-      Animated.timing(progressAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false,
-      }).start(() => {
-        progressAnim.setValue(0);
-      });
-    }
-  }, [progress, loading]);
-
-  // Handle hardware Android back button ONCE (static binding, never unbinds during navigation)
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      const onBackPress = () => {
-        const { url, canGoBack: navCanGoBack } = navStateRef.current;
-        const rawUrl = (url || '').toLowerCase();
-        
-        // Explicit sub-page detection: video player and view.html are NEVER home pages
-        const isVideoPlayer = rawUrl.includes('video-player');
-        const isViewPage = rawUrl.includes('view.html') || rawUrl.includes('/view');
-
-        const pathOnly = rawUrl.split('?')[0].split('#')[0].replace(/\/$/, '');
-        const base = (siteUrl || '').toLowerCase().replace(/\/$/, '');
-        const defaultBase = DEFAULT_SITE_URL.toLowerCase().replace(/\/$/, '');
-
-        // Strict Home Page detection
-        const isHomePage = !isVideoPlayer && !isViewPage && (
-          !rawUrl || 
-          pathOnly === base || 
-          pathOnly === base + '/index.html' ||
-          pathOnly === defaultBase ||
-          pathOnly === defaultBase + '/index.html' ||
-          pathOnly.endsWith('/index.html') ||
-          pathOnly === 'file:///android_asset/web/index.html'
-        );
-
-        // On sub-pages (video player, view, etc.): ALWAYS intercept and navigate back
-        if (isVideoPlayer || isViewPage || !isHomePage) {
-          if (navCanGoBack && webViewRef.current) {
-            webViewRef.current.goBack();
-          } else if (webViewRef.current) {
-            const homeUrl = siteUrl.endsWith('/') ? siteUrl + 'index.html' : siteUrl + '/index.html';
-            webViewRef.current.injectJavaScript(`window.location.href = '${homeUrl}'; true;`);
-          }
-          return true; // GUARANTEES APP DOES NOT CLOSE ON SUB-PAGES / VIDEO PLAYER!
-        }
-
-        // If on Home page but WebView can go back
-        if (navCanGoBack && webViewRef.current) {
-          webViewRef.current.goBack();
-          return true;
-        }
-
-        // If strictly on root Home page with empty stack, return false to let Android exit app
-        return false;
-      };
-
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }
-  }, [siteUrl]);
-
-  // Handle Fullscreen & Navigation logic
-  const onMessage = async (event) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'fullscreen') {
-        if (data.isFullscreen) {
-          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        } else {
-          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-        }
-      } else if (data.type === 'navigationState') {
-        // Synchronously sync ref to prevent asynchronous state lag
-        if (typeof data.canGoBack === 'boolean') {
-          navStateRef.current.canGoBack = data.canGoBack;
-          setCanGoBack(data.canGoBack);
-        }
-        if (data.url) {
-          navStateRef.current.url = data.url;
-          setCurrentUri(data.url);
-        }
-      }
-    } catch (e) {
-      // Silence parsing errors
-    }
-  };
-
-  const injectedJSBefore = `
-    (function() {
-      try {
-        if ('${siteUrl}'.indexOf('file:') !== 0) {
-          localStorage.setItem('infinx_server_url', '${siteUrl}');
-        } else {
-          var existing = localStorage.getItem('infinx_server_url');
-          if (existing && existing.indexOf('file:') === 0) {
-            localStorage.removeItem('infinx_server_url');
-          }
-        }
-      } catch(e) {}
-      
-      try {
-        var style = document.createElement('style');
-        style.id = 'injected-header-fix';
-        style.innerHTML = \`
-          .site-header {
-            padding-top: 0px !important;
-            margin-top: 0px !important;
-            height: 52px !important;
-            min-height: 52px !important;
-            max-height: 52px !important;
-            box-sizing: border-box !important;
-          }
-          header {
-            padding-top: 0px !important;
-            margin-top: 0px !important;
-            height: 54px !important;
-            min-height: 54px !important;
-            max-height: 54px !important;
-            box-sizing: border-box !important;
-          }
-        \`;
-        if (document.head) {
-          document.head.appendChild(style);
-        } else {
-          document.addEventListener('DOMContentLoaded', function() {
-            if (document.head) document.head.appendChild(style);
-          });
-        }
-      } catch(e) {}
-
-      window.fitScreenBtn = window.fitScreenBtn || null;
-      const originalDefineProperty = Object.defineProperty;
-      window.defineProperty = originalDefineProperty;
-    })();
-    true;
-  `;
-
-  const localBundleUri = Platform.OS === 'android' ? 'file:///android_asset/web/index.html' : siteUrl;
-
-  const injectedJS = `
-    (function() {
-      // 1. NAVIGATION & HISTORY TRACKING
-      function updateNavState() {
-        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'navigationState',
-            canGoBack: window.history.length > 1 || window.location.hash !== '',
-            url: window.location.href
-          }));
-        }
-      }
-
-      window.addEventListener('hashchange', updateNavState);
-      window.addEventListener('popstate', updateNavState);
-      window.addEventListener('DOMContentLoaded', updateNavState);
-      window.addEventListener('load', updateNavState);
-
-      const originalPushState = window.history.pushState;
-      window.history.pushState = function() {
-        originalPushState.apply(this, arguments);
-        updateNavState();
-      };
-
-      const originalReplaceState = window.history.replaceState;
-      window.history.replaceState = function() {
-        originalReplaceState.apply(this, arguments);
-        updateNavState();
-      };
-
-      // 2. ACTIVE RECOVERY & FULLSCREEN DETECTION
-      let lastState = false;
-
-      function emit(isFullscreen) {
-        if (isFullscreen !== lastState) {
-          lastState = isFullscreen;
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'fullscreen',
-            isFullscreen: isFullscreen
-          }));
-        }
-      }
-
-      // Track all video elements (including those added dynamically)
-      function attachVideoListeners() {
-        const videos = document.querySelectorAll('video');
-        videos.forEach(v => {
-          if (!v._fsListenersAttached) {
-            v.addEventListener('webkitbeginfullscreen', () => emit(true));
-            v.addEventListener('webkitendfullscreen', () => emit(false));
-            v._fsListenersAttached = true;
-          }
-
-          // Force play heartbeat
-          if (v.paused && v.readyState >= 1) {
-            v.play().catch(e => {});
-          }
-        });
-      }
-
-      // Generic listeners
-      document.addEventListener('fullscreenchange', () => emit(!!document.fullscreenElement));
-      document.addEventListener('webkitfullscreenchange', () => emit(!!document.webkitIsFullScreen));
-
-      // Continuous Heartbeat (Check every 1s)
-      setInterval(function() {
-        attachVideoListeners();
-
-        // Final fallback check
-        const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.querySelector('video:fullscreen'));
-        emit(isFS);
-      }, 1000);
-
-      // Initial state sync
-      updateNavState();
-    })();
-    true;
-  `;
-
-  const handleWebViewError = (syntheticEvent) => {
-    const { nativeEvent } = syntheticEvent;
-    console.warn('WebView load error: ', nativeEvent);
-    if (currentUri !== siteUrl && siteUrl) {
-      setCurrentUri(siteUrl);
-    } else if (currentUri !== DEFAULT_SITE_URL) {
-      setCurrentUri(DEFAULT_SITE_URL);
-    }
-    setLoading(false);
+  const navTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: COLORS.background,
+      card: COLORS.card,
+      text: COLORS.text,
+      border: COLORS.cardBorder,
+      primary: COLORS.primary,
+    },
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" translucent={true} />
 
-      {/* Web View Container rendering exact site clean fullscreen */}
-      <View style={styles.webContainer}>
-        <WebView
-          ref={webViewRef}
-          source={{ uri: currentUri }}
-          injectedJavaScriptBeforeContentLoaded={injectedJSBefore}
-          injectedJavaScript={injectedJS}
-          style={styles.webview}
-          originWhitelist={['*']}
-          allowsInlineMediaPlayback={true}
-          allowsFullscreenVideo={true}
-          mediaPlaybackRequiresUserAction={false}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          databaseEnabled={true}
-          cacheEnabled={true}
-          cacheMode="LOAD_DEFAULT"
-          mixedContentMode="always"
-          thirdPartyCookiesEnabled={true}
-          sharedCookiesEnabled={true}
-          allowsBackgroundMediaPlayback={true}
-          overScrollMode="never"
-          androidLayerType="hardware"
-          renderToHardwareTextureAndroid={true}
-          decelerationRate="normal"
-          javaScriptCanOpenWindowsAutomatically={true}
-          userAgent="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
-          allowFileAccess={true}
-          allowUniversalAccessFromFileURLs={true}
-          allowFileAccessFromFileURLs={true}
-          scalesPageToFit={true}
-          androidHardwareAccelerationDisabled={false}
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
-          pullToRefreshEnabled={true}
-          onMessage={onMessage}
-          onNavigationStateChange={(navState) => {
-            if (typeof navState.canGoBack === 'boolean') {
-              navStateRef.current.canGoBack = navState.canGoBack;
-              setCanGoBack(navState.canGoBack);
-            }
-            if (navState.url) {
-              navStateRef.current.url = navState.url;
-              setCurrentUri(navState.url);
-            }
+      <NavigationContainer theme={navTheme}>
+        <Stack.Navigator 
+          initialRouteName="Home"
+          screenOptions={{
+            headerShown: false,
+            animation: 'slide_from_right',
+            contentStyle: { backgroundColor: COLORS.background },
           }}
-          onRenderProcessGone={() => {
-            console.log('WebView process crashed. Reloading...');
-            webViewRef.current?.reload();
-          }}
-          onLoadProgress={({ nativeEvent }) => setProgress(nativeEvent.progress)}
-          onLoadStart={() => setLoading(true)}
-          onLoadEnd={() => setLoading(false)}
-          onError={handleWebViewError}
-          onHttpError={handleWebViewError}
-        />
-
-        {/* Improved Progress Loading Bar */}
-        {loading && !showSplash && (
-          <View style={styles.progressContainer}>
-            <Animated.View
-              style={[
-                styles.progressBar,
-                {
-                  width: progressAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%']
-                  })
-                }
-              ]}
-            />
-          </View>
-        )}
-      </View>
+        >
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="ShowDetail" component={ShowDetailScreen} />
+          <Stack.Screen 
+            name="Player" 
+            component={PlayerScreen} 
+            options={{ animation: 'fade' }}
+          />
+          <Stack.Screen name="Explore" component={ExploreScreen} />
+          <Stack.Screen name="Library" component={LibraryScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
 
       {/* Animated Launch Splash Screen */}
       {showSplash && (
-        <Animated.View style={[styles.splashContainer, { opacity: splashFade }]}>
+        <Animated.View style={[styles.splashContainer, { opacity: splashFade }]} pointerEvents="none">
           <Animated.View 
             style={[
               styles.logoBox, 
@@ -467,43 +152,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
-  },
-  webContainer: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: '#000000',
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 30) : 0,
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  progressContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    zIndex: 100,
-    backgroundColor: 'transparent',
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  miniLoadingBar: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
-    zIndex: 99,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 6,
-    borderRadius: 20,
   },
   splashContainer: {
     ...StyleSheet.absoluteFillObject,

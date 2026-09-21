@@ -2697,125 +2697,125 @@
         }
 
 
-            // Toggle favorite watchlist item
-            async function toggleWatchlist(btn, showId) {
-                if (!isLoggedIn()) {
-                    openModal('login');
-                    return;
-                }
-                try {
-                    const res = await fetch(`${API_BASE}/user/watchlist`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...getAuthHeader()
-                        },
-                        body: JSON.stringify({ showId })
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.status === 'added') {
-                            btn.classList.add('active');
-                            btn.querySelector('i').className = 'fas fa-heart';
-                            userWatchlist.push(showId);
-                        } else {
-                            btn.classList.remove('active');
-                            btn.querySelector('i').className = 'far fa-heart';
-                            userWatchlist = userWatchlist.filter(id => id !== showId);
-                        }
-                        loadWatchlist();
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
+        // Toggle favorite watchlist item
+        async function toggleWatchlist(btn, showId) {
+            if (!isLoggedIn()) {
+                openModal('login');
+                return;
             }
-
-            // Authentication Handlers
-            async function handleLogin(e) {
-                e.preventDefault();
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-
-                try {
-                    const res = await fetch(`${API_BASE}/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-
-                    const data = await res.json();
-                    if (res.ok) {
-                        localStorage.setItem('infinx_token', data.token);
-                        localStorage.setItem('infinx_user_email', data.user.email);
-                        localStorage.setItem('infinx_user_role', data.user.role);
-
-                        closeModal('login');
-                        initApp();
-                    } else {
-                        alert(data.error || 'Login failed');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Connection error');
-                }
-            }
-
-            async function handleRegister(e) {
-                e.preventDefault();
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-
-                try {
-                    const res = await fetch(`${API_BASE}/auth/register`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-
-                    const data = await res.json();
-                    if (res.ok) {
-                        localStorage.setItem('infinx_token', data.token);
-                        localStorage.setItem('infinx_user_email', data.user.email);
-                        localStorage.setItem('infinx_user_role', data.user.role);
-
-                        closeModal('register');
-                        initApp();
-                    } else {
-                        alert(data.error || 'Registration failed');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Connection error');
-                }
-            }
-
-            function handleLogout(e) {
-                if (e) e.stopPropagation();
-                localStorage.clear();
-                updateAuthHeader();
-                document.getElementById('continueWatchingSection').classList.add('hidden');
-                // Remove active classes from hearts
-                document.querySelectorAll('.btn-watchlist-toggle').forEach(btn => {
-                    btn.classList.remove('active');
-                    btn.querySelector('i').className = 'far fa-heart';
+            try {
+                const res = await fetch(`${API_BASE}/user/watchlist`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeader()
+                    },
+                    body: JSON.stringify({ showId })
                 });
-                userWatchlist = [];
-            }
 
-            // Modal triggers
-            function openModal(type) {
-                document.getElementById(`${type}Modal`).classList.add('active');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === 'added') {
+                        btn.classList.add('active');
+                        btn.querySelector('i').className = 'fas fa-heart';
+                        userWatchlist.push(showId);
+                    } else {
+                        btn.classList.remove('active');
+                        btn.querySelector('i').className = 'far fa-heart';
+                        userWatchlist = userWatchlist.filter(id => id !== showId);
+                    }
+                    loadWatchlist();
+                }
+            } catch (e) {
+                console.error(e);
             }
+        }
 
-            function closeModal(type) {
-                document.getElementById(`${type}Modal`).classList.remove('active');
-            }
+        // Authentication Handlers
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-            function switchModal(closeType, openType) {
-                closeModal(closeType);
-                setTimeout(() => openModal(openType), 100);
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('infinx_token', data.token);
+                    localStorage.setItem('infinx_user_email', data.user.email);
+                    localStorage.setItem('infinx_user_role', data.user.role);
+
+                    closeModal('login');
+                    initApp();
+                } else {
+                    alert(data.error || 'Login failed');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error');
             }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('infinx_token', data.token);
+                    localStorage.setItem('infinx_user_email', data.user.email);
+                    localStorage.setItem('infinx_user_role', data.user.role);
+
+                    closeModal('register');
+                    initApp();
+                } else {
+                    alert(data.error || 'Registration failed');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error');
+            }
+        }
+
+        function handleLogout(e) {
+            if (e) e.stopPropagation();
+            localStorage.clear();
+            updateAuthHeader();
+            document.getElementById('continueWatchingSection').classList.add('hidden');
+            // Remove active classes from hearts
+            document.querySelectorAll('.btn-watchlist-toggle').forEach(btn => {
+                btn.classList.remove('active');
+                btn.querySelector('i').className = 'far fa-heart';
+            });
+            userWatchlist = [];
+        }
+
+        // Modal triggers
+        function openModal(type) {
+            document.getElementById(`${type}Modal`).classList.add('active');
+        }
+
+        function closeModal(type) {
+            document.getElementById(`${type}Modal`).classList.remove('active');
+        }
+
+        function switchModal(closeType, openType) {
+            closeModal(closeType);
+            setTimeout(() => openModal(openType), 100);
+        }
     </script>
 </body>
 

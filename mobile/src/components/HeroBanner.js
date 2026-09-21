@@ -3,12 +3,14 @@ import { View, Text, ImageBackground, StyleSheet, TouchableOpacity } from 'react
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, GRADIENTS } from '../theme/colors';
+import { formatMediaUrl } from '../services/api';
 
 export const HeroBanner = ({ show, onPlayPress, onDetailPress }) => {
   if (!show) return null;
 
   const rating = show.rating ? parseFloat(show.rating).toFixed(1) : '4.9';
-  const bannerUrl = show.bannerUrl || show.posterUrl || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200';
+  const rawBanner = show.banner || show.bannerUrl || show.poster || show.posterUrl;
+  const bannerUrl = formatMediaUrl(rawBanner);
 
   return (
     <View style={styles.container}>

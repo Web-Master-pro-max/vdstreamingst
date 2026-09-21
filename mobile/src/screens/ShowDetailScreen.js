@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, GRADIENTS } from '../theme/colors';
-import { apiService } from '../services/api';
+import { apiService, formatMediaUrl } from '../services/api';
 
 export const ShowDetailScreen = ({ route, navigation }) => {
   const { showId, show: initialShow } = route.params || {};
@@ -44,7 +44,8 @@ export const ShowDetailScreen = ({ route, navigation }) => {
   }
 
   const rating = show.rating ? parseFloat(show.rating).toFixed(1) : '4.9';
-  const bannerUrl = show.bannerUrl || show.posterUrl || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800';
+  const rawBanner = show.banner || show.bannerUrl || show.poster || show.posterUrl;
+  const bannerUrl = formatMediaUrl(rawBanner);
   const episodes = show.episodes && show.episodes.length > 0 ? show.episodes : [
     { id: 101, episodeNumber: 1, title: 'Episode 1: Awakening', duration: '24m' },
     { id: 102, episodeNumber: 2, title: 'Episode 2: The Rising Storm', duration: '23m' },

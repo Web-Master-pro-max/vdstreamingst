@@ -31,6 +31,13 @@ export const setApiBaseUrl = async (newUrl) => {
   return formatted;
 };
 
+export const formatMediaUrl = (url) => {
+  if (!url) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+  const baseUrl = cachedApiUrl || DEFAULT_URL;
+  return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+};
+
 const fetchWithTimeout = async (endpoint, options = {}, timeoutMs = 8000) => {
   const baseUrl = await getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
@@ -172,7 +179,7 @@ export const apiService = {
       id: id,
       episodeNumber: 1,
       title: "Episode 1: Awakening",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      videoUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
       show: DEMO_CAROUSEL[0]
     };
   },
