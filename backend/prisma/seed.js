@@ -6,15 +6,31 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // 1. Seed Categories
+  // 1. Seed Categories & Genres
   const categoriesData = [
-    { name: 'Action Movies', slug: 'action' },
-    { name: 'Anime Series', slug: 'anime' },
+    // Categories
+    { name: 'South Hindi Dubbed', slug: 'south-hindi-dubbed' },
     { name: 'Hollywood Movies', slug: 'hollywood' },
+    { name: 'Bollywood Movies', slug: 'bollywood' },
+    { name: 'Anime Series', slug: 'anime' },
     { name: 'Web Series', slug: 'web-series' },
-    { name: 'Horror Movies', slug: 'horror' },
     { name: 'Kids & Family', slug: 'kids' },
     { name: 'Korean Drama', slug: 'kdrama' },
+    // Genres
+    { name: 'Action', slug: 'action' },
+    { name: 'Adventure', slug: 'adventure' },
+    { name: 'Animation', slug: 'animation' },
+    { name: 'Comedy', slug: 'comedy' },
+    { name: 'Crime', slug: 'crime' },
+    { name: 'Drama', slug: 'drama' },
+    { name: 'Fantasy', slug: 'fantasy' },
+    { name: 'Historical', slug: 'historical' },
+    { name: 'Horror', slug: 'horror' },
+    { name: 'Mystery', slug: 'mystery' },
+    { name: 'Political', slug: 'political' },
+    { name: 'Romance', slug: 'romance' },
+    { name: 'Sci-Fi', slug: 'sci-fi' },
+    { name: 'Thriller', slug: 'thriller' }
   ];
 
   console.log('Upserting categories...');
@@ -22,7 +38,7 @@ async function main() {
   for (const cat of categoriesData) {
     const createdCat = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: {},
+      update: { name: cat.name },
       create: cat,
     });
     categories[cat.slug] = createdCat;
@@ -37,7 +53,10 @@ async function main() {
   console.log(`Upserting admin user: ${adminEmail}...`);
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: {
+      passwordHash: passwordHash,
+      role: 'ADMIN',
+    },
     create: {
       email: adminEmail,
       passwordHash: passwordHash,
@@ -46,7 +65,7 @@ async function main() {
   });
   console.log('✅ Admin user seeded.');
 
-  // 3. Seed some initial shows
+  // 3. Seed initial shows (Create missing, Update changed)
   console.log('Seeding initial mock shows...');
   
   const showsData = [
@@ -86,7 +105,7 @@ async function main() {
         {
           title: "Pilot",
           episodeNumber: 1,
-          videoUrl: "https://server-3a.s3.ap-south-1.amazonaws.com/Breaking+Bad+Season+1/master.m3u8", // Using the user's existing HLS folders if available
+          videoUrl: "https://server-3a.s3.ap-south-1.amazonaws.com/Breaking+Bad+Season+1/master.m3u8",
           transcodeStatus: "COMPLETED",
           duration: "58:00"
         },
@@ -169,8 +188,10 @@ async function main() {
       where: { title: show.title }
     });
 
+    const isFeatured = show.title.includes("Demon Slayer") || show.title.includes("Spy X Family");
+
     if (!exists) {
-      console.log(`Creating show: ${show.title}...`);
+      console.log(`➕ Creating show: ${show.title}...`);
       const createdShow = await prisma.show.create({
         data: {
           title: show.title,
@@ -182,7 +203,7 @@ async function main() {
           runtime: show.runtime,
           badge: show.badge,
           dubsub: show.dubsub,
-          isFeatured: show.title.includes("Demon Slayer") || show.title.includes("Spy X Family"),
+          isFeatured: isFeatured,
           categories: {
             create: show.categorySlugs.map(slug => ({
               category: {
@@ -195,7 +216,108 @@ async function main() {
           }
         }
       });
-      console.log(`✅ Created show with ID: ${createdShow.id}`);
+      console.log(`   ✅ Created show with ID: ${createdShow.id}`);
+    } else {
+      // Check if show fields need updating
+      const needsShowUpdate =
+        exists.description !== show.description ||
+        exists.type !== show.type ||
+        exists.rating !== show.rating ||
+        exists.poster !== show.poster ||
+        exists.year !== show.year ||
+        exists.runtime !== show.runtime ||
+        exists.badge !== show.badge ||
+        exists.dubsub !== show.dubsub ||
+        exists.isFeatured !== isFeatured;
+
+      if (needsShowUpdate) {
+        await prisma.show.update({
+          where: { id: exists.id },
+          data: {
+            description: show.description,
+            type: show.type,
+            rating: show.rating,
+            poster: show.poster,
+            year: show.year,
+            runtime: show.runtime,
+            badge: show.badge,
+            dubsub: show.dubsub,
+            isFeatured: isFeatured
+          }
+        });
+        console.log(`🔄 Updated show metadata: ${show.title}`);
+      } else {
+        console.log(`✨ Show metadata up to date: ${show.title}`);
+      }
+
+      // Sync categories for existing show
+      if (show.categorySlugs && show.categorySlugs.length > 0) {
+        for (const slug of show.categorySlugs) {
+          const cat = categories[slug];
+          if (cat) {
+            await prisma.categoryOnShow.upsert({
+              where: {
+                showId_categoryId: {
+                  showId: exists.id,
+                  categoryId: cat.id
+                }
+              },
+              update: {},
+              create: {
+                showId: exists.id,
+                categoryId: cat.id
+              }
+            });
+          }
+        }
+      }
+
+      // Sync episodes for existing show
+      if (show.episodes && show.episodes.length > 0) {
+        for (const ep of show.episodes) {
+          const existingEp = await prisma.episode.findFirst({
+            where: {
+              showId: exists.id,
+              episodeNumber: ep.episodeNumber
+            }
+          });
+
+          if (!existingEp) {
+            await prisma.episode.create({
+              data: {
+                showId: exists.id,
+                title: ep.title,
+                episodeNumber: ep.episodeNumber,
+                videoUrl: ep.videoUrl,
+                transcodeStatus: ep.transcodeStatus,
+                duration: ep.duration
+              }
+            });
+            console.log(`   ➕ Added episode ${ep.episodeNumber}: "${ep.title}"`);
+          } else {
+            const needsEpUpdate =
+              existingEp.title !== ep.title ||
+              existingEp.videoUrl !== ep.videoUrl ||
+              existingEp.transcodeStatus !== ep.transcodeStatus ||
+              existingEp.duration !== ep.duration;
+
+            if (needsEpUpdate) {
+              await prisma.episode.update({
+                where: { id: existingEp.id },
+                data: {
+                  title: ep.title,
+                  videoUrl: ep.videoUrl,
+                  transcodeStatus: ep.transcodeStatus,
+                  duration: ep.duration
+                }
+              });
+              console.log(`   🔄 Updated episode ${ep.episodeNumber}: "${ep.title}"`);
+            } else {
+              console.log(`   ✨ Episode ${ep.episodeNumber} up to date.`);
+            }
+          }
+        }
+      }
     }
   }
 

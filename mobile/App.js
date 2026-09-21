@@ -29,7 +29,16 @@ export default function App() {
   const [progress, setProgress] = useState(0);
 
   const webViewRef = useRef(null);
+  const navStateRef = useRef({ url: DEFAULT_SITE_URL, canGoBack: false });
   const progressAnim = useRef(new Animated.Value(0)).current;
+
+  // Sync ref with current state synchronously
+  useEffect(() => {
+    navStateRef.current = {
+      url: currentUri,
+      canGoBack: canGoBack,
+    };
+  }, [currentUri, canGoBack]);
 
   // Animations
   const logoScale = useRef(new Animated.Value(0.5)).current;
@@ -130,22 +139,53 @@ export default function App() {
     }
   }, [progress, loading]);
 
-  // Handle hardware Android back button to navigate back in webview
+  // Handle hardware Android back button ONCE (static binding, never unbinds during navigation)
   useEffect(() => {
     if (Platform.OS === 'android') {
       const onBackPress = () => {
-        if (canGoBack && webViewRef.current) {
-          webViewRef.current.goBack();
-          return true;
+        const { url, canGoBack: navCanGoBack } = navStateRef.current;
+        const rawUrl = (url || '').toLowerCase();
+        
+        // Explicit sub-page detection: video player and view.html are NEVER home pages
+        const isVideoPlayer = rawUrl.includes('video-player');
+        const isViewPage = rawUrl.includes('view.html') || rawUrl.includes('/view');
+
+        const pathOnly = rawUrl.split('?')[0].split('#')[0].replace(/\/$/, '');
+        const base = (siteUrl || '').toLowerCase().replace(/\/$/, '');
+        const defaultBase = DEFAULT_SITE_URL.toLowerCase().replace(/\/$/, '');
+
+        // Strict Home Page detection
+        const isHomePage = !isVideoPlayer && !isViewPage && (
+          !rawUrl || 
+          pathOnly === base || 
+          pathOnly === base + '/index.html' ||
+          pathOnly === defaultBase ||
+          pathOnly === defaultBase + '/index.html' ||
+          pathOnly.endsWith('/index.html') ||
+          pathOnly === 'file:///android_asset/web/index.html'
+        );
+
+        // If strictly on Home page, return false to let Android exit app
+        if (isHomePage) {
+          return false;
         }
-        return false;
+
+        // On sub-pages (video player, view, etc.): ALWAYS intercept and navigate back
+        if (navCanGoBack && webViewRef.current) {
+          webViewRef.current.goBack();
+        } else if (webViewRef.current) {
+          const homeUrl = siteUrl.endsWith('/') ? siteUrl + 'index.html' : siteUrl + '/index.html';
+          webViewRef.current.injectJavaScript(`window.location.href = '${homeUrl}'; true;`);
+        }
+        return true; // GUARANTEES APP DOES NOT CLOSE ON SUB-PAGES!
       };
+
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => subscription.remove();
     }
-  }, [canGoBack]);
+  }, [siteUrl]);
 
-  // Handle Fullscreen Rotation logic
+  // Handle Fullscreen & Navigation logic
   const onMessage = async (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -155,9 +195,17 @@ export default function App() {
         } else {
           await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
         }
+      } else if (data.type === 'navigationState') {
+        // Force update back state if site emits custom navigation events
+        if (typeof data.canGoBack === 'boolean') {
+          setCanGoBack(data.canGoBack);
+        }
+        if (data.url) {
+          setCurrentUri(data.url);
+        }
       }
     } catch (e) {
-      // Silence parsing errors for non-app messages
+      // Silence parsing errors
     }
   };
 
@@ -208,6 +256,18 @@ export default function App() {
 
   const injectedJS = `
     (function() {
+      // 1. NAVIGATION & HISTORY TRACKING
+      function updateNavState() {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'navigationState',
+          canGoBack: window.history.length > 1 || window.location.hash !== '',
+          url: window.location.href
+        }));
+      }
+
+      window.addEventListener('hashchange', updateNavState);
+      window.addEventListener('popstate', updateNavState);
+
       // 2. ACTIVE RECOVERY & FULLSCREEN DETECTION
       let lastState = false;
 
@@ -230,6 +290,11 @@ export default function App() {
             v.addEventListener('webkitendfullscreen', () => emit(false));
             v._fsListenersAttached = true;
           }
+
+          // Force play heartbeat
+          if (v.paused && v.readyState >= 1) {
+            v.play().catch(e => {});
+          }
         });
       }
 
@@ -246,6 +311,8 @@ export default function App() {
         emit(isFS);
       }, 1000);
 
+      // Initial state sync
+      updateNavState();
     })();
     true;
   `;
@@ -303,6 +370,9 @@ export default function App() {
           onMessage={onMessage}
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack);
+            if (navState.url) {
+              setCurrentUri(navState.url);
+            }
           }}
           onRenderProcessGone={() => {
             console.log('WebView process crashed. Reloading...');

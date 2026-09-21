@@ -155,6 +155,7 @@ async function main() {
   for (const s of showsData) {
     const showExist = await prisma.show.findUnique({ where: { id: s.id } });
     if (!showExist) {
+      console.log(`➕ Creating show: ${s.title}...`);
       await prisma.show.create({
         data: {
           id: s.id,
@@ -190,6 +191,119 @@ async function main() {
           }
         }
       });
+      console.log(`   ✅ Created show with ID: ${s.id}`);
+    } else {
+      const needsShowUpdate =
+        showExist.title !== s.title ||
+        showExist.description !== s.description ||
+        showExist.type !== s.type ||
+        showExist.rating !== s.rating ||
+        showExist.poster !== s.poster ||
+        showExist.banner !== s.banner ||
+        showExist.year !== s.year ||
+        showExist.runtime !== s.runtime ||
+        showExist.badge !== s.badge ||
+        showExist.dubsub !== s.dubsub ||
+        showExist.isFeatured !== s.isFeatured;
+
+      if (needsShowUpdate) {
+        await prisma.show.update({
+          where: { id: s.id },
+          data: {
+            title: s.title,
+            description: s.description,
+            type: s.type,
+            rating: s.rating,
+            poster: s.poster,
+            banner: s.banner,
+            year: s.year,
+            runtime: s.runtime,
+            badge: s.badge,
+            dubsub: s.dubsub,
+            isFeatured: s.isFeatured
+          }
+        });
+        console.log(`🔄 Updated show metadata: ${s.title}`);
+      } else {
+        console.log(`✨ Show metadata up to date: ${s.title}`);
+      }
+
+      // Sync categories
+      if (s.categories && s.categories.length > 0) {
+        for (const c of s.categories) {
+          await prisma.categoryOnShow.upsert({
+            where: {
+              showId_categoryId: {
+                showId: s.id,
+                categoryId: c.categoryId
+              }
+            },
+            update: {},
+            create: {
+              showId: s.id,
+              categoryId: c.categoryId
+            }
+          });
+        }
+      }
+
+      // Sync episodes
+      if (s.episodes && s.episodes.length > 0) {
+        for (const ep of s.episodes) {
+          const existingEp = await prisma.episode.findFirst({
+            where: {
+              OR: [
+                { id: ep.id },
+                { showId: s.id, episodeNumber: ep.episodeNumber }
+              ]
+            }
+          });
+
+          if (!existingEp) {
+            await prisma.episode.create({
+              data: {
+                id: ep.id,
+                showId: s.id,
+                title: ep.title,
+                episodeNumber: ep.episodeNumber,
+                description: ep.description,
+                duration: ep.duration,
+                videoUrl: ep.videoUrl,
+                transcodeStatus: ep.transcodeStatus,
+                stageDetails: ep.stageDetails,
+                views: ep.views
+              }
+            });
+            console.log(`   ➕ Added episode ${ep.episodeNumber}: "${ep.title}"`);
+          } else {
+            const needsEpUpdate =
+              existingEp.title !== ep.title ||
+              existingEp.videoUrl !== ep.videoUrl ||
+              existingEp.transcodeStatus !== ep.transcodeStatus ||
+              existingEp.duration !== ep.duration ||
+              existingEp.description !== ep.description ||
+              existingEp.stageDetails !== ep.stageDetails;
+
+            if (needsEpUpdate) {
+              await prisma.episode.update({
+                where: { id: existingEp.id },
+                data: {
+                  title: ep.title,
+                  episodeNumber: ep.episodeNumber,
+                  description: ep.description,
+                  duration: ep.duration,
+                  videoUrl: ep.videoUrl,
+                  transcodeStatus: ep.transcodeStatus,
+                  stageDetails: ep.stageDetails
+                }
+              });
+              console.log(`   🔄 Updated episode ${ep.episodeNumber}: "${ep.title}"`);
+            } else {
+              console.log(`   ✨ Episode ${ep.episodeNumber} up to date.`);
+            }
+          }
+        }
+      }
     }
   }
 
