@@ -2,8 +2,8 @@ const path = require('path');
 const fs = require('fs');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
-function getUploadsDir() {
-  const custom = process.env.LOCAL_STORAGE_PATH;
+function getUploadsDir(customOverride) {
+  const custom = customOverride || process.env.LOCAL_STORAGE_PATH;
   if (custom && custom.trim()) {
     const resolved = path.resolve(custom.trim());
     if (!fs.existsSync(resolved)) {
@@ -26,12 +26,12 @@ const s3Client = new S3Client({
   },
 });
 
-async function uploadToS3(key, buffer, mimeType) {
-  const storageType = (process.env.STORAGE_TYPE || 'local').toLowerCase().trim();
+async function uploadToS3(key, buffer, mimeType, storageTypeOverride, storagePathOverride) {
+  const storageType = (storageTypeOverride || process.env.STORAGE_TYPE || 'local').toLowerCase().trim();
 
   // If storage type is 'local' (default for laptop server), save directly to disk
   if (storageType !== 's3') {
-    const uploadsDir = getUploadsDir();
+    const uploadsDir = getUploadsDir(storagePathOverride);
     const cleanKey = key.replace(/^[/\\]+/, '');
     const targetPath = path.join(uploadsDir, cleanKey);
     const targetFolder = path.dirname(targetPath);

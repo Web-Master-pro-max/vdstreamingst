@@ -333,8 +333,8 @@ def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_k
         )
         print(f"Uploaded {file} as {content_type}")
 
-def get_uploads_dir():
-    custom = os.getenv("LOCAL_STORAGE_PATH")
+def get_uploads_dir(storage_path_override=None):
+    custom = storage_path_override or os.getenv("LOCAL_STORAGE_PATH")
     if custom and custom.strip():
         resolved = os.path.abspath(custom.strip())
         if not os.path.exists(resolved):
@@ -349,7 +349,7 @@ def get_uploads_dir():
     os.makedirs(default_path, exist_ok=True)
     return default_path
 
-def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
+def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storage_type_override=None, storage_path_override=None):
     """
     Executes the full pipeline:
     1. Probes video duration & streams
@@ -357,7 +357,7 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
     3. Saves generated files to laptop local storage (or uploads to S3 if STORAGE_TYPE=s3)
     4. Cleans up local temp files
     """
-    uploads_dir = get_uploads_dir()
+    uploads_dir = get_uploads_dir(storage_path_override)
     temp_output_dir = os.path.join(uploads_dir, f"transcode_{episode_id}")
     
     if os.path.exists(temp_output_dir):
@@ -386,7 +386,7 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
         # Report Transcoding completed
         report_progress(episode_id, stage="TRANSCODING", percent=100, speed="Done", eta=0)
         
-        storage_type = os.getenv("STORAGE_TYPE", "local").lower().strip()
+        storage_type = (storage_type_override or os.getenv("STORAGE_TYPE", "local")).lower().strip()
         
         if storage_type == "s3":
             # AWS S3 Settings from environment
@@ -406,7 +406,7 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
             playback_url = f"https://{bucket}.s3.{region}.amazonaws.com/{clean_s3_prefix}/master.m3u8"
         else:
             # LOCAL STORAGE MODE (Stores directly on laptop's local disk)
-            print(f"💾 Saving HLS streams directly to laptop local storage...")
+            print(f"💾 Saving HLS streams directly to laptop local storage (Target: {uploads_dir})...")
             report_progress(episode_id, stage="UPLOADING_S3", percent=50, speed="Saving local files...", eta=0)
             
             clean_folder_key = s3_folder_key.strip('/').replace('\\', '/')
@@ -475,16 +475,18 @@ if __name__ == "__main__":
         pass
     
     if len(sys.argv) < 5:
-        print("Usage: python converter_helper.py <source_path> <episode_id> <show_id> <s3_folder_key>")
+        print("Usage: python converter_helper.py <source_path> <episode_id> <show_id> <s3_folder_key> [storage_type] [local_storage_path]")
         sys.exit(1)
         
     source_path = sys.argv[1]
     episode_id = sys.argv[2]
     show_id = sys.argv[3]
     s3_folder_key = sys.argv[4]
+    cli_storage_type = sys.argv[5] if len(sys.argv) > 5 and sys.argv[5].strip() else None
+    cli_storage_path = sys.argv[6] if len(sys.argv) > 6 and sys.argv[6].strip() else None
     
     try:
-        url = transcode_and_upload(source_path, episode_id, show_id, s3_folder_key)
+        url = transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storage_type_override=cli_storage_type, storage_path_override=cli_storage_path)
         print(f"SUCCESS_PLAYBACK_URL: {url}")
     except Exception as e:
         print(f"TRANSCODE_ERROR: {e}", file=sys.stderr)

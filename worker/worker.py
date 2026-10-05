@@ -99,15 +99,20 @@ def main():
                 # 2. Run Transcoding and Uploading
                 start_time = time.time()
                 try:
+                    storage_type = task.get("storageType")
+                    local_storage_path = task.get("localStoragePath")
                     playback_url = transcode_and_upload(
                         source_path=source_video_path,
                         episode_id=episode_id,
                         show_id=show_id,
-                        s3_folder_key=s3_folder_key
+                        s3_folder_key=s3_folder_key,
+                        storage_type_override=storage_type,
+                        storage_path_override=local_storage_path
                     )
                     
                     elapsed = time.time() - start_time
-                    print(f"✅ Transcoding & S3 upload completed in {elapsed:.1f} seconds.")
+                    dest_str = "S3 Cloud" if (storage_type == "s3") else "Laptop Local Storage"
+                    print(f"✅ Transcoding & save to {dest_str} completed in {elapsed:.1f} seconds.")
                     
                     # 3. Update status to COMPLETED
                     send_webhook_status(episode_id, "COMPLETED", video_url=playback_url)

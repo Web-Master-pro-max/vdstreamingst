@@ -75,6 +75,21 @@ app.get('/api/download/app', (req, res) => {
   res.redirect('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500');
 });
 
+// Load persistent storage settings from settings.json if present
+try {
+  const defaultUploads = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
+  const tempSettingsFile = path.join(defaultUploads, 'settings.json');
+  if (fs.existsSync(tempSettingsFile)) {
+    const s = JSON.parse(fs.readFileSync(tempSettingsFile, 'utf8'));
+    if (s.storageType && !process.env.STORAGE_TYPE) {
+      process.env.STORAGE_TYPE = s.storageType;
+    }
+    if (s.localStoragePath && !process.env.LOCAL_STORAGE_PATH) {
+      process.env.LOCAL_STORAGE_PATH = s.localStoragePath;
+    }
+  }
+} catch (e) {}
+
 // Resolve directories dynamically (supports custom laptop storage path, Docker, and native)
 const { getUploadsDir } = require('./s3');
 const uploadsPath = getUploadsDir();
@@ -83,12 +98,19 @@ const settingsPath = path.join(uploadsPath, 'settings.json');
 // Settings Endpoint
 app.get('/api/settings', (req, res) => {
   try {
+    let settings = { bannerSlideTime: 6000 };
     if (fs.existsSync(settingsPath)) {
-      const data = fs.readFileSync(settingsPath, 'utf8');
-      res.json(JSON.parse(data));
-    } else {
-      res.json({ bannerSlideTime: 6000 });
+      try {
+        settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      } catch (e) {}
     }
+    res.json({
+      bannerSlideTime: settings.bannerSlideTime || 6000,
+      storageType: settings.storageType || process.env.STORAGE_TYPE || 'local',
+      localStoragePath: settings.localStoragePath || process.env.LOCAL_STORAGE_PATH || uploadsPath,
+      s3Bucket: process.env.AWS_S3_BUCKET || 'serverbuket-12',
+      s3Region: process.env.AWS_REGION || 'ap-south-1'
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to read settings' });
   }
@@ -96,13 +118,28 @@ app.get('/api/settings', (req, res) => {
 
 app.post('/api/settings', (req, res) => {
   try {
-    const { bannerSlideTime } = req.body;
+    const { bannerSlideTime, storageType, localStoragePath } = req.body;
     let settings = { bannerSlideTime: 6000 };
     if (fs.existsSync(settingsPath)) {
-      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      try {
+        settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      } catch (e) {}
     }
     if (bannerSlideTime) {
       settings.bannerSlideTime = parseInt(bannerSlideTime, 10) || 6000;
+    }
+    if (storageType) {
+      const cleanType = storageType.toLowerCase().trim();
+      settings.storageType = cleanType;
+      process.env.STORAGE_TYPE = cleanType;
+    }
+    if (localStoragePath !== undefined) {
+      const cleanPath = (localStoragePath || '').trim();
+      settings.localStoragePath = cleanPath;
+      process.env.LOCAL_STORAGE_PATH = cleanPath;
+      if (cleanPath && !fs.existsSync(cleanPath)) {
+        try { fs.mkdirSync(cleanPath, { recursive: true }); } catch (e) {}
+      }
     }
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
     res.json({ success: true, settings });

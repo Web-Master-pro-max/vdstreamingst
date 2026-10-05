@@ -165,7 +165,7 @@ router.post('/shows', authenticate, requireAdmin, imageUpload.fields([{ name: 'p
 const episodeUploadHandler = async (req, res) => {
   try {
     const showId = parseInt(req.params.id || req.body.showId);
-    const { title, episodeNumber, description, duration } = req.body;
+    const { title, episodeNumber, description, duration, storageType, localStoragePath } = req.body;
 
     if (!showId) {
       return res.status(400).json({ error: 'Show ID is required.' });
@@ -217,6 +217,8 @@ const episodeUploadHandler = async (req, res) => {
         episodeNumber: episode.episodeNumber,
         sourceVideoPath: rawVideoPath,
         s3FolderKey: s3FolderKey,
+        storageType: storageType || process.env.STORAGE_TYPE || 'local',
+        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
       };
 
       console.log(`Enqueueing transcode job to Redis for Episode ${episode.id}...`);
@@ -234,6 +236,8 @@ const episodeUploadHandler = async (req, res) => {
         showId: showId,
         rawVideoPath: rawVideoPath,
         s3FolderKey: s3FolderKey,
+        storageType: storageType || process.env.STORAGE_TYPE || 'local',
+        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
       });
 
       res.status(201).json({
@@ -357,7 +361,7 @@ function reassembleChunks(chunksDir, totalChunks, finalRawPath) {
 // POST /api/admin/upload-chunk-finalize - Reassemble all chunks into final raw video & trigger transcoding
 router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { uploadId, showId, title, episodeNumber, description, duration, totalChunks, fileName } = req.body;
+    const { uploadId, showId, title, episodeNumber, description, duration, totalChunks, fileName, storageType, localStoragePath } = req.body;
     if (!uploadId || !showId || !title || !episodeNumber || !totalChunks) {
       return res.status(400).json({ error: 'Missing required parameters for finalization.' });
     }
@@ -423,6 +427,8 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
         episodeNumber: episode.episodeNumber,
         sourceVideoPath: finalRawPath,
         s3FolderKey: s3FolderKey,
+        storageType: storageType || process.env.STORAGE_TYPE || 'local',
+        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
       };
 
       console.log(`Enqueueing transcode job to Redis for Episode ${episode.id}...`);
@@ -440,6 +446,8 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
         showId: parsedShowId,
         rawVideoPath: finalRawPath,
         s3FolderKey: s3FolderKey,
+        storageType: storageType || process.env.STORAGE_TYPE || 'local',
+        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
       });
 
       return res.status(201).json({

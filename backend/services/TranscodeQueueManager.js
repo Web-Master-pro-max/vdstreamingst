@@ -63,10 +63,11 @@ class TranscodeQueueManager {
     const job = this.queue.shift();
     this.currentJob = job;
 
-    const { episodeId, showId, rawVideoPath, s3FolderKey } = job;
+    const { episodeId, showId, rawVideoPath, s3FolderKey, storageType, localStoragePath } = job;
 
     console.log(`\n====================================================`);
     console.log(`🚀 [QueueManager] STARTING Transcoding Job for Episode ${episodeId} (Show ${showId})`);
+    console.log(`   Storage Destination: ${storageType || 'local'} (${localStoragePath || 'default'})`);
     console.log(`====================================================\n`);
 
     try {
@@ -91,17 +92,27 @@ class TranscodeQueueManager {
 
     const customEnv = { ...process.env };
     customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
+    if (storageType) {
+      customEnv.STORAGE_TYPE = storageType;
+    }
+    if (localStoragePath) {
+      customEnv.LOCAL_STORAGE_PATH = localStoragePath;
+    }
     const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
     const originalPath = customEnv[pathKey] || '';
     customEnv[pathKey] = `${binPath};${originalPath}`;
 
-    const child = spawn(pythonExecutable, [
+    const spawnArgs = [
       scriptPath,
       rawVideoPath,
       episodeId.toString(),
       showId.toString(),
-      s3FolderKey
-    ], {
+      s3FolderKey,
+      storageType || process.env.STORAGE_TYPE || 'local',
+      localStoragePath || process.env.LOCAL_STORAGE_PATH || ''
+    ];
+
+    const child = spawn(pythonExecutable, spawnArgs, {
       env: customEnv,
       shell: false
     });
