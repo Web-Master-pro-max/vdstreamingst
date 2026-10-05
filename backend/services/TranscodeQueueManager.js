@@ -10,7 +10,30 @@ function getPythonExecutable() {
   if (process.env.PYTHON_EXECUTABLE && process.env.PYTHON_EXECUTABLE.trim()) {
     return process.env.PYTHON_EXECUTABLE.trim();
   }
-  if (process.platform === 'win32') {
+
+  // Check virtual environment candidates first
+  const projectRoot = path.join(__dirname, '../..');
+  const workerDir = path.join(__dirname, '../../worker');
+  const isWin = process.platform === 'win32';
+  const binSub = isWin ? 'Scripts' : 'bin';
+  const pyExeName = isWin ? 'python.exe' : 'python3';
+  const pyAltExeName = isWin ? 'python.exe' : 'python';
+
+  const venvDirs = [
+    path.join(projectRoot, 'venv'),
+    path.join(projectRoot, '.venv'),
+    path.join(workerDir, 'venv'),
+    path.join(workerDir, '.venv'),
+  ];
+
+  for (const venv of venvDirs) {
+    const mainPy = path.join(venv, binSub, pyExeName);
+    if (fs.existsSync(mainPy)) return mainPy;
+    const altPy = path.join(venv, binSub, pyAltExeName);
+    if (fs.existsSync(altPy)) return altPy;
+  }
+
+  if (isWin) {
     return 'python';
   }
   try {

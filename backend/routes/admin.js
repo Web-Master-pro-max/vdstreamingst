@@ -506,6 +506,18 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
         const rawFiles = files.filter(f => f.startsWith('raw-'));
         if (rawFiles.length === 1) {
           matchFile = rawFiles[0];
+        } else if (rawFiles.length > 1) {
+          // Priority 4: Pick the most recently modified raw file
+          rawFiles.sort((a, b) => {
+            try {
+              const statA = fs.statSync(path.join(activeUploadsDir, a));
+              const statB = fs.statSync(path.join(activeUploadsDir, b));
+              return statB.mtimeMs - statA.mtimeMs;
+            } catch (e) {
+              return 0;
+            }
+          });
+          matchFile = rawFiles[0];
         }
       }
       if (matchFile) {

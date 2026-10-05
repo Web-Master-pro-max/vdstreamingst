@@ -3,7 +3,6 @@ import sys
 import shutil
 import subprocess
 import json
-import boto3
 import mimetypes
 import io
 import time
@@ -61,11 +60,26 @@ def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCES
         payload["error"] = error or speed_str
 
     try:
-        import requests
-        res = requests.post(url, json=payload, timeout=5)
-        print(f"📡 Webhook progress report sent: Ep #{episode_id} {stage} {percent:.1f}% ({speed_str}) -> {res.status_code}")
+        import urllib.request
+        data_bytes = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=data_bytes,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "converter_helper/1.0"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=5) as res:
+            code = res.getcode()
+            print(f"📡 Webhook progress report sent: Ep #{episode_id} {stage} {percent:.1f}% ({speed_str}) -> {code}")
     except Exception as e:
-        print(f"Progress webhook notification warning: {e}", file=sys.stderr)
+        try:
+            import requests
+            res = requests.post(url, json=payload, timeout=5)
+            print(f"📡 Webhook progress report sent (requests): Ep #{episode_id} {stage} {percent:.1f}% ({speed_str}) -> {res.status_code}")
+        except Exception:
+            print(f"Progress webhook notification warning: {e}", file=sys.stderr)
 
 def run_cmd(cmd):
     print(f"\nRunning: {' '.join(cmd)}")
@@ -354,6 +368,13 @@ def get_mime_type(filename):
     return mime or 'binary/octet-stream'
 
 def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_key, region, episode_id=None):
+    try:
+        import boto3
+    except ImportError:
+        err = "boto3 is not installed in Python environment. To upload to AWS S3, run: pip3 install boto3 (or set STORAGE_TYPE=local to store on laptop disk)"
+        print(f"❌ {err}", file=sys.stderr)
+        raise RuntimeError(err)
+
     s3 = boto3.client(
         's3',
         region_name=region,
