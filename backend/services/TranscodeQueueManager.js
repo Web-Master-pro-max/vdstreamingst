@@ -214,6 +214,8 @@ class TranscodeQueueManager {
 
       let stdoutData = '';
       let stderrData = '';
+      let isJobFinished = false;
+      let lastProgressUpdateTime = 0;
 
       child.stdout.on('data', (data) => {
         const text = data.toString();
@@ -221,9 +223,20 @@ class TranscodeQueueManager {
         const lines = text.trim().split('\n');
         lines.forEach(line => {
           console.log(`[Transcoder Ep ${episodeId}] ${line}`);
-          // Direct fallback parsing for live progress updates
+          if (isJobFinished) return;
+
+          // If line signals completion, ignore any in-flight progress overwrite
+          if (line.includes('SUCCESS_PLAYBACK_URL:') || line.includes('COMPLETED 100.0%')) {
+            return;
+          }
+
+          // Direct fallback parsing for live progress updates (throttled to 1 sec)
           const transcodeMatch = line.match(/TRANSCODING\s+([\d.]+)%\s*\(([^)]+)\)/i);
-          if (transcodeMatch) {
+          const uploadMatch = line.match(/UPLOADING_S3\s+([\d.]+)%\s*\(([^)]+)\)/i);
+
+          const now = Date.now();
+          if (transcodeMatch && (now - lastProgressUpdateTime > 1000)) {
+            lastProgressUpdateTime = now;
             const pct = parseFloat(transcodeMatch[1]);
             const spd = transcodeMatch[2];
             prisma.episode.update({
@@ -234,6 +247,21 @@ class TranscodeQueueManager {
                   uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
                   transcoding: { percent: pct, speed: spd, eta: 0, status: 'PROCESSING' },
                   uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+                })
+              }
+            }).catch(() => {});
+          } else if (uploadMatch && (now - lastProgressUpdateTime > 1000)) {
+            lastProgressUpdateTime = now;
+            const pct = parseFloat(uploadMatch[1]);
+            const spd = uploadMatch[2];
+            prisma.episode.update({
+              where: { id: episodeId },
+              data: {
+                transcodeStatus: 'PROCESSING',
+                stageDetails: JSON.stringify({
+                  uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  uploadS3: { percent: pct, speed: spd, eta: 0, status: 'PROCESSING' }
                 })
               }
             }).catch(() => {});
@@ -259,6 +287,7 @@ class TranscodeQueueManager {
       });
 
       child.on('close', async (code, signal) => {
+        isJobFinished = true;
         if (this.currentJobTimeout) {
           clearTimeout(this.currentJobTimeout);
           this.currentJobTimeout = null;
@@ -275,8 +304,13 @@ class TranscodeQueueManager {
 
         if (code === 0) {
           const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(\S+)/);
-          if (match && match[1]) {
-            const playbackUrl = match[1];
+          let playbackUrl = match && match[1] ? match[1] : null;
+          if (!playbackUrl) {
+            const ep = await prisma.episode.findUnique({ where: { id: episodeId } });
+            if (ep && ep.videoUrl) playbackUrl = ep.videoUrl;
+          }
+
+          if (playbackUrl) {
             console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
             try {
               await prisma.episode.update({

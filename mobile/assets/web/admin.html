@@ -1944,7 +1944,15 @@
                 } catch (e) {}
             }
 
-            if (overallStatus === 'PROCESSING') {
+            // If videoUrl is already generated and valid, it is fully completed
+            if (task.videoUrl && task.videoUrl.includes('master.m3u8') && overallStatus !== 'FAILED') {
+                stageObj.transcoding.status = 'COMPLETED';
+                stageObj.transcoding.percent = 100;
+                stageObj.transcoding.speed = 'Done';
+                stageObj.uploadS3.status = 'COMPLETED';
+                stageObj.uploadS3.percent = 100;
+                stageObj.uploadS3.speed = 'Done';
+            } else if (overallStatus === 'PROCESSING') {
                 if (stageObj.transcoding.status === 'PENDING') {
                     stageObj.transcoding.status = 'PROCESSING';
                 }
@@ -2068,7 +2076,11 @@
 
                     const activePanel = document.querySelector('.content-panel.active');
                     const isTaskPanelActive = activePanel && activePanel.id === 'taskPanel';
-                    const hasActiveTasks = data.some(t => t.transcodeStatus === 'PENDING' || t.transcodeStatus === 'PROCESSING');
+                    const hasActiveTasks = data.some(t => {
+                        const isReady = t.videoUrl && t.videoUrl.includes('master.m3u8') && (t.transcodeStatus || '').toUpperCase() !== 'FAILED';
+                        if (isReady) return false;
+                        return t.transcodeStatus === 'PENDING' || t.transcodeStatus === 'PROCESSING';
+                    });
 
                     if (isTaskPanelActive && hasActiveTasks && !taskPollInterval) {
                         taskPollInterval = setInterval(fetchTasks, 2000);
@@ -2078,7 +2090,9 @@
                     }
 
                     tbody.innerHTML = data.map(task => {
-                        const statusUpper = (task.transcodeStatus || 'PENDING').toUpperCase();
+                        const isReady = task.videoUrl && task.videoUrl.includes('master.m3u8') && (task.transcodeStatus || '').toUpperCase() !== 'FAILED';
+                        const effectiveStatus = isReady ? 'COMPLETED' : (task.transcodeStatus || 'PENDING');
+                        const statusUpper = effectiveStatus.toUpperCase();
                         const statusClass = statusUpper.toLowerCase();
                         const timeText = new Date(task.updatedAt).toLocaleString();
                         const showTitle = task.show ? task.show.title : `Show #${task.showId}`;
@@ -2100,7 +2114,7 @@
                                     <span style="color: var(--gray-text); font-size: 1.1rem;">Ep ${task.episodeNumber}: ${task.title}</span>
                                 </td>
                                 <td>
-                                    <span class="status-badge ${statusClass}">${task.transcodeStatus || 'PENDING'}</span>
+                                    <span class="status-badge ${statusClass}">${effectiveStatus}</span>
                                     ${retryBtnHtml}
                                 </td>
                                 <td>

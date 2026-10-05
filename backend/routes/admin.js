@@ -461,6 +461,30 @@ router.get('/tasks', authenticate, requireAdmin, async (req, res) => {
       },
       take: 50
     });
+
+    // Auto-heal: If an episode has videoUrl pointing to master.m3u8 but is stuck on PROCESSING,
+    // and is not actively running in transcodeQueueManager, finalize it as COMPLETED.
+    for (const ep of episodes) {
+      const isJobRunning = transcodeQueueManager.currentJob && transcodeQueueManager.currentJob.episodeId === ep.id;
+      if (!isJobRunning && ep.transcodeStatus === 'PROCESSING' && ep.videoUrl && ep.videoUrl.includes('master.m3u8')) {
+        ep.transcodeStatus = 'COMPLETED';
+        const completedStageDetails = JSON.stringify({
+          uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+          transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+          uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+        });
+        ep.stageDetails = completedStageDetails;
+
+        prisma.episode.update({
+          where: { id: ep.id },
+          data: {
+            transcodeStatus: 'COMPLETED',
+            stageDetails: completedStageDetails
+          }
+        }).catch(err => console.warn(`[Tasks Auto-Heal] Ep #${ep.id}:`, err.message));
+      }
+    }
+
     res.json(episodes);
   } catch (error) {
     console.error('Error getting tasks:', error);
