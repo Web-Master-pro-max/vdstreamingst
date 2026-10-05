@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const Redis = require('ioredis');
 const { PrismaClient } = require('@prisma/client');
-const { uploadToS3 } = require('../s3');
+const { uploadToS3, getUploadsDir } = require('../s3');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 const transcodeQueueManager = require('../services/TranscodeQueueManager');
 
@@ -32,7 +32,7 @@ redis.on('error', (err) => {
   }
 });
 
-const uploadsDir = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
+const uploadsDir = getUploadsDir();
 
 // Multer config for image and video files (posters/banners) - in-memory
 const imageUpload = multer({
@@ -43,7 +43,7 @@ const imageUpload = multer({
 // Multer config for video uploads - disk storage on shared volume
 const videoStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dir = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
+    const dir = getUploadsDir();
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -489,14 +489,14 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
     }
 
     // Find raw source video file in uploads directory
-    const uploadsDir = path.join(__dirname, '../uploads');
+    const activeUploadsDir = getUploadsDir();
     let rawVideoPath = null;
 
-    if (fs.existsSync(uploadsDir)) {
-      const files = fs.readdirSync(uploadsDir);
+    if (fs.existsSync(activeUploadsDir)) {
+      const files = fs.readdirSync(activeUploadsDir);
       const matchFile = files.find(f => f.startsWith(`raw-`) || f.includes(episodeId.toString()));
       if (matchFile) {
-        rawVideoPath = path.join(uploadsDir, matchFile);
+        rawVideoPath = path.join(activeUploadsDir, matchFile);
       }
     }
 
@@ -683,6 +683,11 @@ router.post('/clean-uploads', authenticate, requireAdmin, (req, res) => {
     let freedBytes = 0;
 
     files.forEach(file => {
+      // Never delete persistent application assets (videos, posters, banners, settings)
+      if (file === 'videos' || file === 'posters' || file === 'banners' || file === 'settings.json') {
+        return;
+      }
+
       const filePath = path.join(uploadsDir, file);
       try {
         const stats = fs.statSync(filePath);

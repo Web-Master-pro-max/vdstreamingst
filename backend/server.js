@@ -75,12 +75,12 @@ app.get('/api/download/app', (req, res) => {
   res.redirect('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500');
 });
 
-// Settings Endpoint
-// Resolve uploads directory for persistent settings storage
-const settingsPath = fs.existsSync('/app/uploads') 
-    ? '/app/uploads/settings.json' 
-    : path.join(__dirname, '../uploads/settings.json');
+// Resolve directories dynamically (supports custom laptop storage path, Docker, and native)
+const { getUploadsDir } = require('./s3');
+const uploadsPath = getUploadsDir();
+const settingsPath = path.join(uploadsPath, 'settings.json');
 
+// Settings Endpoint
 app.get('/api/settings', (req, res) => {
   try {
     if (fs.existsSync(settingsPath)) {
@@ -111,17 +111,15 @@ app.post('/api/settings', (req, res) => {
   }
 });
 
-// Resolve directories dynamically (supports both Docker and native system execution)
-const uploadsPath = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
 const frontendPath = fs.existsSync('/app/frontend') ? '/app/frontend' : path.join(__dirname, '../frontend');
 const videoPlayerPath = path.join(frontendPath, 'video-player');
 
-// Ensure native uploads directory exists if missing
+// Ensure uploads directory exists
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
 }
 
-// Serve uploads folder for raw verification or local testing fallback
+// Serve uploads folder for videos, posters, banners, and HLS streams
 app.use('/uploads', express.static(uploadsPath));
 
 // Serve Video Player static files at '/video-player' path
@@ -160,6 +158,11 @@ function cleanupOldUploads() {
     let freedBytes = 0;
 
     files.forEach(file => {
+      // Never delete persistent application assets (videos, posters, banners, settings)
+      if (file === 'videos' || file === 'posters' || file === 'banners' || file === 'settings.json') {
+        return;
+      }
+
       const filePath = path.join(uploadsPath, file);
       try {
         const stats = fs.statSync(filePath);

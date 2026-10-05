@@ -7,12 +7,19 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ActivityIndicator,
-  Alert 
+  Alert,
+  BackHandler
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, GRADIENTS } from '../theme/colors';
-import { apiService, formatMediaUrl } from '../services/api';
+import {
+  apiService,
+  formatMediaUrl,
+  getShowBannerMedia,
+  isWatchlisted,
+  toggleWatchlist,
+} from '../services/api';
 
 export const ShowDetailScreen = ({ route, navigation }) => {
   const { showId, show: initialShow } = route.params || {};
@@ -21,11 +28,36 @@ export const ShowDetailScreen = ({ route, navigation }) => {
   const [bookmarked, setBookmarked] = useState(false);
 
   useEffect(() => {
+    const onBackPress = () => {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Home');
+      }
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [navigation]);
+
+  // Check initial bookmark / watchlist status
+  useEffect(() => {
+    const targetId = showId || initialShow?.id;
+    if (targetId) {
+      isWatchlisted(targetId).then(setBookmarked).catch(() => {});
+    }
+  }, [showId, initialShow?.id]);
+
+  useEffect(() => {
     const fetchDetails = async () => {
       if (!showId) return;
       try {
         const data = await apiService.getShowById(showId);
         setShow(data);
+        if (data?.id) {
+          const isBookmarked = await isWatchlisted(data.id);
+          setBookmarked(isBookmarked);
+        }
       } catch (e) {
         console.error('Error fetching show details:', e);
       } finally {
@@ -44,24 +76,30 @@ export const ShowDetailScreen = ({ route, navigation }) => {
   }
 
   const rating = show.rating ? parseFloat(show.rating).toFixed(1) : '4.9';
-  const rawBanner = show.banner || show.bannerUrl || show.poster || show.posterUrl;
-  const bannerUrl = formatMediaUrl(rawBanner);
+  const { bannerUrl, posterUrl, isVideo } = getShowBannerMedia(show);
+  const backdropImageUri = isVideo ? (posterUrl || bannerUrl) : (bannerUrl || posterUrl);
   const episodes = show.episodes && show.episodes.length > 0 ? show.episodes : [
-    { id: 101, episodeNumber: 1, title: 'Episode 1: Awakening', duration: '24m' },
-    { id: 102, episodeNumber: 2, title: 'Episode 2: The Rising Storm', duration: '23m' },
-    { id: 103, episodeNumber: 3, title: 'Episode 3: Unbreakable Bond', duration: '25m' },
+    { id: 101, episodeNumber: 1, title: 'Episode 1: Awakening', duration: '24m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
+    { id: 102, episodeNumber: 2, title: 'Episode 2: The Rising Storm', duration: '23m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
+    { id: 103, episodeNumber: 3, title: 'Episode 3: Unbreakable Bond', duration: '25m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
   ];
 
   const handlePlayEpisode = (episode) => {
     navigation.navigate('Player', { episodeId: episode.id, episode, show });
   };
 
-  const toggleBookmark = () => {
-    setBookmarked(!bookmarked);
-    Alert.alert(
-      bookmarked ? 'Removed from Watchlist' : 'Added to Watchlist',
-      bookmarked ? `"${show.title}" removed from your list.` : `"${show.title}" saved to your Watchlist.`
-    );
+  const toggleBookmark = async () => {
+    if (!show) return;
+    try {
+      const res = await toggleWatchlist(show);
+      setBookmarked(res.bookmarked);
+      Alert.alert(
+        res.bookmarked ? 'Added to Watchlist' : 'Removed from Watchlist',
+        res.bookmarked ? `"${show.title}" saved to your Watchlist.` : `"${show.title}" removed from your list.`
+      );
+    } catch (e) {
+      console.warn('Watchlist toggle error:', e);
+    }
   };
 
   return (
@@ -69,7 +107,7 @@ export const ShowDetailScreen = ({ route, navigation }) => {
       <ScrollView style={styles.scroll}>
         {/* Top Backdrop Header */}
         <View style={styles.backdropContainer}>
-          <Image source={{ uri: bannerUrl }} style={styles.backdropImage} resizeMode="cover" />
+          <Image source={{ uri: backdropImageUri }} style={styles.backdropImage} resizeMode="cover" />
           <LinearGradient colors={GRADIENTS.heroOverlay} style={styles.gradientOverlay}>
             <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={24} color="#fff" />

@@ -333,15 +333,31 @@ def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_k
         )
         print(f"Uploaded {file} as {content_type}")
 
+def get_uploads_dir():
+    custom = os.getenv("LOCAL_STORAGE_PATH")
+    if custom and custom.strip():
+        resolved = os.path.abspath(custom.strip())
+        if not os.path.exists(resolved):
+            try:
+                os.makedirs(resolved, exist_ok=True)
+            except Exception as e:
+                print(f"Warning: Could not create custom storage directory {resolved}: {e}", file=sys.stderr)
+        return resolved
+    if os.path.exists("/app/uploads"):
+        return "/app/uploads"
+    default_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
+    os.makedirs(default_path, exist_ok=True)
+    return default_path
+
 def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
     """
     Executes the full pipeline:
     1. Probes video duration & streams
     2. Transcodes video, audio, and subtitles to temp dir with progress reporting
-    3. Uploads generated files to S3 with progress reporting
+    3. Saves generated files to laptop local storage (or uploads to S3 if STORAGE_TYPE=s3)
     4. Cleans up local temp files
     """
-    uploads_dir = "/app/uploads" if os.path.exists("/app/uploads") else os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+    uploads_dir = get_uploads_dir()
     temp_output_dir = os.path.join(uploads_dir, f"transcode_{episode_id}")
     
     if os.path.exists(temp_output_dir):
@@ -367,23 +383,54 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key):
         print(f"🔗 Creating master playlist...")
         create_master(audio_streams, subtitle_streams, temp_output_dir)
         
-        # Report Transcoding completed, moving to S3 Upload
+        # Report Transcoding completed
         report_progress(episode_id, stage="TRANSCODING", percent=100, speed="Done", eta=0)
         
-        # AWS S3 Settings from environment
-        bucket = os.getenv("AWS_S3_BUCKET")
-        access_key = os.getenv("AWS_ACCESS_KEY_ID")
-        secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-        region = os.getenv("AWS_REGION", "us-east-1")
+        storage_type = os.getenv("STORAGE_TYPE", "local").lower().strip()
         
-        if not bucket or access_key == "YOUR_AWS_ACCESS_KEY_ID" or not access_key:
-            raise Exception("AWS S3 Credentials or Bucket not configured in .env file.")
+        if storage_type == "s3":
+            # AWS S3 Settings from environment
+            bucket = os.getenv("AWS_S3_BUCKET")
+            access_key = os.getenv("AWS_ACCESS_KEY_ID")
+            secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+            region = os.getenv("AWS_REGION", "us-east-1")
             
-        # Upload to S3 with progress tracking
-        upload_to_s3(temp_output_dir, s3_folder_key, bucket, access_key, secret_key, region, episode_id=episode_id)
-        
-        # Build master manifest URL
-        playback_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_folder_key}master.m3u8"
+            if not bucket or access_key == "YOUR_AWS_ACCESS_KEY_ID" or not access_key:
+                raise Exception("AWS S3 Credentials or Bucket not configured in .env file.")
+                
+            # Upload to S3 with progress tracking
+            upload_to_s3(temp_output_dir, s3_folder_key, bucket, access_key, secret_key, region, episode_id=episode_id)
+            
+            # Build master manifest URL
+            clean_s3_prefix = s3_folder_key.strip('/')
+            playback_url = f"https://{bucket}.s3.{region}.amazonaws.com/{clean_s3_prefix}/master.m3u8"
+        else:
+            # LOCAL STORAGE MODE (Stores directly on laptop's local disk)
+            print(f"💾 Saving HLS streams directly to laptop local storage...")
+            report_progress(episode_id, stage="UPLOADING_S3", percent=50, speed="Saving local files...", eta=0)
+            
+            clean_folder_key = s3_folder_key.strip('/').replace('\\', '/')
+            # e.g., videos/show_1/ep_2
+            final_dest_dir = os.path.join(uploads_dir, *clean_folder_key.split('/'))
+            
+            if os.path.exists(final_dest_dir):
+                shutil.rmtree(final_dest_dir)
+            os.makedirs(final_dest_dir, exist_ok=True)
+            
+            # Copy all generated HLS files to final destination directory
+            for item in os.listdir(temp_output_dir):
+                s = os.path.join(temp_output_dir, item)
+                d = os.path.join(final_dest_dir, item)
+                if os.path.isdir(s):
+                    shutil.copytree(s, d, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(s, d)
+                    
+            print(f"✅ All HLS stream files successfully saved to: {final_dest_dir}")
+            report_progress(episode_id, stage="UPLOADING_S3", percent=100, speed="Saved to disk", eta=0)
+            
+            playback_url = f"/uploads/{clean_folder_key}/master.m3u8"
+            
         report_progress(episode_id, stage="COMPLETED", percent=100, speed="Done", eta=0, status="COMPLETED", video_url=playback_url)
         return playback_url
         

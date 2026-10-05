@@ -10,6 +10,7 @@ import {
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ShowDetailScreen } from './src/screens/ShowDetailScreen';
@@ -17,12 +18,17 @@ import { PlayerScreen } from './src/screens/PlayerScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
 import { LibraryScreen } from './src/screens/LibraryScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { AdminScreen } from './src/screens/AdminScreen';
 import { COLORS } from './src/theme/colors';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }, []);
 
   // Splash Screen Animations
   const logoScale = useRef(new Animated.Value(0.5)).current;
@@ -120,6 +126,7 @@ export default function App() {
           <Stack.Screen name="Explore" component={ExploreScreen} />
           <Stack.Screen name="Library" component={LibraryScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="Admin" component={AdminScreen} />
         </Stack.Navigator>
       </NavigationContainer>
 

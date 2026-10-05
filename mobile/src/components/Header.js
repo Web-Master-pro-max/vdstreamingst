@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar as RNStatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
+
+const STATUSBAR_HEIGHT = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0;
 
 export const Header = ({ onSearchPress, onProfilePress }) => {
   return (
@@ -14,12 +16,22 @@ export const Header = ({ onSearchPress, onProfilePress }) => {
 
       <View style={styles.actions}>
         {onSearchPress && (
-          <TouchableOpacity style={styles.iconBtn} onPress={onSearchPress} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={onSearchPress}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Ionicons name="search" size={20} color={COLORS.text} />
           </TouchableOpacity>
         )}
         {onProfilePress && (
-          <TouchableOpacity style={styles.iconBtn} onPress={onProfilePress} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={onProfilePress}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Ionicons name="person-circle-outline" size={24} color={COLORS.primary} />
           </TouchableOpacity>
         )}
@@ -30,7 +42,8 @@ export const Header = ({ onSearchPress, onProfilePress }) => {
 
 const styles = StyleSheet.create({
   header: {
-    height: 60,
+    paddingTop: STATUSBAR_HEIGHT,
+    height: 56 + STATUSBAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

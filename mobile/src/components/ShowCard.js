@@ -29,6 +29,13 @@ export const ShowCard = ({ show, onPress, width = 140, height = 200 }) => {
           <Text style={styles.ratingText}>{rating}</Text>
         </View>
 
+        {/* Playback Progress Indicator for Continue Watching */}
+        {show.progressPercent != null && show.progressPercent > 0 && (
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: `${Math.min(100, Math.max(2, show.progressPercent))}%` }]} />
+          </View>
+        )}
+
         {/* Play Icon Hover Overlay */}
         <View style={styles.playOverlay}>
           <View style={styles.playBtn}>
@@ -42,7 +49,13 @@ export const ShowCard = ({ show, onPress, width = 140, height = 200 }) => {
       </Text>
       
       <View style={styles.metaRow}>
-        <Text style={styles.category}>{categoryName}</Text>
+        {show.currentEpisode ? (
+          <Text style={styles.episodeTag}>
+            Ep. {show.currentEpisode.episodeNumber || 1} • {show.progressPercent || 0}%
+          </Text>
+        ) : (
+          <Text style={styles.category}>{categoryName}</Text>
+        )}
         {show.year && <Text style={styles.year}>{show.year}</Text>}
       </View>
     </TouchableOpacity>
@@ -125,5 +138,23 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     fontSize: 11,
     fontWeight: '600',
+  },
+  progressBarBg: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+  },
+  episodeTag: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: '800',
   },
 });

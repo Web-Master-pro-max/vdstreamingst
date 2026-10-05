@@ -1,21 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  StyleSheet, 
-  FlatList, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  RefreshControl 
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  Image,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../components/Header';
-import { HeroBanner } from '../components/HeroBanner';
+import { HeroCarousel } from '../components/HeroCarousel';
 import { ShowCard } from '../components/ShowCard';
+import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
 import { COLORS } from '../theme/colors';
-import { apiService } from '../services/api';
+import { apiService, formatMediaUrl, isVideoMedia } from '../services/api';
 
-const CATEGORY_TAGS = ['All', 'Action', 'Dark Fantasy', 'Supernatural', 'Shounen', 'Romance'];
+const CACHE_KEY_CAROUSEL = '@infinx_cached_carousel';
+const CACHE_KEY_CATEGORIES = '@infinx_cached_categories';
 
 export const HomeScreen = ({ navigation }) => {
   const [carouselShows, setCarouselShows] = useState([]);
@@ -23,31 +27,78 @@ export const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTag, setActiveTag] = useState('All');
-  const [heroIndex, setHeroIndex] = useState(0);
 
-  const loadData = async () => {
+  // Background image prefetcher for smooth stutter-free scrolling
+  const prefetchShowImages = useCallback((showsList) => {
+    if (!Array.isArray(showsList)) return;
+    showsList.forEach((show) => {
+      const poster = show.poster || show.posterUrl;
+      const banner = show.banner || show.bannerUrl;
+      if (poster && !isVideoMedia(poster)) {
+        Image.prefetch(formatMediaUrl(poster)).catch(() => {});
+      }
+      if (banner && !isVideoMedia(banner)) {
+        Image.prefetch(formatMediaUrl(banner)).catch(() => {});
+      }
+    });
+  }, []);
+
+  const loadData = useCallback(async (isRefresh = false) => {
+    // 1. Instant Cache: Load stored data first so the app feels instant
+    if (!isRefresh) {
+      try {
+        const [cachedHero, cachedCats] = await Promise.all([
+          AsyncStorage.getItem(CACHE_KEY_CAROUSEL),
+          AsyncStorage.getItem(CACHE_KEY_CATEGORIES),
+        ]);
+        if (cachedHero && cachedCats) {
+          const parsedHero = JSON.parse(cachedHero);
+          const parsedCats = JSON.parse(cachedCats);
+          if (parsedHero.length > 0 && parsedCats.length > 0) {
+            setCarouselShows(parsedHero);
+            setCategories(parsedCats);
+            setLoading(false);
+            prefetchShowImages(parsedHero);
+          }
+        }
+      } catch (cacheErr) {
+        console.warn('Cache read warning:', cacheErr);
+      }
+    }
+
+    // 2. Fetch fresh live data from EC2 backend
     try {
       const [heroData, catData] = await Promise.all([
         apiService.getCarouselShows(),
-        apiService.getCategoriesWithShows()
+        apiService.getCategoriesWithShows(),
       ]);
-      setCarouselShows(heroData);
-      setCategories(catData);
+
+      if (Array.isArray(heroData) && heroData.length > 0) {
+        setCarouselShows(heroData);
+        AsyncStorage.setItem(CACHE_KEY_CAROUSEL, JSON.stringify(heroData)).catch(() => {});
+        prefetchShowImages(heroData);
+      }
+
+      if (Array.isArray(catData) && catData.length > 0) {
+        setCategories(catData);
+        AsyncStorage.setItem(CACHE_KEY_CATEGORIES, JSON.stringify(catData)).catch(() => {});
+        catData.forEach((c) => prefetchShowImages(c.shows));
+      }
     } catch (e) {
-      console.error('Error loading homepage data:', e);
+      console.warn('Error fetching homepage data:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [prefetchShowImages]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadData();
+    loadData(true);
   };
 
   const handleShowPress = (show) => {
@@ -55,98 +106,179 @@ export const HomeScreen = ({ navigation }) => {
   };
 
   const handlePlayPress = (show) => {
-    const epId = show.episodes?.[0]?.id || 1;
-    navigation.navigate('Player', { episodeId: epId, show });
+    const ep = show.episodes?.[0];
+    if (ep && ep.id) {
+      navigation.navigate('Player', { episodeId: ep.id, episode: ep, show });
+    } else {
+      navigation.navigate('ShowDetail', { showId: show.id, show });
+    }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading Infinx Anime...</Text>
-      </View>
-    );
-  }
+  // Dynamically extract available categories & genres so all pills are guaranteed relevant
+  const availableTags = useMemo(() => {
+    const list = ['All'];
+    if (Array.isArray(categories)) {
+      categories.forEach((cat) => {
+        if (cat.name && !list.includes(cat.name)) {
+          list.push(cat.name);
+        }
+      });
+      categories.forEach((cat) => {
+        (cat.shows || []).forEach((show) => {
+          (show.categories || []).forEach((sc) => {
+            const name = sc.category?.name;
+            if (name && !list.includes(name)) {
+              list.push(name);
+            }
+          });
+        });
+      });
+    }
+    return list;
+  }, [categories]);
 
-  const currentHero = carouselShows[heroIndex] || carouselShows[0];
+  const handleTagPress = (tag) => {
+    setActiveTag((prev) => (prev === tag ? 'All' : tag));
+  };
+
+  // Filter categories by active pill tag
+  const displayedCategories = useMemo(() => {
+    if (activeTag === 'All') return categories;
+
+    const tagLower = activeTag.toLowerCase();
+    return categories
+      .map((cat) => {
+        const catMatches = cat.name.toLowerCase().includes(tagLower);
+        const matchedShows = (cat.shows || []).filter((s) => {
+          if (catMatches) return true;
+          return (
+            s.categories &&
+            s.categories.some(
+              (sc) =>
+                sc.category?.name?.toLowerCase().includes(tagLower) ||
+                sc.category?.slug?.toLowerCase().includes(tagLower)
+            )
+          );
+        });
+
+        return {
+          ...cat,
+          shows: matchedShows,
+        };
+      })
+      .filter((cat) => cat.shows && cat.shows.length > 0);
+  }, [categories, activeTag]);
+
+  // Show modern Shimmer Skeleton if loading and no cached data is present
+  if (loading && carouselShows.length === 0) {
+    return <HomeScreenSkeleton />;
+  }
 
   return (
     <View style={styles.container}>
-      <Header 
-        onSearchPress={() => navigation.navigate('Explore')} 
+      <Header
+        onSearchPress={() => navigation.navigate('Explore')}
         onProfilePress={() => navigation.navigate('Library')}
       />
 
-      <ScrollView 
+      <ScrollView
         style={styles.scroll}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor={COLORS.primary} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
           />
         }
       >
-        {/* Featured Hero Banner */}
-        {currentHero && (
-          <HeroBanner 
-            show={currentHero} 
+        {/* Full Swipable Hero Carousel (All 5 Featured Shows with Auto-play) */}
+        {carouselShows.length > 0 && (
+          <HeroCarousel
+            shows={carouselShows}
             onPlayPress={handlePlayPress}
             onDetailPress={handleShowPress}
           />
         )}
 
-        {/* Category Pills Bar */}
-        <View style={styles.tagSection}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagScroll}>
-            {CATEGORY_TAGS.map((tag) => {
-              const isActive = activeTag === tag;
-              return (
-                <TouchableOpacity
-                  key={tag}
-                  style={[styles.tagPill, isActive && styles.activeTagPill]}
-                  onPress={() => setActiveTag(tag)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.tagText, isActive && styles.activeTagText]}>
-                    {tag}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+        {/* Dynamic Category Filter Pills Bar */}
+        {availableTags.length > 1 && (
+          <View style={styles.tagSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tagScroll}
+            >
+              {availableTags.map((tag) => {
+                const isActive = activeTag === tag;
+                return (
+                  <TouchableOpacity
+                    key={tag}
+                    style={[styles.tagPill, isActive && styles.activeTagPill]}
+                    onPress={() => handleTagPress(tag)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.tagText, isActive && styles.activeTagText]}>
+                      {tag}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
-        {/* Categories Rail List */}
-        {categories.map((cat) => {
-          if (!cat.shows || cat.shows.length === 0) return null;
-          return (
-            <View key={cat.id} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{cat.name}</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Explore', { category: cat.name })}>
-                  <Text style={styles.seeAllText}>See All ›</Text>
-                </TouchableOpacity>
+        {/* Empty State when no shows match the filter */}
+        {displayedCategories.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="film-outline" size={48} color={COLORS.textSecondary} />
+            <Text style={styles.emptyTitle}>No Shows Found</Text>
+            <Text style={styles.emptySubtitle}>
+              No titles match "{activeTag}". Tap below to view all shows.
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => setActiveTag('All')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyButtonText}>View All Shows</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* Categories Rail List */
+          displayedCategories.map((cat) => {
+            if (!cat.shows || cat.shows.length === 0) return null;
+            return (
+              <View key={cat.id} style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>{cat.name}</Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Explore', { category: cat.name })}
+                  >
+                    <Text style={styles.seeAllText}>See All ›</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <FlatList
+                  data={cat.shows}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <ShowCard show={item} onPress={handleShowPress} />
+                  )}
+                  contentContainerStyle={styles.railContent}
+                  initialNumToRender={4}
+                  maxToRenderPerBatch={4}
+                  windowSize={3}
+                />
               </View>
+            );
+          })
+        )}
 
-              <FlatList 
-                data={cat.shows}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                  <ShowCard 
-                    show={item} 
-                    onPress={handleShowPress} 
-                  />
-                )}
-                contentContainerStyle={styles.railContent}
-              />
-            </View>
-          );
-        })}
-
-        <View style={{ height: 30 }} />
+        <View style={{ height: 36 }} />
       </ScrollView>
     </View>
   );
@@ -156,17 +288,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-    gap: 12,
-  },
-  loadingText: {
-    color: COLORS.textMuted,
-    fontSize: 14,
   },
   scroll: {
     flex: 1,
@@ -205,7 +326,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   section: {
-    marginTop: 16,
+    marginTop: 18,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -227,5 +348,36 @@ const styles = StyleSheet.create({
   },
   railContent: {
     paddingLeft: 16,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 24,
+  },
+  emptyTitle: {
+    color: COLORS.text,
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+  emptyButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

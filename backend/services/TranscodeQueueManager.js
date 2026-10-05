@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
+const { getUploadsDir } = require('../s3');
 const prisma = new PrismaClient();
 
 class TranscodeQueueManager {
@@ -145,7 +146,7 @@ class TranscodeQueueManager {
       console.log(`[QueueManager] Transcoder for Episode ${episodeId} exited with code ${code}`);
 
       if (code === 0) {
-        const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(https?:\/\/\S+)/);
+        const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(\S+)/);
         if (match && match[1]) {
           const playbackUrl = match[1];
           console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
@@ -331,15 +332,23 @@ class TranscodeQueueManager {
 
       if (pendingEpisodes.length > 0) {
         console.log(`[QueueManager] Found ${pendingEpisodes.length} unfinished episodes in database. Re-queueing sequentially...`);
+        const uploadsDir = getUploadsDir();
+        const rawDir = path.join(uploadsDir, 'temp_raw');
         for (const ep of pendingEpisodes) {
-          const rawDir = path.join(__dirname, '../../uploads/temp_raw');
-          const possibleRawPath = path.join(rawDir, `raw_show_${ep.showId}_ep_${ep.id}.mp4`);
+          let rawVideoPath = path.join(rawDir, `raw_show_${ep.showId}_ep_${ep.id}.mp4`);
+          if (!fs.existsSync(rawVideoPath) && fs.existsSync(uploadsDir)) {
+            const files = fs.readdirSync(uploadsDir);
+            const matchFile = files.find(f => f.startsWith('raw-') && f.includes(ep.id.toString()));
+            if (matchFile) {
+              rawVideoPath = path.join(uploadsDir, matchFile);
+            }
+          }
           const s3FolderKey = `videos/show_${ep.showId}/ep_${ep.id}`;
           
           this.enqueueJob({
             episodeId: ep.id,
             showId: ep.showId,
-            rawVideoPath: possibleRawPath,
+            rawVideoPath: rawVideoPath,
             s3FolderKey: s3FolderKey
           });
         }
