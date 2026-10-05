@@ -4,6 +4,27 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Get all shows
+router.get('/', async (req, res) => {
+  try {
+    const shows = await prisma.show.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        categories: {
+          include: { category: true }
+        },
+        episodes: {
+          orderBy: { episodeNumber: 'asc' }
+        }
+      }
+    });
+    res.json(shows);
+  } catch (error) {
+    console.error('Error fetching shows list:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 // Get featured shows for carousel
 router.get('/carousel', async (req, res) => {
   try {

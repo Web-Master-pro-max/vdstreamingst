@@ -184,12 +184,23 @@ const episodeUploadHandler = async (req, res) => {
 
     const s3FolderKey = `videos/show_${showId}/ep_${episode.id}/`;
 
+    // Tag raw file with episodeId for reliable recovery, sync, and retry
+    const cleanOrigName = (req.file.originalname || 'video.mp4').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const dedicatedFileName = `raw-${Date.now()}-ep_${episode.id}-${cleanOrigName}`;
+    const dedicatedFilePath = path.join(path.dirname(rawVideoPath), dedicatedFileName);
+    try {
+      if (fs.existsSync(rawVideoPath)) {
+        fs.renameSync(rawVideoPath, dedicatedFilePath);
+      }
+    } catch (e) {}
+    const activeRawPath = fs.existsSync(dedicatedFilePath) ? dedicatedFilePath : rawVideoPath;
+
     // Always enqueue into TranscodeQueueManager so transcoding starts immediately
     console.log(`[Admin Upload] Enqueueing Episode ${episode.id} into TranscodeQueueManager...`);
     transcodeQueueManager.enqueueJob({
       episodeId: episode.id,
       showId: showId,
-      rawVideoPath: rawVideoPath,
+      rawVideoPath: activeRawPath,
       s3FolderKey: s3FolderKey,
       storageType: storageType || process.env.STORAGE_TYPE || 'local',
       localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
@@ -470,15 +481,43 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
       return res.status(404).json({ error: 'Episode not found.' });
     }
 
-    // Find raw source video file in uploads directory
+    // Find raw source video file in uploads directory specifically for this episode
     const activeUploadsDir = getUploadsDir();
     let rawVideoPath = null;
 
     if (fs.existsSync(activeUploadsDir)) {
       const files = fs.readdirSync(activeUploadsDir);
-      const matchFile = files.find(f => f.startsWith(`raw-`) || f.includes(episodeId.toString()));
+      // Priority 1: Match files with explicit ep_${episodeId}
+      let matchFile = files.find(f => 
+        f.startsWith('raw-') && (
+          f.includes(`ep_${episodeId}-`) || 
+          f.includes(`ep_${episodeId}_`) || 
+          f.includes(`_${episodeId}_`) ||
+          f.includes(`_${episodeId}.`) ||
+          f.includes(`ep${episodeId}`)
+        )
+      );
+      // Priority 2: Match files containing episodeId
+      if (!matchFile) {
+        matchFile = files.find(f => f.includes(`ep_${episodeId}`) || f.includes(`ep${episodeId}`) || f.includes(episodeId.toString()));
+      }
+      // Priority 3: If only one raw file exists in uploadsDir, use it
+      if (!matchFile) {
+        const rawFiles = files.filter(f => f.startsWith('raw-'));
+        if (rawFiles.length === 1) {
+          matchFile = rawFiles[0];
+        }
+      }
       if (matchFile) {
         rawVideoPath = path.join(activeUploadsDir, matchFile);
+      }
+    }
+
+    // Also check legacy folder path
+    if (!rawVideoPath || !fs.existsSync(rawVideoPath)) {
+      const legacyPath = path.join(activeUploadsDir, 'temp_raw', `raw_show_${episode.showId}_ep_${episode.id}.mp4`);
+      if (fs.existsSync(legacyPath)) {
+        rawVideoPath = legacyPath;
       }
     }
 

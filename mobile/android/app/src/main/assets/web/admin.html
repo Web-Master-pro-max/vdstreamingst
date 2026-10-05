@@ -1345,6 +1345,26 @@
         const API_BASE = '/api';
         let taskPollInterval = null;
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        window.formatMediaUrl = function (url) {
+            const fallback = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200';
+            if (!url) return fallback;
+            if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+            if (url.startsWith('/uploads/')) return url;
+            if (url.startsWith('posters/') || url.startsWith('banners/')) return `/uploads/${url}`;
+            if (!url.includes('/')) return `/uploads/posters/${url}`;
+            return url.startsWith('/') ? url : `/${url}`;
+        };
+
         // Authorization & Guards
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('infinx_token');
@@ -1956,7 +1976,8 @@
                     barGradient = 'linear-gradient(90deg, #e74c3c, #c0392b)';
                     statusColor = '#e74c3c';
                     iconClass = 'fa-exclamation-triangle';
-                    statusLabel = 'Failed';
+                    const errSnippet = data.error || (data.speed && data.speed !== '0' && data.speed !== '0x' && data.speed !== 'Done' ? data.speed : 'Transcode failed');
+                    statusLabel = `<span title="${escapeHtml(errSnippet)}" style="cursor: help;">Failed</span>`;
                 } else if (st === 'PROCESSING') {
                     barGradient = activeGradient;
                     statusColor = '#00a8ff';
@@ -1968,6 +1989,12 @@
                     const metaText = metaArr.length > 0 ? ` (${metaArr.join(' • ')})` : '';
                     statusLabel = `${percent}%${metaText}`;
                 }
+
+                const errDetailHtml = (st === 'FAILED' && (data.error || (data.speed && data.speed !== 'Failed' && data.speed !== '0x' && data.speed !== 'Done'))) ? `
+                    <div style="font-size: 0.8rem; color: #ff7675; margin-top: 4px; line-height: 1.3; background: rgba(231,76,60,0.12); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(231,76,60,0.3); word-break: break-all;">
+                        <i class="fas fa-exclamation-circle"></i> ${escapeHtml(data.error || data.speed)}
+                    </div>
+                ` : '';
 
                 return `
                     <div style="margin-bottom: 6px; width: 100%; min-width: 220px; max-width: 320px;">
@@ -1982,6 +2009,7 @@
                         <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
                             <div style="width: ${percent}%; height: 100%; background: ${barGradient}; border-radius: 3px; transition: width 0.4s ease;"></div>
                         </div>
+                        ${errDetailHtml}
                     </div>
                 `;
             }
@@ -2178,7 +2206,8 @@
                     }
 
                     tbody.innerHTML = showsList.map(show => {
-                        const posterUrl = show.poster || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200';
+                        const fallbackPoster = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200';
+                        const posterUrl = window.formatMediaUrl(show.poster) || fallbackPoster;
                         const episodesCount = show.episodes ? show.episodes.length : 0;
                         const isMovie = show.type === 'movie';
                         const epBtnLabel = isMovie ? '<i class="fas fa-video"></i> Movie File' : '<i class="fas fa-tasks"></i> Episodes';
@@ -2188,7 +2217,7 @@
                         return `
                             <tr>
                                 <td>
-                                    <img src="${posterUrl}" alt="${show.title}" style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gray-border);">
+                                    <img src="${posterUrl}" alt="${escapeHtml(show.title)}" style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gray-border);" onerror="this.onerror=null; this.src='${fallbackPoster}';">
                                 </td>
                                 <td>
                                     <strong style="font-size: 1.4rem; font-family: 'Outfit';">${show.title}</strong><br>
@@ -2497,15 +2526,15 @@
 
                     listBody.innerHTML = featured.map(show => {
                         const fallbackImage = 'Postes/infinit-cas11.jpg';
-                        const posterUrl = show.poster || fallbackImage;
-                        const bannerUrl = show.banner || fallbackImage;
+                        const posterUrl = window.formatMediaUrl(show.poster) || fallbackImage;
+                        const bannerUrl = window.formatMediaUrl(show.banner) || fallbackImage;
 
                         return `
                             <tr>
-                                <td><strong style="font-size: 1.4rem; color: white;">${show.title}</strong></td>
+                                <td><strong style="font-size: 1.4rem; color: white;">${escapeHtml(show.title)}</strong></td>
                                 <td><span style="color: var(--warning);"><i class="fas fa-star"></i> ${show.rating}</span> <span style="margin-left: 8px; color: var(--gray-text); font-size: 1.2rem;">(${show.year})</span></td>
-                                <td><img src="${posterUrl}" style="height: 60px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover; aspect-ratio: 2/3;" onerror="this.src='${fallbackImage}'"></td>
-                                <td><img src="${bannerUrl}" style="height: 60px; width: 120px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover;" onerror="this.src='${fallbackImage}'"></td>
+                                <td><img src="${posterUrl}" style="height: 60px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover; aspect-ratio: 2/3;" onerror="this.onerror=null; this.src='${fallbackImage}';"></td>
+                                <td><img src="${bannerUrl}" style="height: 60px; width: 120px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover;" onerror="this.onerror=null; this.src='${fallbackImage}';"></td>
                                 <td>
                                     <button onclick="removeFeatured(${show.id}, '${show.title.replace(/'/g, "\\'")}')" style="background: rgba(231, 76, 60, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 6px;"><i class="fas fa-trash-alt"></i> Remove</button>
                                 </td>

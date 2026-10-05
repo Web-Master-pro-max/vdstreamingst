@@ -33,12 +33,26 @@ router.post('/transcode-status', async (req, res) => {
     }
 
     if (stageDetails) {
-      updateData.stageDetails = typeof stageDetails === 'string' ? stageDetails : JSON.stringify(stageDetails);
+      let stageObj = typeof stageDetails === 'string' ? JSON.parse(stageDetails) : stageDetails;
+      if (error && stageObj.transcoding) {
+        stageObj.transcoding.error = error;
+        if (!stageObj.transcoding.speed || stageObj.transcoding.speed === '0x') {
+          stageObj.transcoding.speed = String(error).substring(0, 80);
+        }
+      }
+      updateData.stageDetails = JSON.stringify(stageObj);
     } else if (status === 'COMPLETED') {
       updateData.stageDetails = JSON.stringify({
         uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
         transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
         uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+      });
+    } else if (status === 'FAILED') {
+      const errMsg = error || 'Transcode process failed';
+      updateData.stageDetails = JSON.stringify({
+        uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+        transcoding: { percent: 0, speed: errMsg.substring(0, 80), eta: 0, status: 'FAILED', error: errMsg },
+        uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
       });
     }
 

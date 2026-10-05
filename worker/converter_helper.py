@@ -22,24 +22,28 @@ for p in local_bin_paths:
     if os.path.exists(p) and p not in os.environ.get("PATH", ""):
         os.environ["PATH"] = p + os.pathsep + os.environ.get("PATH", "")
 
-def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCESSING", video_url=None):
+def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCESSING", video_url=None, error=None):
     if not episode_id:
         return
     backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
     secret = os.getenv("WORKER_WEBHOOK_SECRET", "infinx_webhook_shared_secret_2026")
     url = f"{backend_url}/api/webhooks/transcode-status"
     
+    is_failed = (stage == "FAILED" or status == "FAILED")
+    speed_str = str(speed) if speed else "0"
+    
     stage_details = {
         "uploadServer": { "percent": 100, "speed": "Done", "eta": 0, "status": "COMPLETED" },
         "transcoding": {
             "percent": round(percent, 1) if stage == "TRANSCODING" else (100 if stage in ["UPLOADING_S3", "COMPLETED"] else 0),
-            "speed": str(speed) if stage == "TRANSCODING" else ("Done" if stage in ["UPLOADING_S3", "COMPLETED"] else "0x"),
+            "speed": speed_str if stage == "TRANSCODING" else ("Done" if stage in ["UPLOADING_S3", "COMPLETED"] else (speed_str if is_failed else "0x")),
             "eta": eta if stage == "TRANSCODING" else 0,
-            "status": "PROCESSING" if stage == "TRANSCODING" else ("COMPLETED" if stage in ["UPLOADING_S3", "COMPLETED"] else "PENDING")
+            "status": "PROCESSING" if stage == "TRANSCODING" else ("COMPLETED" if stage in ["UPLOADING_S3", "COMPLETED"] else ("FAILED" if is_failed else "PENDING")),
+            "error": error if is_failed else None
         },
         "uploadS3": {
             "percent": round(percent, 1) if stage == "UPLOADING_S3" else (100 if stage == "COMPLETED" else 0),
-            "speed": str(speed) if stage == "UPLOADING_S3" else ("Done" if stage == "COMPLETED" else "0 MB/s"),
+            "speed": speed_str if stage == "UPLOADING_S3" else ("Done" if stage == "COMPLETED" else "0 MB/s"),
             "eta": eta if stage == "UPLOADING_S3" else 0,
             "status": "PROCESSING" if stage == "UPLOADING_S3" else ("COMPLETED" if stage == "COMPLETED" else "PENDING")
         }
@@ -53,11 +57,13 @@ def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCES
     }
     if video_url:
         payload["videoUrl"] = video_url
+    if error or is_failed:
+        payload["error"] = error or speed_str
 
     try:
         import requests
         res = requests.post(url, json=payload, timeout=5)
-        print(f"📡 Webhook progress report sent: Ep #{episode_id} {stage} {percent:.1f}% ({speed}) -> {res.status_code}")
+        print(f"📡 Webhook progress report sent: Ep #{episode_id} {stage} {percent:.1f}% ({speed_str}) -> {res.status_code}")
     except Exception as e:
         print(f"Progress webhook notification warning: {e}", file=sys.stderr)
 
@@ -101,38 +107,70 @@ def probe_streams(input_file):
     audio_streams = []
     subtitle_streams = []
 
+    # Supported text subtitle codecs that FFmpeg can transcode to WebVTT
+    supported_sub_codecs = {"subrip", "srt", "ass", "ssa", "webvtt", "mov_text", "text"}
+
     for stream in data.get("streams", []):
-        if stream["codec_type"] == "audio":
-            tags = stream.get("tags", {})
+        codec_type = stream.get("codec_type")
+        codec_name = (stream.get("codec_name") or "").lower().strip()
+        tags = stream.get("tags") or {}
+
+        if codec_type == "audio":
             audio_streams.append({
-                "index": stream["index"],
+                "index": stream.get("index"),
+                "codec_name": codec_name,
                 "lang": tags.get("language", "und"),
                 "title": tags.get("title", f"Audio {len(audio_streams)+1}")
             })
 
-        if stream["codec_type"] == "subtitle":
-            tags = stream.get("tags", {})
-            subtitle_streams.append({
-                "index": stream["index"],
-                "lang": tags.get("language", "und"),
-                "title": tags.get("title", f"Subtitle {len(subtitle_streams)+1}")
-            })
+        elif codec_type == "subtitle":
+            if codec_name in supported_sub_codecs:
+                subtitle_streams.append({
+                    "index": stream.get("index"),
+                    "codec_name": codec_name,
+                    "lang": tags.get("language", "und"),
+                    "title": tags.get("title", f"Subtitle {len(subtitle_streams)+1}")
+                })
+            else:
+                print(f"ℹ️ Skipping non-text/bitmap subtitle stream #{stream.get('index')} (codec: {codec_name}) - WebVTT only supports text subtitles.")
 
     return audio_streams, subtitle_streams
 
 def extract_subtitles(input_file, subtitle_streams, output_dir):
+    successful_subs = []
     for i, sub in enumerate(subtitle_streams):
-        output = os.path.join(output_dir, f"sub_{i}.vtt")
-        run_cmd([
-            "ffmpeg",
-            "-i", input_file,
-            "-map", f"0:s:{i}",
-            "-c:s", "webvtt",
-            "-y",
-            output
-        ])
+        out_vtt_name = f"sub_{i}.vtt"
+        output = os.path.join(output_dir, out_vtt_name)
+        # Try extracting with stream index first, then fallback to relative subtitle index 0:s:{i}
+        for map_arg in [f"0:{sub['index']}", f"0:s:{i}"]:
+            cmd = [
+                "ffmpeg",
+                "-i", input_file,
+                "-map", map_arg,
+                "-c:s", "webvtt",
+                "-y",
+                output
+            ]
+            try:
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                if res.returncode == 0 and os.path.exists(output) and os.path.getsize(output) > 0:
+                    sub_item = dict(sub)
+                    sub_item["uri"] = out_vtt_name
+                    successful_subs.append(sub_item)
+                    print(f"✅ Extracted subtitle track #{i} ({sub.get('lang', 'und')}) via {map_arg}")
+                    break
+                else:
+                    if os.path.exists(output):
+                        try: os.remove(output)
+                        except Exception: pass
+            except Exception as e:
+                print(f"⚠️ Subtitle extract warning for track #{i} ({map_arg}): {e}")
+    return successful_subs
 
 def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None):
+    stderr_log_path = os.path.join(output_dir, "ffmpeg_video_err.log")
+    stderr_file = open(stderr_log_path, "w", encoding="utf-8", errors="ignore")
+
     cmd = [
         "ffmpeg",
         "-progress", "pipe:1",
@@ -140,6 +178,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
         "-i", input_file,
         "-map", "0:v:0",
         "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
         "-preset", "fast",
         "-crf", "23",
         "-f", "hls",
@@ -152,77 +191,110 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
     ]
 
     print(f"\nRunning: {' '.join(cmd)}")
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr_file, text=True, bufsize=1)
     
     start_time = time.time()
     last_report_time = 0.0
     current_out_time_sec = 0.0
     speed_val = "1.0x"
     
-    while True:
-        line = process.stdout.readline()
-        if not line and process.poll() is not None:
-            break
-        if not line:
-            continue
-        line = line.strip()
-        if "=" in line:
-            parts = line.split("=", 1)
-            key = parts[0].strip()
-            val = parts[1].strip()
-            
-            if key == "out_time_us" or key == "out_time_ms":
-                try:
-                    current_out_time_sec = float(val) / 1000000.0
-                except ValueError:
-                    pass
-            elif key == "out_time":
-                try:
-                    h, m, s = val.split(":")
-                    current_out_time_sec = float(h)*3600 + float(m)*60 + float(s)
-                except Exception:
-                    pass
-            elif key == "speed":
-                speed_val = val.strip()
+    try:
+        while True:
+            line = process.stdout.readline()
+            if not line and process.poll() is not None:
+                break
+            if not line:
+                continue
+            line = line.strip()
+            if "=" in line:
+                parts = line.split("=", 1)
+                key = parts[0].strip()
+                val = parts[1].strip()
                 
-            now = time.time()
-            if (now - last_report_time) >= 1.0:
-                last_report_time = now
-                if total_duration > 0:
-                    percent = min(99.0, max(0.0, (current_out_time_sec / total_duration) * 100))
-                    elapsed = max(0.1, now - start_time)
-                    calc_speed = current_out_time_sec / elapsed if elapsed > 0 else 1.0
-                    eta = max(0, int((total_duration - current_out_time_sec) / calc_speed)) if calc_speed > 0 else 0
-                    speed_display = speed_val if speed_val != "N/A" else f"{calc_speed:.1f}x"
-                else:
-                    percent = 50.0
-                    speed_display = "1.0x"
-                    eta = 0
+                if key == "out_time_us" or key == "out_time_ms":
+                    try:
+                        current_out_time_sec = float(val) / 1000000.0
+                    except ValueError:
+                        pass
+                elif key == "out_time":
+                    try:
+                        h, m, s = val.split(":")
+                        current_out_time_sec = float(h)*3600 + float(m)*60 + float(s)
+                    except Exception:
+                        pass
+                elif key == "speed":
+                    speed_val = val.strip()
                     
-                if episode_id:
-                    report_progress(episode_id, stage="TRANSCODING", percent=percent, speed=speed_display, eta=eta)
+                now = time.time()
+                if (now - last_report_time) >= 1.0:
+                    last_report_time = now
+                    if total_duration > 0:
+                        percent = min(99.0, max(0.0, (current_out_time_sec / total_duration) * 100))
+                        elapsed = max(0.1, now - start_time)
+                        calc_speed = current_out_time_sec / elapsed if elapsed > 0 else 1.0
+                        eta = max(0, int((total_duration - current_out_time_sec) / calc_speed)) if calc_speed > 0 else 0
+                        speed_display = speed_val if speed_val != "N/A" else f"{calc_speed:.1f}x"
+                    else:
+                        percent = 50.0
+                        speed_display = "1.0x"
+                        eta = 0
+                        
+                    if episode_id:
+                        report_progress(episode_id, stage="TRANSCODING", percent=percent, speed=speed_display, eta=eta)
+    finally:
+        stderr_file.close()
 
     rc = process.poll()
     if rc != 0:
-        raise Exception(f"FFmpeg transcode command failed (exit code {rc}).")
+        err_snippet = ""
+        if os.path.exists(stderr_log_path):
+            try:
+                with open(stderr_log_path, "r", encoding="utf-8", errors="ignore") as f:
+                    err_lines = [l.strip() for l in f.readlines() if l.strip()]
+                    err_snippet = " ".join(err_lines[-5:]) if err_lines else ""
+            except Exception:
+                pass
+        raise Exception(f"FFmpeg video transcode failed (code {rc}): {err_snippet}")
 
 def create_audio_hls(input_file, audio_streams, output_dir):
+    successful_audios = []
     for i, audio in enumerate(audio_streams):
-        run_cmd([
-            "ffmpeg",
-            "-i", input_file,
-            "-map", f"0:a:{i}",
-            "-c:a", "aac",
-            "-b:a", "192k",
-            "-ac", "2",
-            "-f", "hls",
-            "-hls_time", "6",
-            "-hls_playlist_type", "vod",
-            "-hls_segment_filename",
-            os.path.join(output_dir, f"audio{i}_%03d.ts"),
-            "-y",
-            os.path.join(output_dir, f"audio{i}.m3u8")
-        ])
+        out_m3u8_name = f"audio{i}.m3u8"
+        out_m3u8 = os.path.join(output_dir, out_m3u8_name)
+        out_ts = os.path.join(output_dir, f"audio{i}_%03d.ts")
+        
+        for map_arg in [f"0:{audio['index']}", f"0:a:{i}"]:
+            cmd = [
+                "ffmpeg",
+                "-i", input_file,
+                "-map", map_arg,
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-ac", "2",
+                "-f", "hls",
+                "-hls_time", "6",
+                "-hls_playlist_type", "vod",
+                "-hls_segment_filename", out_ts,
+                "-y",
+                out_m3u8
+            ]
+            try:
+                print(f"\nTranscoding audio track #{i} with {map_arg}...")
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+                if res.returncode == 0 and os.path.exists(out_m3u8):
+                    audio_item = dict(audio)
+                    audio_item["uri"] = out_m3u8_name
+                    successful_audios.append(audio_item)
+                    print(f"✅ Transcoded audio track #{i} ({audio.get('lang', 'und')})")
+                    break
+                else:
+                    print(f"⚠️ Audio transcode with {map_arg} failed (code {res.returncode}): {res.stderr.strip()[-200:]}")
+                    if os.path.exists(out_m3u8):
+                        try: os.remove(out_m3u8)
+                        except Exception: pass
+            except Exception as e:
+                print(f"⚠️ Audio transcode exception for track #{i}: {e}")
+    return successful_audios
 
 def create_master(audio_streams, subtitle_streams, output_dir):
     master = os.path.join(output_dir, "master.m3u8")
@@ -233,37 +305,42 @@ def create_master(audio_streams, subtitle_streams, output_dir):
         f.write("#EXT-X-INDEPENDENT-SEGMENTS\n\n")
 
         # AUDIO GROUP
-        for i, audio in enumerate(audio_streams):
-            f.write(
-                f'#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",'
-                f'NAME="{audio["title"]}",'
-                f'LANGUAGE="{audio["lang"]}",'
-                f'DEFAULT={"YES" if i==0 else "NO"},'
-                f'AUTOSELECT=YES,'
-                f'URI="audio{i}.m3u8"\n'
-            )
-
-        f.write("\n")
+        has_audio = audio_streams and len(audio_streams) > 0
+        if has_audio:
+            for i, audio in enumerate(audio_streams):
+                uri = audio.get("uri", f"audio{i}.m3u8")
+                f.write(
+                    f'#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",'
+                    f'NAME="{audio.get("title", f"Audio {i+1}")}",'
+                    f'LANGUAGE="{audio.get("lang", "und")}",'
+                    f'DEFAULT={"YES" if i==0 else "NO"},'
+                    f'AUTOSELECT=YES,'
+                    f'URI="{uri}"\n'
+                )
+            f.write("\n")
 
         # SUBTITLE GROUP
-        for i, sub in enumerate(subtitle_streams):
-            f.write(
-                f'#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",'
-                f'NAME="{sub["title"]}",'
-                f'LANGUAGE="{sub["lang"]}",'
-                f'DEFAULT={"YES" if i==0 else "NO"},'
-                f'AUTOSELECT=YES,'
-                f'URI="sub_{i}.vtt"\n'
-            )
-
-        f.write("\n")
+        has_subs = subtitle_streams and len(subtitle_streams) > 0
+        if has_subs:
+            for i, sub in enumerate(subtitle_streams):
+                uri = sub.get("uri", f"sub_{i}.vtt")
+                f.write(
+                    f'#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",'
+                    f'NAME="{sub.get("title", f"Subtitle {i+1}")}",'
+                    f'LANGUAGE="{sub.get("lang", "und")}",'
+                    f'DEFAULT={"YES" if i==0 else "NO"},'
+                    f'AUTOSELECT=YES,'
+                    f'URI="{uri}"\n'
+                )
+            f.write("\n")
 
         # VIDEO STREAM
-        f.write(
-            '#EXT-X-STREAM-INF:BANDWIDTH=2000000,'
-            'AUDIO="audio",'
-            'SUBTITLES="subs"\n'
-        )
+        stream_inf = '#EXT-X-STREAM-INF:BANDWIDTH=2000000'
+        if has_audio:
+            stream_inf += ',AUDIO="audio"'
+        if has_subs:
+            stream_inf += ',SUBTITLES="subs"'
+        f.write(stream_inf + "\n")
         f.write("video.m3u8\n")
 
 def get_mime_type(filename):
@@ -358,10 +435,12 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
     4. Cleans up local temp files
     """
     uploads_dir = get_uploads_dir(storage_path_override)
-    temp_output_dir = os.path.join(uploads_dir, f"transcode_{episode_id}")
+    unique_suffix = f"{episode_id}_{int(time.time()*1000)}_{os.getpid()}"
+    temp_output_dir = os.path.join(uploads_dir, f"transcode_{unique_suffix}")
     
     if os.path.exists(temp_output_dir):
-        shutil.rmtree(temp_output_dir)
+        try: shutil.rmtree(temp_output_dir)
+        except Exception: pass
     os.makedirs(temp_output_dir, exist_ok=True)
     
     transcode_success = False
@@ -375,14 +454,15 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
         create_video_hls(source_path, temp_output_dir, total_duration=duration, episode_id=episode_id)
         
         print(f"🔊 Transcoding audio tracks ({len(audio_streams)} found)...")
-        create_audio_hls(source_path, audio_streams, temp_output_dir)
+        valid_audios = create_audio_hls(source_path, audio_streams, temp_output_dir)
         
+        valid_subs = []
         if len(subtitle_streams) > 0:
             print(f"📝 Extracting subtitle tracks ({len(subtitle_streams)} found)...")
-            extract_subtitles(source_path, subtitle_streams, temp_output_dir)
+            valid_subs = extract_subtitles(source_path, subtitle_streams, temp_output_dir)
             
         print(f"🔗 Creating master playlist...")
-        create_master(audio_streams, subtitle_streams, temp_output_dir)
+        create_master(valid_audios, valid_subs, temp_output_dir)
         
         # Report Transcoding completed
         report_progress(episode_id, stage="TRANSCODING", percent=100, speed="Done", eta=0)
@@ -415,7 +495,8 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
             final_dest_dir = os.path.join(uploads_dir, *clean_folder_key.split('/'))
             
             if os.path.exists(final_dest_dir):
-                shutil.rmtree(final_dest_dir)
+                try: shutil.rmtree(final_dest_dir)
+                except Exception: pass
             os.makedirs(final_dest_dir, exist_ok=True)
             
             # Copy all generated HLS files to final destination directory
@@ -437,13 +518,16 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
         return playback_url
         
     except Exception as e:
-        report_progress(episode_id, stage="FAILED", percent=0, speed="0", eta=0, status="FAILED")
+        err_msg = str(e)
+        print(f"❌ Transcode Pipeline Error: {err_msg}", file=sys.stderr)
+        report_progress(episode_id, stage="FAILED", percent=0, speed=err_msg[:80], eta=0, status="FAILED", error=err_msg)
         raise e
     finally:
         # Cleanup temp transcode directory
         if os.path.exists(temp_output_dir):
             print(f"🧹 Cleaning up local transcode temp directory: {temp_output_dir}")
-            shutil.rmtree(temp_output_dir)
+            try: shutil.rmtree(temp_output_dir)
+            except Exception: pass
         
         # Cleanup original raw upload ONLY on successful completion so admin can retry if failed
         if transcode_success and os.path.exists(source_path):

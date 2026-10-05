@@ -159,6 +159,44 @@ if (!fs.existsSync(uploadsPath)) {
 
 // Serve uploads folder for videos, posters, banners, and HLS streams
 app.use('/uploads', express.static(uploadsPath));
+app.use('/posters', express.static(path.join(uploadsPath, 'posters')));
+app.use('/banners', express.static(path.join(uploadsPath, 'banners')));
+
+// Fallback resolver for image files requested at root (e.g. /1791215324723-abc.jpg)
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const ext = path.extname(req.path).toLowerCase();
+  if (!['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'].includes(ext)) return next();
+
+  const fileName = path.basename(req.path);
+  const possiblePaths = [
+    path.join(uploadsPath, 'posters', fileName),
+    path.join(uploadsPath, 'banners', fileName),
+    path.join(uploadsPath, fileName),
+    path.join(__dirname, '../uploads/posters', fileName),
+    path.join(__dirname, '../uploads/banners', fileName),
+    path.join(__dirname, '../uploads', fileName),
+    path.join(frontendPath, 'Postes', fileName),
+    path.join(frontendPath, 'Horror-poster', fileName),
+  ];
+
+  const foundPath = possiblePaths.find(p => fs.existsSync(p));
+  if (foundPath) {
+    return res.sendFile(foundPath);
+  }
+
+  // If an image asset is requested but not found, send default poster fallback to prevent console 404s
+  const fallbackCandidates = [
+    path.join(frontendPath, 'Postes', 'spyfamS3p.jpg'),
+    path.join(frontendPath, 'Postes', 'spyfamS3.jpg'),
+    path.join(frontendPath, 'Postes', 'infinit-cas11.jpg')
+  ];
+  const foundFallback = fallbackCandidates.find(p => fs.existsSync(p));
+  if (foundFallback) {
+    return res.sendFile(foundFallback);
+  }
+  next();
+});
 
 // Serve Video Player static files at '/video-player' path
 app.use('/video-player', express.static(videoPlayerPath));

@@ -70,6 +70,7 @@ class TranscodeQueueManager {
       }
     }
 
+    this.isPaused = false;
     this.queue.push(formattedJob);
     console.log(`[QueueManager] 📥 Enqueued Episode ${episodeId} for Show ${showId}. Total in queue: ${this.queue.length}`);
     
@@ -276,10 +277,30 @@ class TranscodeQueueManager {
         }
 
         console.error(`❌ [QueueManager] Episode ${episodeId} Transcoding FAILED with code ${code}. Stderr: ${stderrData}`);
+        const errLines = stderrData.trim().split('\n').filter(Boolean);
+        const lastErr = errLines.slice(-3).join(' ') || `Transcode exited with code ${code}`;
         try {
+          const ep = await prisma.episode.findUnique({ where: { id: episodeId } });
+          let stageObj = {
+            uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+            transcoding: { percent: 0, speed: lastErr.substring(0, 80), eta: 0, status: 'FAILED', error: lastErr },
+            uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+          };
+          if (ep && ep.stageDetails) {
+            try {
+              const prev = JSON.parse(ep.stageDetails);
+              stageObj = {
+                ...prev,
+                transcoding: { ...prev.transcoding, status: 'FAILED', speed: lastErr.substring(0, 80), error: lastErr }
+              };
+            } catch (e) {}
+          }
           await prisma.episode.update({
             where: { id: episodeId },
-            data: { transcodeStatus: 'FAILED' }
+            data: { 
+              transcodeStatus: 'FAILED',
+              stageDetails: JSON.stringify(stageObj)
+            }
           });
         } catch (e) {}
 
@@ -290,7 +311,14 @@ class TranscodeQueueManager {
       try {
         await prisma.episode.update({
           where: { id: episodeId },
-          data: { transcodeStatus: 'FAILED' }
+          data: { 
+            transcodeStatus: 'FAILED',
+            stageDetails: JSON.stringify({
+              uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+              transcoding: { percent: 0, speed: spawnErr.message.substring(0, 80), eta: 0, status: 'FAILED', error: spawnErr.message },
+              uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+            })
+          }
         });
       } catch (e) {}
       this.finishCurrentJob();
@@ -436,11 +464,12 @@ class TranscodeQueueManager {
     this.isProcessing = false;
     this.currentJob = null;
     this.activeChildProcess = null;
+    this.isPaused = false;
     
-    if (!this.isPaused && this.queue.length > 0) {
+    if (this.queue.length > 0) {
       console.log(`\n[QueueManager] 🔄 Moving to next queued job in line (${this.queue.length} remaining)...`);
       setTimeout(() => this.processNext(), 1000);
-    } else if (this.queue.length === 0) {
+    } else {
       console.log(`\n[QueueManager] ✨ All queued transcoding jobs completed! Queue is now idle.`);
     }
   }
