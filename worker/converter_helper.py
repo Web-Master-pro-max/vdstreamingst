@@ -186,7 +186,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
                 speed_val = val.strip()
                 
             now = time.time()
-            if key == "progress" or (now - last_report_time) >= 1.0:
+            if (now - last_report_time) >= 1.0:
                 last_report_time = now
                 if total_duration > 0:
                     percent = min(99.0, max(0.0, (current_out_time_sec / total_duration) * 100))
@@ -364,6 +364,7 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
         shutil.rmtree(temp_output_dir)
     os.makedirs(temp_output_dir, exist_ok=True)
     
+    transcode_success = False
     try:
         print(f"🔍 Probing source video duration & streams: {source_path}")
         duration = get_video_duration(source_path)
@@ -432,6 +433,7 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
             playback_url = f"/uploads/{clean_folder_key}/master.m3u8"
             
         report_progress(episode_id, stage="COMPLETED", percent=100, speed="Done", eta=0, status="COMPLETED", video_url=playback_url)
+        transcode_success = True
         return playback_url
         
     except Exception as e:
@@ -443,9 +445,9 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
             print(f"🧹 Cleaning up local transcode temp directory: {temp_output_dir}")
             shutil.rmtree(temp_output_dir)
         
-        # Cleanup original raw upload
-        if os.path.exists(source_path):
-            print(f"🧹 Cleaning up original raw video: {source_path}")
+        # Cleanup original raw upload ONLY on successful completion so admin can retry if failed
+        if transcode_success and os.path.exists(source_path):
+            print(f"🧹 Cleaning up original raw video after success: {source_path}")
             try:
                 os.remove(source_path)
             except Exception as e:

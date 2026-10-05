@@ -3,7 +3,24 @@ const path = require('path');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { getUploadsDir } = require('../s3');
+const redis = require('../redis');
 const prisma = new PrismaClient();
+
+function getPythonExecutable() {
+  if (process.env.PYTHON_EXECUTABLE && process.env.PYTHON_EXECUTABLE.trim()) {
+    return process.env.PYTHON_EXECUTABLE.trim();
+  }
+  if (process.platform === 'win32') {
+    return 'python';
+  }
+  try {
+    const { execSync } = require('child_process');
+    execSync('python3 --version', { stdio: 'ignore' });
+    return 'python3';
+  } catch (e) {
+    return 'python';
+  }
+}
 
 class TranscodeQueueManager {
   constructor() {
@@ -11,7 +28,9 @@ class TranscodeQueueManager {
     this.isProcessing = false;
     this.currentJob = null;
     this.activeChildProcess = null;
+    this.currentJobTimeout = null;
     this.isPaused = false;
+    this.redisWatcherInterval = null;
   }
 
   /**
@@ -20,14 +39,20 @@ class TranscodeQueueManager {
   async enqueueJob(job) {
     const episodeId = parseInt(job.episodeId, 10);
     const showId = parseInt(job.showId, 10);
+    if (!episodeId || isNaN(episodeId)) {
+      console.warn('[QueueManager] Cannot enqueue job with invalid episodeId:', job);
+      return;
+    }
+
     const formattedJob = { ...job, episodeId, showId };
     
-    // Check if job is already running or queued
+    // Check if job is already running
     if (this.currentJob && this.currentJob.episodeId === episodeId) {
       console.log(`[QueueManager] Episode ${episodeId} is currently being transcoded.`);
       return;
     }
 
+    // Check if job is already queued
     const alreadyInQueue = this.queue.some(j => j.episodeId === episodeId);
     if (alreadyInQueue) {
       console.log(`[QueueManager] Episode ${episodeId} is already queued in line.`);
@@ -67,9 +92,31 @@ class TranscodeQueueManager {
 
     console.log(`\n====================================================`);
     console.log(`🚀 [QueueManager] STARTING Transcoding Job for Episode ${episodeId} (Show ${showId})`);
+    console.log(`   Source File: ${rawVideoPath}`);
     console.log(`   Storage Destination: ${storageType || 'local'} (${localStoragePath || 'default'})`);
     console.log(`====================================================\n`);
 
+    // Verify source video file exists on disk
+    if (!rawVideoPath || !fs.existsSync(rawVideoPath)) {
+      console.error(`❌ [QueueManager] Raw video file not found on disk for Episode ${episodeId}: ${rawVideoPath}`);
+      try {
+        await prisma.episode.update({
+          where: { id: episodeId },
+          data: {
+            transcodeStatus: 'FAILED',
+            stageDetails: JSON.stringify({
+              uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+              transcoding: { percent: 0, speed: 'Source file missing', eta: 0, status: 'FAILED' },
+              uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'FAILED' }
+            })
+          }
+        });
+      } catch (e) {}
+      this.finishCurrentJob();
+      return;
+    }
+
+    // Immediately mark as PROCESSING in DB
     try {
       await prisma.episode.update({
         where: { id: episodeId },
@@ -86,21 +133,25 @@ class TranscodeQueueManager {
       console.error(`[QueueManager] Failed to set PROCESSING status for Episode ${episodeId}:`, err.message);
     }
 
-    const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
+    const pythonExecutable = getPythonExecutable();
     const scriptPath = path.join(__dirname, '../../worker/converter_helper.py');
     const binPath = path.join(__dirname, '../bin');
 
     const customEnv = { ...process.env };
-    customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8000}`;
+    customEnv.BACKEND_URL = process.env.BACKEND_URL || `http://127.0.0.1:${process.env.PORT || 8000}`;
+    customEnv.WORKER_WEBHOOK_SECRET = process.env.WORKER_WEBHOOK_SECRET || 'infinx_webhook_shared_secret_2026';
+
     if (storageType) {
       customEnv.STORAGE_TYPE = storageType;
     }
     if (localStoragePath) {
       customEnv.LOCAL_STORAGE_PATH = localStoragePath;
     }
+
+    // Platform-safe PATH delimiter (':' on Linux/WSL, ';' on Windows)
     const pathKey = Object.keys(customEnv).find(k => k.toLowerCase() === 'path') || 'PATH';
     const originalPath = customEnv[pathKey] || '';
-    customEnv[pathKey] = `${binPath};${originalPath}`;
+    customEnv[pathKey] = `${binPath}${path.delimiter}${originalPath}`;
 
     const spawnArgs = [
       scriptPath,
@@ -112,81 +163,138 @@ class TranscodeQueueManager {
       localStoragePath || process.env.LOCAL_STORAGE_PATH || ''
     ];
 
-    const child = spawn(pythonExecutable, spawnArgs, {
-      env: customEnv,
-      shell: false
-    });
+    console.log(`[QueueManager] Spawning: ${pythonExecutable} ${scriptPath}`);
 
-    this.activeChildProcess = child;
+    try {
+      const child = spawn(pythonExecutable, spawnArgs, {
+        env: customEnv,
+        shell: false
+      });
 
-    let stdoutData = '';
-    let stderrData = '';
+      this.activeChildProcess = child;
 
-    child.stdout.on('data', (data) => {
-      stdoutData += data.toString();
-      const lines = data.toString().trim().split('\n');
-      lines.forEach(line => console.log(`[Transcoder Ep ${episodeId}] ${line}`));
-    });
-
-    child.stderr.on('data', (data) => {
-      stderrData += data.toString();
-      const lines = data.toString().trim().split('\n');
-      lines.forEach(line => console.warn(`[Transcoder Ep ${episodeId}] ${line}`));
-    });
-
-    child.on('error', async (err) => {
-      console.error(`❌ [QueueManager] Error executing transcoder for Episode ${episodeId}:`, err);
-      try {
-        await prisma.episode.update({
-          where: { id: episodeId },
-          data: { transcodeStatus: 'FAILED' }
-        });
-      } catch (e) {}
-      this.finishCurrentJob();
-    });
-
-    child.on('close', async (code, signal) => {
-      this.activeChildProcess = null;
-
-      if (signal === 'SIGKILL' || signal === 'SIGTERM') {
-        console.log(`⏹️ [QueueManager] Transcoder for Episode ${episodeId} was STOPPED/CANCELLED.`);
+      // 60-minute maximum runtime safety watchdog to prevent stuck processes
+      this.currentJobTimeout = setTimeout(async () => {
+        console.error(`⏱️ [QueueManager] Transcode timeout reached for Episode ${episodeId}. Terminating process...`);
+        if (this.activeChildProcess) {
+          try { this.activeChildProcess.kill('SIGKILL'); } catch (e) {}
+        }
+        try {
+          await prisma.episode.update({
+            where: { id: episodeId },
+            data: { transcodeStatus: 'FAILED' }
+          });
+        } catch (e) {}
         this.finishCurrentJob();
-        return;
-      }
+      }, 60 * 60 * 1000);
 
-      console.log(`[QueueManager] Transcoder for Episode ${episodeId} exited with code ${code}`);
+      let stdoutData = '';
+      let stderrData = '';
 
-      if (code === 0) {
-        const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(\S+)/);
-        if (match && match[1]) {
-          const playbackUrl = match[1];
-          console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
-          try {
-            await prisma.episode.update({
+      child.stdout.on('data', (data) => {
+        const text = data.toString();
+        stdoutData += text;
+        const lines = text.trim().split('\n');
+        lines.forEach(line => {
+          console.log(`[Transcoder Ep ${episodeId}] ${line}`);
+          // Direct fallback parsing for live progress updates
+          const transcodeMatch = line.match(/TRANSCODING\s+([\d.]+)%\s*\(([^)]+)\)/i);
+          if (transcodeMatch) {
+            const pct = parseFloat(transcodeMatch[1]);
+            const spd = transcodeMatch[2];
+            prisma.episode.update({
               where: { id: episodeId },
               data: {
-                transcodeStatus: 'COMPLETED',
-                videoUrl: playbackUrl
+                transcodeStatus: 'PROCESSING',
+                stageDetails: JSON.stringify({
+                  uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  transcoding: { percent: pct, speed: spd, eta: 0, status: 'PROCESSING' },
+                  uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
+                })
               }
-            });
-          } catch (e) {
-            console.error(`Error updating completed status for Ep ${episodeId}:`, e.message);
+            }).catch(() => {});
           }
+        });
+      });
+
+      child.stderr.on('data', (data) => {
+        stderrData += data.toString();
+        const lines = data.toString().trim().split('\n');
+        lines.forEach(line => console.warn(`[Transcoder Ep ${episodeId}] ${line}`));
+      });
+
+      child.on('error', async (err) => {
+        console.error(`❌ [QueueManager] Error executing transcoder for Episode ${episodeId}:`, err);
+        try {
+          await prisma.episode.update({
+            where: { id: episodeId },
+            data: { transcodeStatus: 'FAILED' }
+          });
+        } catch (e) {}
+        this.finishCurrentJob();
+      });
+
+      child.on('close', async (code, signal) => {
+        if (this.currentJobTimeout) {
+          clearTimeout(this.currentJobTimeout);
+          this.currentJobTimeout = null;
+        }
+        this.activeChildProcess = null;
+
+        if (signal === 'SIGKILL' || signal === 'SIGTERM') {
+          console.log(`⏹️ [QueueManager] Transcoder for Episode ${episodeId} was STOPPED/CANCELLED.`);
           this.finishCurrentJob();
           return;
         }
-      }
 
-      console.error(`❌ [QueueManager] Episode ${episodeId} Transcoding FAILED with code ${code}. Stderr: ${stderrData}`);
+        console.log(`[QueueManager] Transcoder for Episode ${episodeId} exited with code ${code}`);
+
+        if (code === 0) {
+          const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(\S+)/);
+          if (match && match[1]) {
+            const playbackUrl = match[1];
+            console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
+            try {
+              await prisma.episode.update({
+                where: { id: episodeId },
+                data: {
+                  transcodeStatus: 'COMPLETED',
+                  videoUrl: playbackUrl,
+                  stageDetails: JSON.stringify({
+                    uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                    transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                    uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+                  })
+                }
+              });
+            } catch (e) {
+              console.error(`Error updating completed status for Ep ${episodeId}:`, e.message);
+            }
+            this.finishCurrentJob();
+            return;
+          }
+        }
+
+        console.error(`❌ [QueueManager] Episode ${episodeId} Transcoding FAILED with code ${code}. Stderr: ${stderrData}`);
+        try {
+          await prisma.episode.update({
+            where: { id: episodeId },
+            data: { transcodeStatus: 'FAILED' }
+          });
+        } catch (e) {}
+
+        this.finishCurrentJob();
+      });
+    } catch (spawnErr) {
+      console.error(`❌ [QueueManager] Critical spawn error for Episode ${episodeId}:`, spawnErr);
       try {
         await prisma.episode.update({
           where: { id: episodeId },
           data: { transcodeStatus: 'FAILED' }
         });
       } catch (e) {}
-
       this.finishCurrentJob();
-    });
+    }
   }
 
   /**
@@ -264,6 +372,10 @@ class TranscodeQueueManager {
 
     if (this.currentJob && this.currentJob.episodeId === episodeId) {
       console.log(`⏹️ [QueueManager] Stopping active transcoding process for Episode ${episodeId}...`);
+      if (this.currentJobTimeout) {
+        clearTimeout(this.currentJobTimeout);
+        this.currentJobTimeout = null;
+      }
       if (this.activeChildProcess) {
         try {
           this.activeChildProcess.kill('SIGKILL');
@@ -317,6 +429,10 @@ class TranscodeQueueManager {
   }
 
   finishCurrentJob() {
+    if (this.currentJobTimeout) {
+      clearTimeout(this.currentJobTimeout);
+      this.currentJobTimeout = null;
+    }
     this.isProcessing = false;
     this.currentJob = null;
     this.activeChildProcess = null;
@@ -330,7 +446,8 @@ class TranscodeQueueManager {
   }
 
   /**
-   * Scan database on server start for any PENDING or interrupted PROCESSING tasks.
+   * Scan database on server start for any PENDING or interrupted PROCESSING tasks,
+   * restoring them or marking orphaned ones cleanly.
    */
   async syncPendingFromDB() {
     try {
@@ -341,32 +458,109 @@ class TranscodeQueueManager {
         orderBy: { createdAt: 'asc' }
       });
 
-      if (pendingEpisodes.length > 0) {
-        console.log(`[QueueManager] Found ${pendingEpisodes.length} unfinished episodes in database. Re-queueing sequentially...`);
-        const uploadsDir = getUploadsDir();
-        const rawDir = path.join(uploadsDir, 'temp_raw');
-        for (const ep of pendingEpisodes) {
-          let rawVideoPath = path.join(rawDir, `raw_show_${ep.showId}_ep_${ep.id}.mp4`);
-          if (!fs.existsSync(rawVideoPath) && fs.existsSync(uploadsDir)) {
-            const files = fs.readdirSync(uploadsDir);
-            const matchFile = files.find(f => f.startsWith('raw-') && f.includes(ep.id.toString()));
-            if (matchFile) {
-              rawVideoPath = path.join(uploadsDir, matchFile);
-            }
+      if (pendingEpisodes.length === 0) return;
+
+      console.log(`[QueueManager] Found ${pendingEpisodes.length} unfinished episodes in database. Checking source files...`);
+      const uploadsDir = getUploadsDir();
+      const rawDir = path.join(uploadsDir, 'temp_raw');
+
+      for (const ep of pendingEpisodes) {
+        // 1. If videoUrl already exists and is working, mark COMPLETED immediately
+        if (ep.videoUrl && ep.videoUrl.trim().length > 0) {
+          console.log(`[QueueManager] Episode ${ep.id} already has videoUrl (${ep.videoUrl}). Auto-marking COMPLETED.`);
+          await prisma.episode.update({
+            where: { id: ep.id },
+            data: { transcodeStatus: 'COMPLETED' }
+          });
+          continue;
+        }
+
+        // 2. Locate raw source video file specifically for this episode
+        let rawVideoPath = null;
+        if (fs.existsSync(uploadsDir)) {
+          const files = fs.readdirSync(uploadsDir);
+          const matchFile = files.find(f => 
+            f.startsWith('raw-') && (
+              f.includes(`ep_${ep.id}-`) || 
+              f.includes(`ep_${ep.id}_`) || 
+              f.includes(`_${ep.id}_`) ||
+              f.includes(`_${ep.id}.`) ||
+              f.includes(`ep${ep.id}`)
+            )
+          );
+          if (matchFile) {
+            rawVideoPath = path.join(uploadsDir, matchFile);
           }
+        }
+
+        if (!rawVideoPath || !fs.existsSync(rawVideoPath)) {
+          const legacyPath = path.join(rawDir, `raw_show_${ep.showId}_ep_${ep.id}.mp4`);
+          if (fs.existsSync(legacyPath)) {
+            rawVideoPath = legacyPath;
+          }
+        }
+
+        if (rawVideoPath && fs.existsSync(rawVideoPath)) {
           const s3FolderKey = `videos/show_${ep.showId}/ep_${ep.id}`;
-          
+          console.log(`[QueueManager] Found source video for Episode ${ep.id}. Re-queueing for transcoding: ${rawVideoPath}`);
           this.enqueueJob({
             episodeId: ep.id,
             showId: ep.showId,
             rawVideoPath: rawVideoPath,
             s3FolderKey: s3FolderKey
           });
+        } else {
+          console.log(`[QueueManager] No raw video file found on disk for Episode ${ep.id}. Marking FAILED so it does not stay stuck in PENDING.`);
+          await prisma.episode.update({
+            where: { id: ep.id },
+            data: {
+              transcodeStatus: 'FAILED',
+              stageDetails: JSON.stringify({
+                uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                transcoding: { percent: 0, speed: 'Source file missing', eta: 0, status: 'FAILED' },
+                uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'FAILED' }
+              })
+            }
+          });
         }
       }
     } catch (err) {
       console.warn(`[QueueManager] Could not sync pending episodes from DB:`, err.message);
     }
+  }
+
+  /**
+   * Watch Redis for any tasks pushed to 'transcode_tasks' that haven't been picked up,
+   * automatically draining and executing them.
+   */
+  startRedisWatcher() {
+    if (this.redisWatcherInterval) return;
+
+    this.redisWatcherInterval = setInterval(async () => {
+      if (redis.status !== 'ready') return;
+      try {
+        const queueLen = await redis.llen('transcode_tasks');
+        if (queueLen > 0) {
+          console.log(`[QueueManager] 📥 Found ${queueLen} task(s) in Redis queue 'transcode_tasks'. Draining to native transcoder...`);
+          const taskData = await redis.rpop('transcode_tasks');
+          if (taskData) {
+            const task = JSON.parse(taskData);
+            if (task && task.episodeId) {
+              this.enqueueJob({
+                episodeId: task.episodeId,
+                showId: task.showId,
+                rawVideoPath: task.sourceVideoPath,
+                s3FolderKey: task.s3FolderKey,
+                storageType: task.storageType,
+                localStoragePath: task.localStoragePath
+              });
+            }
+          }
+        }
+      } catch (err) {
+        // Ignore redis poll errors
+      }
+    }, 4000);
   }
 
   getQueueStatus() {

@@ -94,8 +94,9 @@ router.get('/history', authenticate, async (req, res) => {
       orderBy: { watchedAt: 'desc' },
     });
 
-    // Clean data structure
-    const cleanedHistory = history.map(item => ({
+    // Filter out deleted episodes or shows to prevent crashes
+    const validHistory = history.filter(item => item && item.episode && item.episode.show);
+    const cleanedHistory = validHistory.map(item => ({
       id: item.id,
       episodeId: item.episodeId,
       progress: item.progress,

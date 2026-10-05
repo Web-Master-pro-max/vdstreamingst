@@ -2,35 +2,14 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const Redis = require('ioredis');
 const { PrismaClient } = require('@prisma/client');
 const { uploadToS3, getUploadsDir } = require('../s3');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 const transcodeQueueManager = require('../services/TranscodeQueueManager');
+const redis = require('../redis');
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-// Connect to Redis for task queueing with clean native fallback retry behavior
-let lastRedisErrorTime = 0;
-const defaultRedisUrl = fs.existsSync('/.dockerenv') ? 'redis://redis:6379' : 'redis://127.0.0.1:6379';
-const redis = new Redis(process.env.REDIS_URL || defaultRedisUrl, {
-  maxRetriesPerRequest: null,
-  enableReadyCheck: false,
-  retryStrategy(times) {
-    // Retries exponentially up to 30 seconds to prevent event-loop throttling
-    return Math.min(times * 1000, 30000);
-  }
-});
-
-// Catch and handle Redis connection errors gracefully without spamming terminal
-redis.on('error', (err) => {
-  const now = Date.now();
-  if (now - lastRedisErrorTime > 30000) {
-    console.warn('⚠️ Redis connection failed (running natively outside Docker-Compose). Task queueing is suspended: ', err.message);
-    lastRedisErrorTime = now;
-  }
-});
 
 const uploadsDir = getUploadsDir();
 
@@ -205,46 +184,37 @@ const episodeUploadHandler = async (req, res) => {
 
     const s3FolderKey = `videos/show_${showId}/ep_${episode.id}/`;
 
-    // Detect if Redis is connected
-    const isRedisConnected = redis.status === 'ready';
+    // Always enqueue into TranscodeQueueManager so transcoding starts immediately
+    console.log(`[Admin Upload] Enqueueing Episode ${episode.id} into TranscodeQueueManager...`);
+    transcodeQueueManager.enqueueJob({
+      episodeId: episode.id,
+      showId: showId,
+      rawVideoPath: rawVideoPath,
+      s3FolderKey: s3FolderKey,
+      storageType: storageType || process.env.STORAGE_TYPE || 'local',
+      localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
+    });
 
-    if (isRedisConnected) {
-      // Enqueue task to Redis for Python worker
-      const transcodeTask = {
-        episodeId: episode.id,
-        showId: showId,
-        showTitle: show.title,
-        episodeNumber: episode.episodeNumber,
-        sourceVideoPath: rawVideoPath,
-        s3FolderKey: s3FolderKey,
-        storageType: storageType || process.env.STORAGE_TYPE || 'local',
-        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
-      };
-
-      console.log(`Enqueueing transcode job to Redis for Episode ${episode.id}...`);
-      await redis.lpush('transcode_tasks', JSON.stringify(transcodeTask));
-
-      res.status(201).json({
-        message: 'Episode created and transcoding task queued successfully to Redis queue.',
-        episode,
-      });
-    } else {
-      // Enqueue job into TranscodeQueueManager to transcode ONE BY ONE sequentially
-      console.log(`[Admin Upload] Enqueueing Episode ${episode.id} into sequential TranscodeQueueManager...`);
-      transcodeQueueManager.enqueueJob({
-        episodeId: episode.id,
-        showId: showId,
-        rawVideoPath: rawVideoPath,
-        s3FolderKey: s3FolderKey,
-        storageType: storageType || process.env.STORAGE_TYPE || 'local',
-        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
-      });
-
-      res.status(201).json({
-        message: 'Episode created and queued for sequential transcoding.',
-        episode,
-      });
+    // Also push to Redis if available for external worker visibility
+    if (redis.status === 'ready') {
+      try {
+        await redis.lpush('transcode_tasks', JSON.stringify({
+          episodeId: episode.id,
+          showId: showId,
+          showTitle: show.title,
+          episodeNumber: episode.episodeNumber,
+          sourceVideoPath: rawVideoPath,
+          s3FolderKey: s3FolderKey,
+          storageType: storageType || process.env.STORAGE_TYPE || 'local',
+          localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
+        }));
+      } catch (e) {}
     }
+
+    res.status(201).json({
+      message: 'Episode created and transcoding dispatched.',
+      episode,
+    });
   } catch (error) {
     console.error('Error uploading episode:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -417,44 +387,48 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
     });
 
     const s3FolderKey = `videos/show_${parsedShowId}/ep_${episode.id}/`;
-    const isRedisConnected = redis.status === 'ready';
 
-    if (isRedisConnected) {
-      const transcodeTask = {
-        episodeId: episode.id,
-        showId: parsedShowId,
-        showTitle: show.title,
-        episodeNumber: episode.episodeNumber,
-        sourceVideoPath: finalRawPath,
-        s3FolderKey: s3FolderKey,
-        storageType: storageType || process.env.STORAGE_TYPE || 'local',
-        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
-      };
+    // Rename raw video file to include episodeId for reliable recovery, sync, and retry
+    const dedicatedRawFileName = `raw-${Date.now()}-ep_${episode.id}-${cleanFileName}`;
+    const dedicatedRawPath = path.join(uploadsDir, dedicatedRawFileName);
+    try {
+      if (fs.existsSync(finalRawPath)) {
+        fs.renameSync(finalRawPath, dedicatedRawPath);
+      }
+    } catch (e) {}
+    const activeRawPath = fs.existsSync(dedicatedRawPath) ? dedicatedRawPath : finalRawPath;
 
-      console.log(`Enqueueing transcode job to Redis for Episode ${episode.id}...`);
-      await redis.lpush('transcode_tasks', JSON.stringify(transcodeTask));
+    // Always enqueue into TranscodeQueueManager so transcoding starts immediately
+    console.log(`[Admin Chunk Finalize] Enqueueing Episode ${episode.id} into TranscodeQueueManager...`);
+    transcodeQueueManager.enqueueJob({
+      episodeId: episode.id,
+      showId: parsedShowId,
+      rawVideoPath: activeRawPath,
+      s3FolderKey: s3FolderKey,
+      storageType: storageType || process.env.STORAGE_TYPE || 'local',
+      localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
+    });
 
-      return res.status(201).json({
-        message: 'Resumable upload finalized! Episode created and transcode task queued.',
-        episode,
-      });
-    } else {
-      // Enqueue job into TranscodeQueueManager to transcode ONE BY ONE sequentially
-      console.log(`[Admin Chunk Finalize] Enqueueing Episode ${episode.id} into sequential TranscodeQueueManager...`);
-      transcodeQueueManager.enqueueJob({
-        episodeId: episode.id,
-        showId: parsedShowId,
-        rawVideoPath: finalRawPath,
-        s3FolderKey: s3FolderKey,
-        storageType: storageType || process.env.STORAGE_TYPE || 'local',
-        localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
-      });
-
-      return res.status(201).json({
-        message: 'Resumable upload finalized! Episode created and transcoding task queued.',
-        episode,
-      });
+    // Also push to Redis if available for external worker visibility
+    if (redis.status === 'ready') {
+      try {
+        await redis.lpush('transcode_tasks', JSON.stringify({
+          episodeId: episode.id,
+          showId: parsedShowId,
+          showTitle: show.title,
+          episodeNumber: episode.episodeNumber,
+          sourceVideoPath: activeRawPath,
+          s3FolderKey: s3FolderKey,
+          storageType: storageType || process.env.STORAGE_TYPE || 'local',
+          localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
+        }));
+      } catch (e) {}
     }
+
+    return res.status(201).json({
+      message: 'Resumable upload finalized! Episode created and transcoding started.',
+      episode,
+    });
   } catch (error) {
     console.error('Error finalizing chunked upload:', error);
     res.status(500).json({ error: 'Internal server error finalizing upload.' });
@@ -527,39 +501,36 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
       }
     });
 
-    const isRedisConnected = redis.status === 'ready';
+    // Always enqueue into TranscodeQueueManager so retry runs immediately
+    console.log(`[Admin Retry] Enqueueing Episode ${episode.id} into TranscodeQueueManager...`);
+    transcodeQueueManager.enqueueJob({
+      episodeId: episode.id,
+      showId: episode.showId,
+      rawVideoPath: rawVideoPath,
+      s3FolderKey: s3FolderKey,
+      storageType: process.env.STORAGE_TYPE || 'local',
+      localStoragePath: process.env.LOCAL_STORAGE_PATH || '',
+    });
 
-    if (isRedisConnected) {
-      const transcodeTask = {
-        episodeId: episode.id,
-        showId: episode.showId,
-        showTitle: episode.show ? episode.show.title : `Show #${episode.showId}`,
-        episodeNumber: episode.episodeNumber,
-        sourceVideoPath: rawVideoPath,
-        s3FolderKey: s3FolderKey,
-      };
-
-      console.log(`Enqueueing retry transcode job to Redis for Episode ${episode.id}...`);
-      await redis.lpush('transcode_tasks', JSON.stringify(transcodeTask));
-
-      return res.json({
-        message: 'Transcode task queued for retry via Redis.',
-        episode: updatedEpisode
-      });
-    } else {
-      console.log(`[Admin Retry] Enqueueing Episode ${episode.id} into sequential TranscodeQueueManager...`);
-      transcodeQueueManager.enqueueJob({
-        episodeId: episode.id,
-        showId: episode.showId,
-        rawVideoPath: rawVideoPath,
-        s3FolderKey: s3FolderKey,
-      });
-
-      return res.json({
-        message: 'Transcode task queued for retry.',
-        episode: updatedEpisode
-      });
+    if (redis.status === 'ready') {
+      try {
+        await redis.lpush('transcode_tasks', JSON.stringify({
+          episodeId: episode.id,
+          showId: episode.showId,
+          showTitle: episode.show ? episode.show.title : `Show #${episode.showId}`,
+          episodeNumber: episode.episodeNumber,
+          sourceVideoPath: rawVideoPath,
+          s3FolderKey: s3FolderKey,
+          storageType: process.env.STORAGE_TYPE || 'local',
+          localStoragePath: process.env.LOCAL_STORAGE_PATH || '',
+        }));
+      } catch (e) {}
     }
+
+    return res.json({
+      message: 'Transcode task queued for retry.',
+      episode: updatedEpisode
+    });
   } catch (error) {
     console.error('Error retrying task:', error);
     res.status(500).json({ error: 'Internal server error attempting retry.' });

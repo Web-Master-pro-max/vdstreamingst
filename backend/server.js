@@ -36,6 +36,7 @@ const transcodeQueueManager = require('./services/TranscodeQueueManager');
 
 // Auto-sync any unfinished transcode tasks from DB into sequential queue
 transcodeQueueManager.syncPendingFromDB();
+transcodeQueueManager.startRedisWatcher();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
