@@ -337,14 +337,27 @@ class TranscodeQueueManager {
             };
             if (job.storageType === 's3' || playbackUrl.includes('amazonaws.com')) {
               completeData.s3Url = playbackUrl;
-            } else {
+            } else if (prisma.episode.fields && prisma.episode.fields.localUrl) {
               completeData.localUrl = playbackUrl;
             }
 
-            await prisma.episode.update({
-              where: { id: episodeId },
-              data: completeData
-            });
+            try {
+              await prisma.episode.update({
+                where: { id: episodeId },
+                data: completeData
+              });
+            } catch (err) {
+              if (completeData.localUrl && err.message && err.message.includes('localUrl')) {
+                console.warn(`[QueueManager] Retrying completion update without localUrl for Ep ${episodeId}...`);
+                delete completeData.localUrl;
+                await prisma.episode.update({
+                  where: { id: episodeId },
+                  data: completeData
+                });
+              } else {
+                throw err;
+              }
+            }
           } catch (e) {
             console.error(`Error updating completed status for Ep ${episodeId}:`, e.message);
           }

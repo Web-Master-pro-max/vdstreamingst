@@ -341,6 +341,8 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
             "-progress", "pipe:1",
             "-nostats",
             "-i", input_file,
+            "-avoid_negative_ts", "make_zero",
+            "-fflags", "+genpts",
             "-map", "0:v:0",
             "-vf", scale_filter,
             "-c:v", "libx264",
@@ -460,6 +462,8 @@ def create_audio_hls(input_file, audio_streams, output_dir):
             cmd = [
                 "ffmpeg",
                 "-i", input_file,
+                "-avoid_negative_ts", "make_zero",
+                "-fflags", "+genpts",
                 "-map", map_arg,
                 "-c:a", "aac",
                 "-b:a", "192k",
@@ -552,7 +556,19 @@ def create_master(audio_streams, subtitle_streams, renditions_or_output_dir, out
             bw = r.get("bandwidth", 2500000)
             name = r.get("name", f"{h}p")
             playlist = r.get("playlist", f"video_{name}.m3u8")
-            stream_inf = f'#EXT-X-STREAM-INF:BANDWIDTH={bw},RESOLUTION={w}x{h},NAME="{name}"'
+
+            # RFC 8216 requirement: CODECS is mandatory when AUDIO or SUBTITLES is specified
+            if h >= 1080:
+                v_codec = "avc1.640028"
+            elif h >= 720:
+                v_codec = "avc1.4d401f"
+            elif h >= 480:
+                v_codec = "avc1.4d401f"
+            else:
+                v_codec = "avc1.42e01e"
+
+            codecs_attr = f'{v_codec},mp4a.40.2' if has_audio else v_codec
+            stream_inf = f'#EXT-X-STREAM-INF:BANDWIDTH={bw},RESOLUTION={w}x{h},CODECS="{codecs_attr}",NAME="{name}"'
             if has_audio:
                 stream_inf += ',AUDIO="audio"'
             if has_subs:

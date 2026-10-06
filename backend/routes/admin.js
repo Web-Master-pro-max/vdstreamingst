@@ -515,16 +515,27 @@ router.get('/tasks', authenticate, requireAdmin, async (req, res) => {
           });
           ep.stageDetails = completedStageDetails;
 
+          const healData = {
+            transcodeStatus: 'COMPLETED',
+            videoUrl: resolvedUrl,
+            s3Url: ep.s3Url,
+            stageDetails: completedStageDetails
+          };
+          if (prisma.episode.fields && prisma.episode.fields.localUrl && ep.localUrl) {
+            healData.localUrl = ep.localUrl;
+          }
+
           prisma.episode.update({
             where: { id: ep.id },
-            data: {
-              transcodeStatus: 'COMPLETED',
-              videoUrl: resolvedUrl,
-              s3Url: ep.s3Url,
-              localUrl: ep.localUrl,
-              stageDetails: completedStageDetails
+            data: healData
+          }).catch(err => {
+            if (healData.localUrl && err.message && err.message.includes('localUrl')) {
+              delete healData.localUrl;
+              prisma.episode.update({ where: { id: ep.id }, data: healData }).catch(e => console.warn(`[Tasks Auto-Heal Retry] Ep #${ep.id}:`, e.message));
+            } else {
+              console.warn(`[Tasks Auto-Heal] Ep #${ep.id}:`, err.message);
             }
-          }).catch(err => console.warn(`[Tasks Auto-Heal] Ep #${ep.id}:`, err.message));
+          });
         }
       }
     }
@@ -571,16 +582,33 @@ router.post('/tasks/:id/complete', authenticate, requireAdmin, async (req, res) 
       uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
     });
 
-    const updated = await prisma.episode.update({
-      where: { id: episodeId },
-      data: {
-        transcodeStatus: 'COMPLETED',
-        videoUrl: resolvedUrl,
-        s3Url: isS3 ? resolvedUrl : episode.s3Url,
-        localUrl: !isS3 ? resolvedUrl : episode.localUrl,
-        stageDetails: completedStageDetails
+    const updateData = {
+      transcodeStatus: 'COMPLETED',
+      videoUrl: resolvedUrl,
+      s3Url: isS3 ? resolvedUrl : episode.s3Url,
+      stageDetails: completedStageDetails
+    };
+    if (prisma.episode.fields && prisma.episode.fields.localUrl) {
+      updateData.localUrl = !isS3 ? resolvedUrl : episode.localUrl;
+    }
+
+    let updated;
+    try {
+      updated = await prisma.episode.update({
+        where: { id: episodeId },
+        data: updateData
+      });
+    } catch (err) {
+      if (updateData.localUrl && err.message && err.message.includes('localUrl')) {
+        delete updateData.localUrl;
+        updated = await prisma.episode.update({
+          where: { id: episodeId },
+          data: updateData
+        });
+      } else {
+        throw err;
       }
-    });
+    }
 
     res.json({ success: true, message: 'Episode marked as COMPLETED successfully.', episode: updated });
   } catch (error) {

@@ -33,12 +33,14 @@ router.post('/transcode-status', async (req, res) => {
       const isS3 = videoUrl.includes('amazonaws.com') || (videoUrl.startsWith('http') && !videoUrl.includes('/uploads/'));
       if (storageType === 's3' || isS3) {
         updateData.s3Url = videoUrl;
-      } else {
+      } else if (prisma.episode.fields && prisma.episode.fields.localUrl) {
         updateData.localUrl = videoUrl;
       }
     }
     if (s3Url) updateData.s3Url = s3Url;
-    if (localUrl) updateData.localUrl = localUrl;
+    if (localUrl && prisma.episode.fields && prisma.episode.fields.localUrl) {
+      updateData.localUrl = localUrl;
+    }
 
     if (status === 'COMPLETED') {
       updateData.stageDetails = JSON.stringify({
@@ -75,10 +77,24 @@ router.post('/transcode-status', async (req, res) => {
       return res.status(404).json({ error: `Episode ${parsedId} not found.` });
     }
 
-    const episode = await prisma.episode.update({
-      where: { id: parsedId },
-      data: updateData,
-    });
+    let episode;
+    try {
+      episode = await prisma.episode.update({
+        where: { id: parsedId },
+        data: updateData,
+      });
+    } catch (dbErr) {
+      if (updateData.localUrl && dbErr.message && dbErr.message.includes('localUrl')) {
+        console.warn(`[Webhook] Retrying DB update without localUrl column for Ep #${parsedId}...`);
+        delete updateData.localUrl;
+        episode = await prisma.episode.update({
+          where: { id: parsedId },
+          data: updateData,
+        });
+      } else {
+        throw dbErr;
+      }
+    }
 
     res.json({ success: true, message: 'Status updated successfully.', episode });
   } catch (error) {

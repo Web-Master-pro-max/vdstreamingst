@@ -1,5 +1,8 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const { PrismaClient } = require('@prisma/client');
+const { getUploadsDir } = require('../s3');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -269,6 +272,38 @@ router.get('/episodes/:id', async (req, res) => {
 
     if (!episode) {
       return res.status(404).json({ error: 'Episode not found.' });
+    }
+
+    // Auto-heal: If videoUrl is not set or status is not COMPLETED, check if master.m3u8 is already on disk
+    if (!episode.videoUrl || episode.transcodeStatus !== 'COMPLETED') {
+      try {
+        const uploadsDir = getUploadsDir();
+        const cleanKey = `videos/show_${episode.showId}/ep_${episode.id}`;
+        const localMaster = path.join(uploadsDir, cleanKey, 'master.m3u8');
+        if (fs.existsSync(localMaster)) {
+          const resolvedUrl = `/uploads/${cleanKey}/master.m3u8`;
+          episode.videoUrl = resolvedUrl;
+          episode.transcodeStatus = 'COMPLETED';
+          const completedStageDetails = JSON.stringify({
+            uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+            transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+            uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+          });
+          episode.stageDetails = completedStageDetails;
+
+          // Asynchronously heal database without blocking response
+          prisma.episode.update({
+            where: { id: episode.id },
+            data: {
+              transcodeStatus: 'COMPLETED',
+              videoUrl: resolvedUrl,
+              stageDetails: completedStageDetails
+            }
+          }).catch(err => console.warn(`[Shows Auto-Heal DB] Ep #${episode.id}:`, err.message));
+        }
+      } catch (checkErr) {
+        // Continue if disk check fails
+      }
     }
 
     // Increment episode views safely

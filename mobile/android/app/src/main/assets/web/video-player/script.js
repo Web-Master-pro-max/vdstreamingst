@@ -452,10 +452,14 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (Hls.isSupported()) {
         hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: true,
+          lowLatencyMode: false,
           backBufferLength: 90,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
           startLevel: -1, // Auto
-          capLevelToPlayerSize: true,
+          capLevelToPlayerSize: false,
+          nudgeOffset: 0.1,
+          nudgeMaxRetry: 5,
         });
 
         hls.loadSource(resolvedVideoSrc);
@@ -469,9 +473,8 @@ document.addEventListener('DOMContentLoaded', async function () {
           if (hls.audioTracks && hls.audioTracks.length > 0) {
             audioTracks = hls.audioTracks;
             updateAudioOptions();
-            hls.audioTrack = 0;
-            currentAudioTrack = 0;
-            updateAudioDisplay(0);
+            currentAudioTrack = hls.audioTrack >= 0 ? hls.audioTrack : 0;
+            updateAudioDisplay(currentAudioTrack);
           } else {
             updateAudioOptions();
           }
@@ -563,6 +566,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         hls.on(Hls.Events.ERROR, function (event, data) {
           console.error('HLS error:', data);
           videoPlayer.classList.remove('loading');
+
+          if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+            console.warn('HLS buffer stalled, nudging playhead forward...');
+            if (!mainVideo.paused && mainVideo.readyState >= 2) {
+              mainVideo.currentTime = Math.min(mainVideo.duration || Infinity, mainVideo.currentTime + 0.1);
+            }
+          }
 
           if (data.fatal) {
             switch (data.type) {
@@ -694,7 +704,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           const parts = level.attrs.RESOLUTION.split('x');
           if (parts.length === 2) height = parseInt(parts[1], 10);
         }
-        
+
         let badge = '';
         let badgeClass = '';
         if (height >= 1080) {
