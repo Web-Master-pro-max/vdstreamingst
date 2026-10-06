@@ -228,53 +228,70 @@ router.get('/episodes/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid episode ID.' });
     }
 
-    const episode = await prisma.episode.findUnique({
-      where: { id },
-      include: {
-        show: {
-          include: {
-            categories: {
-              include: {
-                category: true,
+    let episode = null;
+    try {
+      episode = await prisma.episode.findUnique({
+        where: { id },
+        include: {
+          show: {
+            include: {
+              categories: {
+                include: {
+                  category: true,
+                },
               },
-            },
-            episodes: {
-              orderBy: { episodeNumber: 'asc' },
-              select: {
-                id: true,
-                episodeNumber: true,
-                title: true,
-                duration: true,
-                videoUrl: true,
-                s3Url: true,
-                localUrl: true,
-                transcodeStatus: true,
+              episodes: {
+                orderBy: { episodeNumber: 'asc' },
               },
             },
           },
         },
-      },
-    });
+      });
+    } catch (queryErr) {
+      console.warn('Detailed episode query failed, trying basic query:', queryErr.message);
+      episode = await prisma.episode.findUnique({
+        where: { id },
+      });
+      if (episode && episode.showId) {
+        try {
+          episode.show = await prisma.show.findUnique({
+            where: { id: episode.showId },
+            include: {
+              categories: { include: { category: true } },
+              episodes: { orderBy: { episodeNumber: 'asc' } },
+            },
+          });
+        } catch (e) {
+          console.warn('Failed to load show for episode:', e.message);
+        }
+      }
+    }
 
     if (!episode) {
       return res.status(404).json({ error: 'Episode not found.' });
     }
 
-    // Increment episode views
-    await prisma.episode.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Increment episode views safely
+    try {
+      await prisma.episode.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+    } catch (viewErr) {
+      // Ignore view increment error
+    }
 
-    if (episode.show && episode.show.episodes) {
+    if (episode.show && Array.isArray(episode.show.episodes)) {
       episode.show.episodes = episode.show.episodes.map(formatEpisodeWithServers);
     }
 
-    res.json(formatEpisodeWithServers(episode));
+    const formatted = formatEpisodeWithServers(episode);
+    res.json(formatted);
   } catch (error) {
     console.error('Error fetching episode:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: 'Internal server error: ' + (error.message || '') });
   }
 });
+
 
 module.exports = router;

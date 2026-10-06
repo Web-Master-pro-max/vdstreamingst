@@ -89,24 +89,58 @@ document.addEventListener('DOMContentLoaded', async function () {
     let showId = null;
 
     try {
-      // 1. Fetch current episode info
+      // 1. Fetch current episode info with resilient handling
       const epRes = await fetch(`${API_BASE}/shows/episodes/${episodeId}`);
-      if (!epRes.ok) throw new Error('Episode not found');
-      currentEpisode = await epRes.json();
-      showId = currentEpisode.showId;
+      if (!epRes.ok) {
+        throw new Error(`Server returned HTTP ${epRes.status}`);
+      }
+      const rawData = await epRes.json();
 
-      // 2. Fetch parent show details to get siblings list
-      const showRes = await fetch(`${API_BASE}/shows/${showId}`);
-      if (showRes.ok) {
-        const showData = await showRes.json();
-        siblingEpisodes = showData.episodes || [];
+      // Normalize if response has nested episode or flat structure
+      if (rawData.episode) {
+        currentEpisode = {
+          ...rawData.episode,
+          show: rawData.show || rawData.episode.show,
+          servers: rawData.servers || rawData.episode.servers
+        };
+      } else {
+        currentEpisode = rawData;
+      }
+
+      showId = currentEpisode.showId || (currentEpisode.show && currentEpisode.show.id);
+
+      // Sibling episodes from embedded show object if present
+      if (currentEpisode.show && Array.isArray(currentEpisode.show.episodes) && currentEpisode.show.episodes.length > 0) {
+        siblingEpisodes = currentEpisode.show.episodes;
+      } else if (showId) {
+        try {
+          const showRes = await fetch(`${API_BASE}/shows/${showId}`);
+          if (showRes.ok) {
+            const showData = await showRes.json();
+            siblingEpisodes = showData.episodes || [];
+          }
+        } catch (showErr) {
+          console.warn('Could not load sibling episodes for showId:', showId, showErr);
+        }
       }
     } catch (err) {
-      console.error(err);
-      alert('Failed to load anime metadata from server.');
-      window.location.href = '/index.html';
-      return;
+      console.error('Failed to load episode metadata:', err);
+      // Attempt recovery: fallback to dummy object so player doesn't hard-crash if partial data exists
+      currentEpisode = currentEpisode || {
+        id: episodeId,
+        title: `Episode ${episodeId}`,
+        episodeNumber: 1,
+        videoUrl: '',
+        servers: []
+      };
+      // Show user-friendly notification inside the UI instead of hard-killing the tab
+      const errorBanner = document.createElement('div');
+      errorBanner.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#e11d48;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 10px 25px rgba(0,0,0,0.5);display:flex;align-items:center;gap:10px;';
+      errorBanner.innerHTML = `<span>⚠️ Could not load episode metadata from server.</span> <button style="background:#fff;color:#e11d48;border:none;padding:4px 10px;border-radius:6px;font-weight:700;cursor:pointer;" onclick="location.reload()">Retry</button>`;
+      document.body.appendChild(errorBanner);
+      setTimeout(() => { if (errorBanner.parentNode) errorBanner.remove(); }, 8000);
     }
+
 
     // Variables
     let isSettingsMenuOpen = false;
@@ -186,14 +220,24 @@ document.addEventListener('DOMContentLoaded', async function () {
       const serverSelector = document.getElementById('server-selector');
       const playerServerSection = document.getElementById('player-server-section');
 
-      if (!availableServers || availableServers.length === 0) {
-        if (serverSelector) serverSelector.style.display = 'none';
-        if (playerServerSection) playerServerSection.style.display = 'none';
-        return;
-      }
-
-      if (serverSelector) serverSelector.style.display = 'block';
+      // Always keep the server selector visible on the frontend as requested
+      if (serverSelector) serverSelector.style.display = 'inline-block';
       if (playerServerSection) playerServerSection.style.display = 'block';
+
+      if (!availableServers || availableServers.length === 0) {
+        if (currentEpisode && currentEpisode.videoUrl) {
+          availableServers = [{
+            id: 's3',
+            name: 'Server 1: AWS Cloud',
+            shortName: 'Server 1 (AWS)',
+            badge: 'AWS S3',
+            url: currentEpisode.videoUrl,
+            type: 'cloud'
+          }];
+        } else {
+          return;
+        }
+      }
 
       // Pick preferred server if available, else first available
       const preferred = localStorage.getItem('infinx_preferred_server');
@@ -205,6 +249,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (curDisplay && match) {
         curDisplay.textContent = match.shortName || match.name;
       }
+
+      const hasS3 = availableServers.some(s => s.id === 's3');
+      const hasLocal = availableServers.some(s => s.id === 'local');
 
       const renderServerItem = (s) => {
         const isActive = s.id === activeServerId;
@@ -219,13 +266,35 @@ document.addEventListener('DOMContentLoaded', async function () {
         `;
       };
 
+      let html = availableServers.map(renderServerItem).join('');
+
+      // If Server 2 has not been uploaded yet for this episode, show it clearly as not uploaded yet
+      if (hasS3 && !hasLocal) {
+        html += `
+          <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not uploaded to laptop server yet">
+            <i class="fas fa-laptop"></i>
+            <span>Server 2: Laptop Local Storage</span>
+            <span class="server-badge-pill" style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px;">Not Added</span>
+          </div>
+        `;
+      } else if (!hasS3 && hasLocal) {
+        html += `
+          <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not hosted on AWS S3">
+            <i class="fas fa-cloud"></i>
+            <span>Server 1: AWS Cloud</span>
+            <span class="server-badge-pill" style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px;">Not Added</span>
+          </div>
+        `;
+      }
+
       if (serverDropdown) {
-        serverDropdown.innerHTML = availableServers.map(renderServerItem).join('');
+        serverDropdown.innerHTML = html;
       }
       if (playerServerOptions) {
-        playerServerOptions.innerHTML = availableServers.map(renderServerItem).join('');
+        playerServerOptions.innerHTML = html;
       }
     }
+
 
     function switchServer(serverId, preserveTime = true) {
       if (!availableServers || availableServers.length === 0) return;
@@ -264,28 +333,29 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function setupServerEventListeners() {
+      const handleServerClick = (e) => {
+        const opt = e.target.closest('.server-option');
+        if (!opt) return;
+        if (opt.classList.contains('disabled')) {
+          showPlayerToast('This server stream has not been uploaded yet.');
+          return;
+        }
+        e.stopPropagation();
+        const sId = opt.getAttribute('data-server-id');
+        if (sId) switchServer(sId, true);
+      };
+
       const serverDropdown = document.getElementById('server-dropdown');
       if (serverDropdown) {
-        serverDropdown.addEventListener('click', function (e) {
-          const opt = e.target.closest('.server-option');
-          if (!opt) return;
-          e.stopPropagation();
-          const sId = opt.getAttribute('data-server-id');
-          switchServer(sId, true);
-        });
+        serverDropdown.addEventListener('click', handleServerClick);
       }
 
       const playerServerOptions = document.getElementById('player-server-options');
       if (playerServerOptions) {
-        playerServerOptions.addEventListener('click', function (e) {
-          const opt = e.target.closest('.server-option');
-          if (!opt) return;
-          e.stopPropagation();
-          const sId = opt.getAttribute('data-server-id');
-          switchServer(sId, true);
-        });
+        playerServerOptions.addEventListener('click', handleServerClick);
       }
     }
+
 
     // Initialize HLS
     function initHLS(videoSrc, seekTime = null, autoPlay = true) {
