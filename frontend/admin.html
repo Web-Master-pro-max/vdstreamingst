@@ -2228,11 +2228,17 @@
                         const storageBadge = task.videoUrl ? (isLocal ? `<span style="font-size: 0.85rem; padding: 2px 6px; background: rgba(0,168,255,0.15); color: var(--secondary); border: 1px solid var(--secondary); border-radius: 4px; margin-left: 6px;"><i class="fas fa-laptop"></i> Local</span>` : `<span style="font-size: 0.85rem; padding: 2px 6px; background: rgba(255,0,85,0.15); color: var(--primary); border: 1px solid var(--primary); border-radius: 4px; margin-left: 6px;"><i class="fas fa-cloud"></i> S3</span>`) : '';
                         const masterLink = task.videoUrl ? `<a href="${task.videoUrl}" target="_blank" style="color: var(--secondary); text-decoration: none; font-weight: 500;"><i class="fas fa-external-link-alt"></i> master.m3u8</a>${storageBadge}` : `<span style="color: var(--gray-text);">Not ready</span>`;
 
-                        const retryBtnHtml = statusUpper === 'FAILED' ? `
-                            <br>
-                            <button onclick="retryTask(${task.id})" style="margin-top: 8px; padding: 4px 10px; font-size: 0.85rem; background: linear-gradient(135deg, #e74c3c, #c0392b); border: none; color: #fff; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(231,76,60,0.3);">
-                                <i class="fas fa-redo"></i> Retry Transcode
-                            </button>
+                        const actionBtnsHtml = statusUpper !== 'COMPLETED' ? `
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                                ${statusUpper === 'FAILED' ? `
+                                    <button onclick="retryTask(${task.id})" style="padding: 4px 8px; font-size: 0.8rem; background: linear-gradient(135deg, #e74c3c, #c0392b); border: none; color: #fff; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(231,76,60,0.3);">
+                                        <i class="fas fa-redo"></i> Retry
+                                    </button>
+                                ` : ''}
+                                <button onclick="completeTask(${task.id})" style="padding: 4px 8px; font-size: 0.8rem; background: linear-gradient(135deg, #27ae60, #2ecc71); border: none; color: #fff; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(46,204,113,0.3);">
+                                    <i class="fas fa-check-circle"></i> Sync Done
+                                </button>
+                            </div>
                         ` : '';
 
                         return `
@@ -2243,7 +2249,7 @@
                                 </td>
                                 <td>
                                     <span class="status-badge ${statusClass}">${effectiveStatus}</span>
-                                    ${retryBtnHtml}
+                                    ${actionBtnsHtml}
                                 </td>
                                 <td>
                                     ${renderTranscodeProgress(task)}
@@ -2284,6 +2290,30 @@
                 }
             } catch (e) {
                 alert('Connection error submitting task retry.');
+            }
+        }
+
+        // Force complete / sync a stuck transcode task
+        async function completeTask(taskId) {
+            if (!confirm(`Sync and mark Task #${taskId} as COMPLETED?`)) return;
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/tasks/${taskId}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Task synchronized and marked as COMPLETED!');
+                    fetchTasks();
+                } else {
+                    alert(data.error || 'Failed to complete task.');
+                }
+            } catch (e) {
+                alert('Connection error completing task: ' + e.message);
             }
         }
 

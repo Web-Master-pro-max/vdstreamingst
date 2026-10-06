@@ -231,14 +231,15 @@ class TranscodeQueueManager {
           }
 
           // Direct fallback parsing for live progress updates (throttled to 1 sec)
-          const transcodeMatch = line.match(/TRANSCODING\s+([\d.]+)%\s*\(([^)]+)\)/i);
-          const uploadMatch = line.match(/UPLOADING_S3\s+([\d.]+)%\s*\(([^)]+)\)/i);
+          const transcodeMatch = line.match(/TRANSCODING\s+([\d.]+)%(?:\s*\((.*)\))?/i);
+          const uploadMatch = line.match(/UPLOADING_S3\s+([\d.]+)%(?:\s*\((.*)\))?/i);
 
           const now = Date.now();
           if (transcodeMatch && (now - lastProgressUpdateTime > 1000)) {
             lastProgressUpdateTime = now;
             const pct = parseFloat(transcodeMatch[1]);
-            const spd = transcodeMatch[2];
+            let spd = transcodeMatch[2] ? transcodeMatch[2].trim() : 'Processing';
+            if (spd.endsWith(')')) spd = spd.slice(0, -1);
             prisma.episode.update({
               where: { id: episodeId },
               data: {
@@ -253,7 +254,8 @@ class TranscodeQueueManager {
           } else if (uploadMatch && (now - lastProgressUpdateTime > 1000)) {
             lastProgressUpdateTime = now;
             const pct = parseFloat(uploadMatch[1]);
-            const spd = uploadMatch[2];
+            let spd = uploadMatch[2] ? uploadMatch[2].trim() : 'Uploading';
+            if (spd.endsWith(')')) spd = spd.slice(0, -1);
             prisma.episode.update({
               where: { id: episodeId },
               data: {
@@ -304,40 +306,50 @@ class TranscodeQueueManager {
 
         if (code === 0) {
           const match = stdoutData.match(/SUCCESS_PLAYBACK_URL:\s*(\S+)/);
-          let playbackUrl = match && match[1] ? match[1] : null;
+          let playbackUrl = match && match[1] ? match[1].trim() : null;
           if (!playbackUrl) {
             const ep = await prisma.episode.findUnique({ where: { id: episodeId } });
-            if (ep && ep.videoUrl) playbackUrl = ep.videoUrl;
+            if (ep && ep.videoUrl && ep.videoUrl.includes('master.m3u8')) playbackUrl = ep.videoUrl;
           }
 
-          if (playbackUrl) {
-            console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
-            try {
-              const completeData = {
-                transcodeStatus: 'COMPLETED',
-                videoUrl: playbackUrl,
-                stageDetails: JSON.stringify({
-                  uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
-                  transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
-                  uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
-                })
-              };
-              if (job.storageType === 's3' || playbackUrl.includes('amazonaws.com')) {
-                completeData.s3Url = playbackUrl;
-              } else {
-                completeData.localUrl = playbackUrl;
-              }
-
-              await prisma.episode.update({
-                where: { id: episodeId },
-                data: completeData
-              });
-            } catch (e) {
-              console.error(`Error updating completed status for Ep ${episodeId}:`, e.message);
+          // Fallback reconstruction if stdout was missed or formatted differently
+          if (!playbackUrl) {
+            const cleanFolderKey = (s3FolderKey || `videos/show_${showId}/ep_${episodeId}`).replace(/^\/+|\/+$/g, '');
+            if (job.storageType === 's3' || process.env.STORAGE_TYPE === 's3') {
+              const bucket = process.env.AWS_S3_BUCKET || 'serverbuket-12';
+              const region = process.env.AWS_REGION || 'ap-south-1';
+              playbackUrl = `https://${bucket}.s3.${region}.amazonaws.com/${cleanFolderKey}/master.m3u8`;
+            } else {
+              playbackUrl = `/uploads/${cleanFolderKey}/master.m3u8`;
             }
-            this.finishCurrentJob();
-            return;
           }
+
+          console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
+          try {
+            const completeData = {
+              transcodeStatus: 'COMPLETED',
+              videoUrl: playbackUrl,
+              stageDetails: JSON.stringify({
+                uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+              })
+            };
+            if (job.storageType === 's3' || playbackUrl.includes('amazonaws.com')) {
+              completeData.s3Url = playbackUrl;
+            } else {
+              completeData.localUrl = playbackUrl;
+            }
+
+            await prisma.episode.update({
+              where: { id: episodeId },
+              data: completeData
+            });
+          } catch (e) {
+            console.error(`Error updating completed status for Ep ${episodeId}:`, e.message);
+          }
+          this.finishCurrentJob();
+          return;
         }
 
         console.error(`❌ [QueueManager] Episode ${episodeId} Transcoding FAILED with code ${code}. Stderr: ${stderrData}`);

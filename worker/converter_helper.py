@@ -21,6 +21,29 @@ for p in local_bin_paths:
     if os.path.exists(p) and p not in os.environ.get("PATH", ""):
         os.environ["PATH"] = p + os.pathsep + os.environ.get("PATH", "")
 
+import threading
+
+def _send_webhook_worker(url, payload, episode_id, stage, percent, speed_str):
+    try:
+        import urllib.request
+        data_bytes = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=data_bytes,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "converter_helper/1.0"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=4) as res:
+            pass
+    except Exception:
+        try:
+            import requests
+            requests.post(url, json=payload, timeout=4)
+        except Exception:
+            pass
+
 def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCESSING", video_url=None, error=None, storage_type=None):
     if not episode_id:
         return
@@ -61,27 +84,27 @@ def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCES
     if error or is_failed:
         payload["error"] = error or speed_str
 
-    try:
-        import urllib.request
-        data_bytes = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(
-            url,
-            data=data_bytes,
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "converter_helper/1.0"
-            }
+    # Print clean progress line directly to stdout for immediate QueueManager consumption
+    if stage == "TRANSCODING":
+        print(f"TRANSCODING {round(percent, 1)}% ({speed_str})", flush=True)
+    elif stage == "UPLOADING_S3":
+        print(f"UPLOADING_S3 {round(percent, 1)}% ({speed_str})", flush=True)
+    elif stage == "COMPLETED" or status == "COMPLETED":
+        print(f"COMPLETED 100.0% (Done)", flush=True)
+        if video_url:
+            print(f"SUCCESS_PLAYBACK_URL: {video_url}", flush=True)
+
+    # For completion, send synchronously with short timeout so DB is guaranteed updated
+    # For in-flight progress, send in non-blocking daemon thread so FFmpeg pipes never stall
+    if status == "COMPLETED" or stage == "COMPLETED" or is_failed:
+        _send_webhook_worker(url, payload, episode_id, stage, percent, speed_str)
+    else:
+        t = threading.Thread(
+            target=_send_webhook_worker,
+            args=(url, payload, episode_id, stage, percent, speed_str),
+            daemon=True
         )
-        with urllib.request.urlopen(req, timeout=5) as res:
-            code = res.getcode()
-            print(f"📡 Webhook progress report sent: Ep #{episode_id} {stage} {percent:.1f}% ({speed_str}) -> {code}")
-    except Exception as e:
-        try:
-            import requests
-            res = requests.post(url, json=payload, timeout=5)
-            print(f"📡 Webhook progress report sent (requests): Ep #{episode_id} {stage} {percent:.1f}% ({speed_str}) -> {res.status_code}")
-        except Exception:
-            print(f"Progress webhook notification warning: {e}", file=sys.stderr)
+        t.start()
 
 def run_cmd(cmd):
     print(f"\nRunning: {' '.join(cmd)}")
@@ -382,10 +405,10 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
                             total_target_seconds = total_duration * len(active_renditions)
                             rem_seconds = max(0, total_target_seconds - (accumulated_out_time + current_out_time_sec))
                             eta = int(rem_seconds / effective_speed) if effective_speed > 0 else 0
-                            speed_display = f"{r_name} ({speed_val if speed_val != 'N/A' else f'{effective_speed:.1f}x'})"
+                            speed_display = f"{r_name} - {speed_val if speed_val != 'N/A' else f'{effective_speed:.1f}x'}"
                         else:
                             composite_pct = min(99.0, base_pct + 10.0)
-                            speed_display = f"{r_name} (1.0x)"
+                            speed_display = f"{r_name} - 1.0x"
                             eta = 0
                             
                         if episode_id:
@@ -409,6 +432,11 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
         accumulated_out_time += total_duration
         successful_renditions.append(rendition)
         print(f"✅ Finished {r_name} rendition successfully!")
+        if episode_id:
+            report_progress(episode_id, stage="TRANSCODING", percent=min(99.0, accumulated_percent), speed=f"{r_name} done", eta=0)
+
+    if episode_id:
+        report_progress(episode_id, stage="TRANSCODING", percent=100.0, speed="Video Done", eta=0)
 
     # Maintain backward compatibility for legacy callers expecting video.m3u8
     if successful_renditions:
@@ -605,6 +633,9 @@ def upload_to_s3(local_dir, s3_prefix, bucket_name, aws_access_key, aws_secret_k
             Callback=make_callback(episode_id, total_bytes, uploaded_bytes, start_time, last_report_time)
         )
         print(f"Uploaded {file} as {content_type}")
+
+    if episode_id:
+        report_progress(episode_id, stage="UPLOADING_S3", percent=100.0, speed="Done", eta=0)
 
 def get_uploads_dir(storage_path_override=None):
     custom = storage_path_override or os.getenv("LOCAL_STORAGE_PATH")
