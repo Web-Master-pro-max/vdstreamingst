@@ -195,22 +195,65 @@ class TranscodeQueueManager {
         shell: false
       });
 
-      this.activeChildProcess = child;
+      // Safety timeout: By default, wall-clock timeout is disabled (0 / null)
+      // so long movie or series transcodes (6-7+ hours) can run to completion.
+      // An optional ceiling can be configured via TRANSCODE_TIMEOUT_HOURS in .env.
+      const timeoutHours = parseFloat(process.env.TRANSCODE_TIMEOUT_HOURS || '0');
+      if (timeoutHours > 0) {
+        const timeoutMs = timeoutHours * 60 * 60 * 1000;
+        console.log(`⏱️ [QueueManager] Maximum job watchdog configured for ${timeoutHours} hours.`);
+        this.currentJobTimeout = setTimeout(async () => {
+          console.error(`⏱️ [QueueManager] Configured transcode timeout (${timeoutHours}h) reached for Episode ${episodeId}. Terminating process...`);
+          if (this.activeChildProcess) {
+            try { this.activeChildProcess.kill('SIGKILL'); } catch (e) { }
+          }
+          try {
+            await prisma.episode.update({
+              where: { id: episodeId },
+              data: {
+                transcodeStatus: 'FAILED',
+                stageDetails: JSON.stringify({
+                  uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  transcoding: { percent: 0, speed: `Exceeded ${timeoutHours}h timeout`, eta: 0, status: 'FAILED', error: `Transcode exceeded configured timeout of ${timeoutHours} hours` },
+                  uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'FAILED' }
+                })
+              }
+            });
+          } catch (e) { }
+          this.finishCurrentJob();
+        }, timeoutMs);
+      } else {
+        console.log(`⏱️ [QueueManager] No wall-clock timeout limit applied (unlimited runtime allowed).`);
+        this.currentJobTimeout = null;
+      }
 
-      // 60-minute maximum runtime safety watchdog to prevent stuck processes
-      this.currentJobTimeout = setTimeout(async () => {
-        console.error(`⏱️ [QueueManager] Transcode timeout reached for Episode ${episodeId}. Terminating process...`);
-        if (this.activeChildProcess) {
-          try { this.activeChildProcess.kill('SIGKILL'); } catch (e) { }
-        }
-        try {
-          await prisma.episode.update({
-            where: { id: episodeId },
-            data: { transcodeStatus: 'FAILED' }
-          });
-        } catch (e) { }
-        this.finishCurrentJob();
-      }, 60 * 60 * 1000);
+      // Inactivity Watchdog: Only intervenes if process emits zero output for 30 consecutive minutes
+      let inactivityTimer = null;
+      const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes of absolute silence
+      const resetInactivity = () => {
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(async () => {
+          console.error(`⚠️ [QueueManager] Inactivity watchdog: Transcoder for Episode ${episodeId} produced no output for 30 minutes. Terminating frozen process...`);
+          if (this.activeChildProcess) {
+            try { this.activeChildProcess.kill('SIGKILL'); } catch (e) { }
+          }
+          try {
+            await prisma.episode.update({
+              where: { id: episodeId },
+              data: {
+                transcodeStatus: 'FAILED',
+                stageDetails: JSON.stringify({
+                  uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  transcoding: { percent: 0, speed: 'Hung (30m silence)', eta: 0, status: 'FAILED', error: 'Transcoder produced no output for 30 minutes' },
+                  uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'FAILED' }
+                })
+              }
+            });
+          } catch (e) { }
+          this.finishCurrentJob();
+        }, INACTIVITY_LIMIT_MS);
+      };
+      resetInactivity();
 
       let stdoutData = '';
       let stderrData = '';
@@ -218,6 +261,7 @@ class TranscodeQueueManager {
       let lastProgressUpdateTime = 0;
 
       child.stdout.on('data', (data) => {
+        resetInactivity();
         const text = data.toString();
         stdoutData += text;
         const lines = text.trim().split('\n');
@@ -272,12 +316,14 @@ class TranscodeQueueManager {
       });
 
       child.stderr.on('data', (data) => {
+        resetInactivity();
         stderrData += data.toString();
         const lines = data.toString().trim().split('\n');
         lines.forEach(line => console.warn(`[Transcoder Ep ${episodeId}] ${line}`));
       });
 
       child.on('error', async (err) => {
+        if (inactivityTimer) { clearTimeout(inactivityTimer); inactivityTimer = null; }
         console.error(`❌ [QueueManager] Error executing transcoder for Episode ${episodeId}:`, err);
         try {
           await prisma.episode.update({
@@ -290,6 +336,10 @@ class TranscodeQueueManager {
 
       child.on('close', async (code, signal) => {
         isJobFinished = true;
+        if (inactivityTimer) {
+          clearTimeout(inactivityTimer);
+          inactivityTimer = null;
+        }
         if (this.currentJobTimeout) {
           clearTimeout(this.currentJobTimeout);
           this.currentJobTimeout = null;
@@ -298,6 +348,22 @@ class TranscodeQueueManager {
 
         if (signal === 'SIGKILL' || signal === 'SIGTERM') {
           console.log(`⏹️ [QueueManager] Transcoder for Episode ${episodeId} was STOPPED/CANCELLED.`);
+          try {
+            const ep = await prisma.episode.findUnique({ where: { id: episodeId } });
+            if (ep && (ep.transcodeStatus === 'PROCESSING' || ep.transcodeStatus === 'PENDING')) {
+              await prisma.episode.update({
+                where: { id: episodeId },
+                data: {
+                  transcodeStatus: 'FAILED',
+                  stageDetails: JSON.stringify({
+                    uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                    transcoding: { percent: 0, speed: 'Terminated or cancelled', eta: 0, status: 'FAILED', error: 'Transcode process stopped or killed' },
+                    uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'FAILED' }
+                  })
+                }
+              });
+            }
+          } catch (e) { }
           this.finishCurrentJob();
           return;
         }

@@ -296,6 +296,51 @@ RENDITIONS_CONFIG = [
     }
 ]
 
+_DETECTED_ENCODER = None
+
+def detect_best_encoder():
+    global _DETECTED_ENCODER
+    if _DETECTED_ENCODER:
+        return _DETECTED_ENCODER
+
+    # Allow manual override via environment variable if desired
+    env_codec = os.getenv("TRANSCODE_CODEC")
+    if env_codec and env_codec.strip():
+        _DETECTED_ENCODER = env_codec.strip().lower()
+        print(f"🔧 Using manually configured video encoder: {_DETECTED_ENCODER}")
+        return _DETECTED_ENCODER
+
+    # 1. Probe NVIDIA NVENC (h264_nvenc)
+    try:
+        res = subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc=duration=0.5:size=320x240:rate=10", "-c:v", "h264_nvenc", "-f", "null", "-"],
+            capture_output=True, text=True, timeout=5
+        )
+        if res.returncode == 0:
+            print("🚀 Hardware Acceleration Detected: NVIDIA NVENC (h264_nvenc) - Ultra Fast")
+            _DETECTED_ENCODER = "h264_nvenc"
+            return _DETECTED_ENCODER
+    except Exception:
+        pass
+
+    # 2. Probe AMD AMF (h264_amf)
+    try:
+        res = subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc=duration=0.5:size=320x240:rate=10", "-c:v", "h264_amf", "-f", "null", "-"],
+            capture_output=True, text=True, timeout=5
+        )
+        if res.returncode == 0:
+            print("🚀 Hardware Acceleration Detected: AMD AMF (h264_amf) - Ultra Fast")
+            _DETECTED_ENCODER = "h264_amf"
+            return _DETECTED_ENCODER
+    except Exception:
+        pass
+
+    # 3. CPU Fallback (libx264)
+    print("ℹ️ Using CPU Software Encoder (libx264) with optimized veryfast preset")
+    _DETECTED_ENCODER = "libx264"
+    return _DETECTED_ENCODER
+
 def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None, source_w=None, source_h=None):
     if not source_w or not source_h:
         source_w, source_h = probe_video_dimensions(input_file)
@@ -303,8 +348,12 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
     print(f"🎬 Source video dimensions: {source_w}x{source_h}")
     
     # Select qualifying ladder renditions (never upscale lower resolutions)
+    # Skip obsolete 360p pass if higher resolutions (480p, 720p, 1080p) are present to save ~20-25% time
+    skip_360p = os.getenv("TRANSCODE_SKIP_360P", "true").lower() in ("true", "1", "yes")
     active_renditions = []
     for r in RENDITIONS_CONFIG:
+        if r["name"] == "360p" and skip_360p and (source_h >= 480 or source_w >= 800):
+            continue
         if source_h >= r["min_source_height"] or source_w >= r["min_source_width"]:
             active_renditions.append(dict(r))
             
@@ -319,6 +368,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
         
     print(f"📋 Generating {len(active_renditions)} quality renditions: {[r['name'] for r in active_renditions]}")
     
+    encoder = detect_best_encoder()
     successful_renditions = []
     accumulated_percent = 0.0
     accumulated_out_time = 0.0
@@ -336,6 +386,42 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
         # Proportional scale preserving original aspect ratio without distortion
         scale_filter = f"scale=w={rendition['width']}:h={rendition['height']}:force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"
         
+        # Configure video encoder parameters according to detected hardware
+        if encoder == "h264_nvenc":
+            video_args = [
+                "-c:v", "h264_nvenc",
+                "-preset", os.getenv("NVENC_PRESET", "p4"),
+                "-tune", "hq",
+                "-rc:v", "vbr",
+                "-cq:v", "23" if r_name in ["1080p", "720p"] else "24",
+                "-b:v", "0",
+                "-maxrate", rendition["maxrate"],
+                "-bufsize", rendition["bufsize"],
+                "-pix_fmt", "yuv420p"
+            ]
+        elif encoder == "h264_amf":
+            video_args = [
+                "-c:v", "h264_amf",
+                "-quality", "speed",
+                "-rc", "vbr_latency",
+                "-b:v", rendition["bitrate"],
+                "-maxrate", rendition["maxrate"],
+                "-bufsize", rendition["bufsize"],
+                "-pix_fmt", "yuv420p"
+            ]
+        else:
+            cpu_preset = os.getenv("TRANSCODE_CPU_PRESET", "veryfast")
+            cpu_threads = os.getenv("TRANSCODE_CPU_THREADS", "0")
+            video_args = [
+                "-c:v", "libx264",
+                "-preset", cpu_preset,
+                "-threads", cpu_threads,
+                "-crf", "23" if r_name in ["1080p", "720p"] else "24",
+                "-maxrate", rendition["maxrate"],
+                "-bufsize", rendition["bufsize"],
+                "-pix_fmt", "yuv420p"
+            ]
+
         cmd = [
             "ffmpeg",
             "-progress", "pipe:1",
@@ -344,13 +430,8 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
             "-avoid_negative_ts", "make_zero",
             "-fflags", "+genpts",
             "-map", "0:v:0",
-            "-vf", scale_filter,
-            "-c:v", "libx264",
-            "-pix_fmt", "yuv420p",
-            "-preset", "fast",
-            "-crf", "23" if r_name in ["1080p", "720p"] else "24",
-            "-maxrate", rendition["maxrate"],
-            "-bufsize", rendition["bufsize"],
+            "-vf", scale_filter
+        ] + video_args + [
             "-force_key_frames", "expr:gte(t,n_forced*6)",
             "-f", "hls",
             "-hls_time", "6",
@@ -360,7 +441,7 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
             r_out_playlist
         ]
         
-        print(f"\n🎬 [{idx+1}/{len(active_renditions)}] Transcoding {r_name} ({rendition['width']}x{rendition['height']})...")
+        print(f"\n🎬 [{idx+1}/{len(active_renditions)}] Transcoding {r_name} ({rendition['width']}x{rendition['height']}) with {encoder}...")
         print(f"Running: {' '.join(cmd)}")
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr_file, text=True, bufsize=1)
         
