@@ -549,6 +549,17 @@ document.addEventListener('DOMContentLoaded', async function () {
           });
         });
 
+        hls.on(Hls.Events.LEVEL_SWITCHED, function (event, data) {
+          if (hls.autoLevelEnabled || hls.currentLevel === -1) {
+            const activeLevel = (qualities && qualities[data.level]) ? qualities[data.level] : null;
+            if (activeLevel && activeLevel.height) {
+              document.querySelectorAll('.current-quality').forEach(el => {
+                el.textContent = `Auto (${activeLevel.height}p)`;
+              });
+            }
+          }
+        });
+
         hls.on(Hls.Events.ERROR, function (event, data) {
           console.error('HLS error:', data);
           videoPlayer.classList.remove('loading');
@@ -650,34 +661,105 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       qualityDropdown.innerHTML = '';
       if (settingsQualitySection) {
-        const autoOption = settingsQualitySection.querySelector('.quality-option[data-quality="auto"]');
-        if (autoOption) {
-          settingsQualitySection.innerHTML = '';
-          settingsQualitySection.appendChild(autoOption.cloneNode(true));
-        }
+        settingsQualitySection.innerHTML = '';
       }
 
+      // Check saved user preference (e.g. 'auto', '1080p', '720p', etc.)
+      const savedPref = localStorage.getItem('infinx_preferred_quality') || 'auto';
+
+      // Auto Option
       const autoOption = document.createElement('div');
-      autoOption.className = 'quality-option active';
+      autoOption.className = 'quality-option' + (savedPref === 'auto' ? ' active' : '');
       autoOption.setAttribute('data-quality', 'auto');
-      autoOption.textContent = 'Auto';
+      autoOption.innerHTML = '<i class="fas fa-magic" style="font-size: 11px; opacity: 0.8; margin-right: 6px;"></i><span>Auto</span><span class="quality-badge badge-auto">Optimal</span>';
       qualityDropdown.appendChild(autoOption);
 
-      qualities.forEach((level, index) => {
+      if (settingsQualitySection) {
+        const settingsAutoOption = document.createElement('div');
+        settingsAutoOption.className = 'quality-option' + (savedPref === 'auto' ? ' active' : '');
+        settingsAutoOption.setAttribute('data-quality', 'auto');
+        settingsAutoOption.textContent = 'Auto';
+        settingsQualitySection.appendChild(settingsAutoOption);
+      }
+
+      if (!qualities || qualities.length === 0) {
+        document.querySelectorAll('.current-quality').forEach(el => { el.textContent = 'Auto'; });
+        return;
+      }
+
+      // Map levels with their original index and compute label + badge
+      const mappedLevels = qualities.map((level, originalIndex) => {
+        let height = level.height;
+        if (!height && level.attrs && level.attrs.RESOLUTION) {
+          const parts = level.attrs.RESOLUTION.split('x');
+          if (parts.length === 2) height = parseInt(parts[1], 10);
+        }
+        
+        let badge = '';
+        let badgeClass = '';
+        if (height >= 1080) {
+          badge = 'FHD';
+          badgeClass = 'badge-fhd';
+        } else if (height >= 720) {
+          badge = 'HD';
+          badgeClass = 'badge-hd';
+        } else if (height >= 480) {
+          badge = 'SD';
+          badgeClass = 'badge-sd';
+        } else if (height > 0) {
+          badge = 'SD';
+          badgeClass = 'badge-sd';
+        }
+
+        const label = height ? `${height}p` : (level.name || `Stream ${originalIndex + 1}`);
+
+        return {
+          index: originalIndex,
+          height: height || 0,
+          label: label,
+          badge: badge,
+          badgeClass: badgeClass
+        };
+      });
+
+      // Sort descending by resolution (highest quality first)
+      mappedLevels.sort((a, b) => b.height - a.height);
+
+      let matchedLevelIndex = null;
+
+      mappedLevels.forEach(lvl => {
+        const isSelected = (savedPref !== 'auto' && (savedPref === lvl.label || parseInt(savedPref, 10) === lvl.height));
+        if (isSelected && matchedLevelIndex === null) {
+          matchedLevelIndex = lvl.index;
+        }
+
+        // Quick bar dropdown item
         const option = document.createElement('div');
-        option.className = 'quality-option';
-        option.setAttribute('data-quality', index);
-        option.textContent = level.height + 'p';
+        option.className = 'quality-option' + (isSelected ? ' active' : '');
+        option.setAttribute('data-quality', lvl.index);
+        option.innerHTML = `
+          <i class="fas fa-tv" style="font-size: 11px; opacity: 0.7; margin-right: 6px;"></i>
+          <span>${lvl.label}</span>
+          ${lvl.badge ? `<span class="quality-badge ${lvl.badgeClass}">${lvl.badge}</span>` : ''}
+        `;
         qualityDropdown.appendChild(option);
 
+        // Settings gear dropdown item
         if (settingsQualitySection) {
           const settingsOption = document.createElement('div');
-          settingsOption.className = 'quality-option';
-          settingsOption.setAttribute('data-quality', index);
-          settingsOption.textContent = level.height + 'p';
+          settingsOption.className = 'quality-option' + (isSelected ? ' active' : '');
+          settingsOption.setAttribute('data-quality', lvl.index);
+          settingsOption.textContent = `${lvl.label}${lvl.badge ? ' ' + lvl.badge : ''}`;
           settingsQualitySection.appendChild(settingsOption);
         }
       });
+
+      // Restore user's preferred quality
+      if (savedPref !== 'auto' && matchedLevelIndex !== null) {
+        setQuality(matchedLevelIndex, false);
+      } else {
+        setQuality('auto', false);
+      }
     }
 
     function getFriendlyLanguageName(langCode) {
@@ -787,28 +869,47 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // Set video quality
-    function setQuality(qualityLevel) {
+    function setQuality(qualityLevel, shouldCloseMenus = true) {
       if (hls) {
+        let displayLabel = 'Auto';
+
         if (qualityLevel === 'auto') {
           hls.currentLevel = -1;
-          document.querySelectorAll('.current-quality').forEach(el => { el.textContent = 'Auto'; });
+          localStorage.setItem('infinx_preferred_quality', 'auto');
+          displayLabel = 'Auto';
         } else {
-          hls.currentLevel = qualityLevel;
-          const quality = qualities[qualityLevel];
-          document.querySelectorAll('.current-quality').forEach(el => { el.textContent = quality.height + 'p'; });
+          const lvlIdx = parseInt(qualityLevel, 10);
+          hls.currentLevel = lvlIdx;
+          const quality = (qualities && qualities[lvlIdx]) ? qualities[lvlIdx] : null;
+          let height = quality ? quality.height : null;
+          if (!height && quality && quality.attrs && quality.attrs.RESOLUTION) {
+            const parts = quality.attrs.RESOLUTION.split('x');
+            if (parts.length === 2) height = parseInt(parts[1], 10);
+          }
+          displayLabel = height ? `${height}p` : `Stream ${lvlIdx + 1}`;
+          localStorage.setItem('infinx_preferred_quality', displayLabel);
         }
+
+        document.querySelectorAll('.current-quality').forEach(el => {
+          el.textContent = displayLabel;
+        });
 
         document.querySelectorAll('.quality-option').forEach(option => {
           option.classList.remove('active');
           const optionQuality = option.getAttribute('data-quality');
-          if ((qualityLevel === 'auto' && optionQuality === 'auto') ||
-            (qualityLevel !== 'auto' && parseInt(optionQuality) === qualityLevel)) {
-            option.classList.add('active');
+          if (qualityLevel === 'auto') {
+            if (optionQuality === 'auto') option.classList.add('active');
+          } else {
+            if (optionQuality !== 'auto' && parseInt(optionQuality, 10) === parseInt(qualityLevel, 10)) {
+              option.classList.add('active');
+            }
           }
         });
 
-        closeAllDropdowns();
-        closeSettingsDropdown();
+        if (shouldCloseMenus) {
+          closeAllDropdowns();
+          closeSettingsDropdown();
+        }
       }
     }
 

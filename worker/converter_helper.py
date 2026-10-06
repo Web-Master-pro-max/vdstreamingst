@@ -183,94 +183,243 @@ def extract_subtitles(input_file, subtitle_streams, output_dir):
                 print(f"⚠️ Subtitle extract warning for track #{i} ({map_arg}): {e}")
     return successful_subs
 
-def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None):
-    stderr_log_path = os.path.join(output_dir, "ffmpeg_video_err.log")
-    stderr_file = open(stderr_log_path, "w", encoding="utf-8", errors="ignore")
-
+def probe_video_dimensions(input_file):
     cmd = [
-        "ffmpeg",
-        "-progress", "pipe:1",
-        "-nostats",
-        "-i", input_file,
-        "-map", "0:v:0",
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-preset", "fast",
-        "-crf", "23",
-        "-f", "hls",
-        "-hls_time", "6",
-        "-hls_playlist_type", "vod",
-        "-hls_segment_filename",
-        os.path.join(output_dir, "video_%03d.ts"),
-        "-y",
-        os.path.join(output_dir, "video.m3u8")
+        "ffprobe",
+        "-v", "quiet",
+        "-print_format", "json",
+        "-show_streams",
+        "-select_streams", "v:0",
+        input_file
     ]
-
-    print(f"\nRunning: {' '.join(cmd)}")
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr_file, text=True, bufsize=1)
-    
-    start_time = time.time()
-    last_report_time = 0.0
-    current_out_time_sec = 0.0
-    speed_val = "1.0x"
-    
     try:
-        while True:
-            line = process.stdout.readline()
-            if not line and process.poll() is not None:
-                break
-            if not line:
-                continue
-            line = line.strip()
-            if "=" in line:
-                parts = line.split("=", 1)
-                key = parts[0].strip()
-                val = parts[1].strip()
-                
-                if key == "out_time_us" or key == "out_time_ms":
-                    try:
-                        current_out_time_sec = float(val) / 1000000.0
-                    except ValueError:
-                        pass
-                elif key == "out_time":
-                    try:
-                        h, m, s = val.split(":")
-                        current_out_time_sec = float(h)*3600 + float(m)*60 + float(s)
-                    except Exception:
-                        pass
-                elif key == "speed":
-                    speed_val = val.strip()
-                    
-                now = time.time()
-                if (now - last_report_time) >= 1.0:
-                    last_report_time = now
-                    if total_duration > 0:
-                        percent = min(99.0, max(0.0, (current_out_time_sec / total_duration) * 100))
-                        elapsed = max(0.1, now - start_time)
-                        calc_speed = current_out_time_sec / elapsed if elapsed > 0 else 1.0
-                        eta = max(0, int((total_duration - current_out_time_sec) / calc_speed)) if calc_speed > 0 else 0
-                        speed_display = speed_val if speed_val != "N/A" else f"{calc_speed:.1f}x"
-                    else:
-                        percent = 50.0
-                        speed_display = "1.0x"
-                        eta = 0
-                        
-                    if episode_id:
-                        report_progress(episode_id, stage="TRANSCODING", percent=percent, speed=speed_display, eta=eta)
-    finally:
-        stderr_file.close()
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0 and res.stdout.strip():
+            info = json.loads(res.stdout)
+            streams = info.get("streams", [])
+            if streams:
+                w = int(streams[0].get("width") or 0)
+                h = int(streams[0].get("height") or 0)
+                if w > 0 and h > 0:
+                    return w, h
+    except Exception as e:
+        print(f"Warning: Failed to probe video dimensions: {e}")
+    return 1920, 1080
 
-    rc = process.poll()
-    if rc != 0:
-        err_snippet = ""
-        if os.path.exists(stderr_log_path):
-            try:
-                with open(stderr_log_path, "r", encoding="utf-8", errors="ignore") as f:
-                    err_lines = [l.strip() for l in f.readlines() if l.strip()]
-                    err_snippet = " ".join(err_lines[-5:]) if err_lines else ""
-            except Exception:
-                pass
-        raise Exception(f"FFmpeg video transcode failed (code {rc}): {err_snippet}")
+RENDITIONS_CONFIG = [
+    {
+        "name": "1080p",
+        "label": "1080p FHD",
+        "badge": "FHD",
+        "min_source_height": 1000,
+        "min_source_width": 1800,
+        "width": 1920,
+        "height": 1080,
+        "bitrate": "4500k",
+        "maxrate": "5000k",
+        "bufsize": "7500k",
+        "bandwidth": 4800000,
+        "playlist": "video_1080p.m3u8",
+        "segment_prefix": "video_1080p_%03d.ts",
+        "weight": 0.40
+    },
+    {
+        "name": "720p",
+        "label": "720p HD",
+        "badge": "HD",
+        "min_source_height": 680,
+        "min_source_width": 1200,
+        "width": 1280,
+        "height": 720,
+        "bitrate": "2500k",
+        "maxrate": "2800k",
+        "bufsize": "4000k",
+        "bandwidth": 2700000,
+        "playlist": "video_720p.m3u8",
+        "segment_prefix": "video_720p_%03d.ts",
+        "weight": 0.28
+    },
+    {
+        "name": "480p",
+        "label": "480p",
+        "badge": "SD",
+        "min_source_height": 440,
+        "min_source_width": 800,
+        "width": 854,
+        "height": 480,
+        "bitrate": "1200k",
+        "maxrate": "1400k",
+        "bufsize": "2000k",
+        "bandwidth": 1350000,
+        "playlist": "video_480p.m3u8",
+        "segment_prefix": "video_480p_%03d.ts",
+        "weight": 0.18
+    },
+    {
+        "name": "360p",
+        "label": "360p",
+        "badge": "SD",
+        "min_source_height": 0,
+        "min_source_width": 0,
+        "width": 640,
+        "height": 360,
+        "bitrate": "700k",
+        "maxrate": "800k",
+        "bufsize": "1200k",
+        "bandwidth": 800000,
+        "playlist": "video_360p.m3u8",
+        "segment_prefix": "video_360p_%03d.ts",
+        "weight": 0.14
+    }
+]
+
+def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None, source_w=None, source_h=None):
+    if not source_w or not source_h:
+        source_w, source_h = probe_video_dimensions(input_file)
+        
+    print(f"🎬 Source video dimensions: {source_w}x{source_h}")
+    
+    # Select qualifying ladder renditions (never upscale lower resolutions)
+    active_renditions = []
+    for r in RENDITIONS_CONFIG:
+        if source_h >= r["min_source_height"] or source_w >= r["min_source_width"]:
+            active_renditions.append(dict(r))
+            
+    # Guarantee at least one baseline rendition
+    if not active_renditions:
+        active_renditions = [dict(RENDITIONS_CONFIG[-1])]
+        
+    # Normalize weights so composite progress increases steadily from 0% to 100%
+    total_weight = sum(r["weight"] for r in active_renditions)
+    for r in active_renditions:
+        r["norm_weight"] = r["weight"] / total_weight
+        
+    print(f"📋 Generating {len(active_renditions)} quality renditions: {[r['name'] for r in active_renditions]}")
+    
+    successful_renditions = []
+    accumulated_percent = 0.0
+    accumulated_out_time = 0.0
+    total_pipeline_start = time.time()
+    
+    for idx, rendition in enumerate(active_renditions):
+        r_name = rendition["name"]
+        r_weight = rendition["norm_weight"]
+        base_pct = accumulated_percent
+        r_out_playlist = os.path.join(output_dir, rendition["playlist"])
+        r_out_segment = os.path.join(output_dir, rendition["segment_prefix"])
+        stderr_log_path = os.path.join(output_dir, f"ffmpeg_{r_name}_err.log")
+        stderr_file = open(stderr_log_path, "w", encoding="utf-8", errors="ignore")
+        
+        # Proportional scale preserving original aspect ratio without distortion
+        scale_filter = f"scale=w={rendition['width']}:h={rendition['height']}:force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"
+        
+        cmd = [
+            "ffmpeg",
+            "-progress", "pipe:1",
+            "-nostats",
+            "-i", input_file,
+            "-map", "0:v:0",
+            "-vf", scale_filter,
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-preset", "fast",
+            "-crf", "23" if r_name in ["1080p", "720p"] else "24",
+            "-maxrate", rendition["maxrate"],
+            "-bufsize", rendition["bufsize"],
+            "-force_key_frames", "expr:gte(t,n_forced*6)",
+            "-f", "hls",
+            "-hls_time", "6",
+            "-hls_playlist_type", "vod",
+            "-hls_segment_filename", r_out_segment,
+            "-y",
+            r_out_playlist
+        ]
+        
+        print(f"\n🎬 [{idx+1}/{len(active_renditions)}] Transcoding {r_name} ({rendition['width']}x{rendition['height']})...")
+        print(f"Running: {' '.join(cmd)}")
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr_file, text=True, bufsize=1)
+        
+        r_start_time = time.time()
+        last_report_time = 0.0
+        current_out_time_sec = 0.0
+        speed_val = "1.0x"
+        
+        try:
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                if not line:
+                    continue
+                line = line.strip()
+                if "=" in line:
+                    parts = line.split("=", 1)
+                    key = parts[0].strip()
+                    val = parts[1].strip()
+                    
+                    if key in ("out_time_us", "out_time_ms"):
+                        try:
+                            current_out_time_sec = float(val) / 1000000.0
+                        except ValueError:
+                            pass
+                    elif key == "out_time":
+                        try:
+                            h, m, s = val.split(":")
+                            current_out_time_sec = float(h)*3600 + float(m)*60 + float(s)
+                        except Exception:
+                            pass
+                    elif key == "speed":
+                        speed_val = val.strip()
+                        
+                    now = time.time()
+                    if (now - last_report_time) >= 1.0:
+                        last_report_time = now
+                        if total_duration > 0:
+                            rendition_pct = min(100.0, max(0.0, (current_out_time_sec / total_duration) * 100))
+                            composite_pct = min(99.0, max(0.1, base_pct + (rendition_pct * r_weight)))
+                            total_elapsed = max(0.1, now - total_pipeline_start)
+                            effective_speed = (accumulated_out_time + current_out_time_sec) / total_elapsed
+                            total_target_seconds = total_duration * len(active_renditions)
+                            rem_seconds = max(0, total_target_seconds - (accumulated_out_time + current_out_time_sec))
+                            eta = int(rem_seconds / effective_speed) if effective_speed > 0 else 0
+                            speed_display = f"{r_name} ({speed_val if speed_val != 'N/A' else f'{effective_speed:.1f}x'})"
+                        else:
+                            composite_pct = min(99.0, base_pct + 10.0)
+                            speed_display = f"{r_name} (1.0x)"
+                            eta = 0
+                            
+                        if episode_id:
+                            report_progress(episode_id, stage="TRANSCODING", percent=composite_pct, speed=speed_display, eta=eta)
+        finally:
+            stderr_file.close()
+            
+        rc = process.poll()
+        if rc != 0:
+            err_snippet = ""
+            if os.path.exists(stderr_log_path):
+                try:
+                    with open(stderr_log_path, "r", encoding="utf-8", errors="ignore") as f:
+                        err_lines = [l.strip() for l in f.readlines() if l.strip()]
+                        err_snippet = " ".join(err_lines[-5:]) if err_lines else ""
+                except Exception:
+                    pass
+            raise Exception(f"FFmpeg {r_name} transcode failed (code {rc}): {err_snippet}")
+            
+        accumulated_percent += (r_weight * 100)
+        accumulated_out_time += total_duration
+        successful_renditions.append(rendition)
+        print(f"✅ Finished {r_name} rendition successfully!")
+
+    # Maintain backward compatibility for legacy callers expecting video.m3u8
+    if successful_renditions:
+        top_playlist = os.path.join(output_dir, successful_renditions[0]["playlist"])
+        legacy_playlist = os.path.join(output_dir, "video.m3u8")
+        try:
+            shutil.copy2(top_playlist, legacy_playlist)
+        except Exception as e:
+            print(f"Warning: Could not copy legacy video.m3u8: {e}")
+
+    return successful_renditions
 
 def create_audio_hls(input_file, audio_streams, output_dir):
     successful_audios = []
@@ -312,8 +461,26 @@ def create_audio_hls(input_file, audio_streams, output_dir):
                 print(f"⚠️ Audio transcode exception for track #{i}: {e}")
     return successful_audios
 
-def create_master(audio_streams, subtitle_streams, output_dir):
-    master = os.path.join(output_dir, "master.m3u8")
+def create_master(audio_streams, subtitle_streams, renditions_or_output_dir, output_dir=None):
+    if output_dir is None:
+        actual_output_dir = renditions_or_output_dir
+        renditions = []
+        for r in RENDITIONS_CONFIG:
+            if os.path.exists(os.path.join(actual_output_dir, r["playlist"])):
+                renditions.append(r)
+        if not renditions:
+            renditions = [{"bandwidth": 2500000, "width": 1280, "height": 720, "name": "720p", "playlist": "video.m3u8"}]
+    else:
+        actual_output_dir = output_dir
+        renditions = renditions_or_output_dir if isinstance(renditions_or_output_dir, list) else []
+        if not renditions:
+            for r in RENDITIONS_CONFIG:
+                if os.path.exists(os.path.join(actual_output_dir, r["playlist"])):
+                    renditions.append(r)
+            if not renditions:
+                renditions = [{"bandwidth": 2500000, "width": 1280, "height": 720, "name": "720p", "playlist": "video.m3u8"}]
+
+    master = os.path.join(actual_output_dir, "master.m3u8")
 
     with open(master, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
@@ -350,14 +517,20 @@ def create_master(audio_streams, subtitle_streams, output_dir):
                 )
             f.write("\n")
 
-        # VIDEO STREAM
-        stream_inf = '#EXT-X-STREAM-INF:BANDWIDTH=2000000'
-        if has_audio:
-            stream_inf += ',AUDIO="audio"'
-        if has_subs:
-            stream_inf += ',SUBTITLES="subs"'
-        f.write(stream_inf + "\n")
-        f.write("video.m3u8\n")
+        # VIDEO STREAMS (Ordered from highest resolution to lowest)
+        for r in renditions:
+            w = r.get("width", 1280)
+            h = r.get("height", 720)
+            bw = r.get("bandwidth", 2500000)
+            name = r.get("name", f"{h}p")
+            playlist = r.get("playlist", f"video_{name}.m3u8")
+            stream_inf = f'#EXT-X-STREAM-INF:BANDWIDTH={bw},RESOLUTION={w}x{h},NAME="{name}"'
+            if has_audio:
+                stream_inf += ',AUDIO="audio"'
+            if has_subs:
+                stream_inf += ',SUBTITLES="subs"'
+            f.write(stream_inf + "\n")
+            f.write(f"{playlist}\n\n")
 
 def get_mime_type(filename):
     if filename.endswith('.m3u8'):
@@ -470,11 +643,13 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
     try:
         print(f"🔍 Probing source video duration & streams: {source_path}")
         duration = get_video_duration(source_path)
+        source_w, source_h = probe_video_dimensions(source_path)
+        print(f"📐 Source video resolution: {source_w}x{source_h}")
         audio_streams, subtitle_streams = probe_streams(source_path)
         
-        print(f"🎵 Transcoding video to HLS (Duration: {duration:.1f}s)...")
-        report_progress(episode_id, stage="TRANSCODING", percent=0.1, speed="1.0x", eta=0)
-        create_video_hls(source_path, temp_output_dir, total_duration=duration, episode_id=episode_id)
+        print(f"🎵 Transcoding video to multi-quality HLS ladder (Duration: {duration:.1f}s)...")
+        report_progress(episode_id, stage="TRANSCODING", percent=0.1, speed="Starting...", eta=0)
+        valid_renditions = create_video_hls(source_path, temp_output_dir, total_duration=duration, episode_id=episode_id, source_w=source_w, source_h=source_h)
         
         print(f"🔊 Transcoding audio tracks ({len(audio_streams)} found)...")
         valid_audios = create_audio_hls(source_path, audio_streams, temp_output_dir)
@@ -484,8 +659,8 @@ def transcode_and_upload(source_path, episode_id, show_id, s3_folder_key, storag
             print(f"📝 Extracting subtitle tracks ({len(subtitle_streams)} found)...")
             valid_subs = extract_subtitles(source_path, subtitle_streams, temp_output_dir)
             
-        print(f"🔗 Creating master playlist...")
-        create_master(valid_audios, valid_subs, temp_output_dir)
+        print(f"🔗 Creating master playlist ({len(valid_renditions)} video renditions, {len(valid_audios)} audio, {len(valid_subs)} subs)...")
+        create_master(valid_audios, valid_subs, valid_renditions, temp_output_dir)
         
         # Report Transcoding completed
         report_progress(episode_id, stage="TRANSCODING", percent=100, speed="Done", eta=0)

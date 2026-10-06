@@ -1091,6 +1091,56 @@ video::cue,
   border: 1px solid rgba(0, 168, 255, 0.4);
 }
 
+.quality-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-fhd {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.3), rgba(255, 85, 0, 0.3));
+  color: #ff3377;
+  border: 1px solid rgba(255, 0, 85, 0.5);
+}
+.quality-option.active .badge-fhd {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.badge-hd {
+  background: rgba(0, 168, 255, 0.2);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 168, 255, 0.4);
+}
+.quality-option.active .badge-hd {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.badge-sd {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.quality-option.active .badge-sd {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.badge-auto {
+  background: rgba(0, 230, 153, 0.18);
+  color: #00e699;
+  border: 1px solid rgba(0, 230, 153, 0.35);
+}
+.quality-option.active .badge-auto {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 .settings-right {
   display: flex;
   gap: clamp(8px, 1.5vw, 10px);
