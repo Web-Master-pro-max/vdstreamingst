@@ -462,51 +462,33 @@ router.get('/tasks', authenticate, requireAdmin, async (req, res) => {
       take: 50
     });
 
-    // Auto-heal: If an episode is stuck in PROCESSING (or PENDING) and not actively running in transcodeQueueManager
+    // Auto-heal only for truly ORPHANED episodes:
+    // If an episode has been abandoned (updatedAt > 15 minutes ago), not running in queue,
+    // AND master.m3u8 ACTUALLY exists on disk in local storage, only then mark COMPLETED.
     const uploadsDir = getUploadsDir();
+    const now = Date.now();
     for (const ep of episodes) {
-      const isJobRunning = transcodeQueueManager.currentJob && transcodeQueueManager.currentJob.episodeId === ep.id;
-      if (!isJobRunning && (ep.transcodeStatus === 'PROCESSING' || ep.transcodeStatus === 'PENDING')) {
-        let shouldComplete = false;
-        let resolvedUrl = ep.videoUrl;
+      const isJobRunning = transcodeQueueManager.currentJob && String(transcodeQueueManager.currentJob.episodeId) === String(ep.id);
+      const isRecentlyActive = (now - new Date(ep.updatedAt).getTime()) < (15 * 60 * 1000); // updated in last 15 mins
 
-        // Condition A: Already has master.m3u8 in videoUrl or s3Url or localUrl
-        if (ep.videoUrl && ep.videoUrl.includes('master.m3u8')) {
-          shouldComplete = true;
-          resolvedUrl = ep.videoUrl;
-        } else if (ep.s3Url && ep.s3Url.includes('master.m3u8')) {
-          shouldComplete = true;
-          resolvedUrl = ep.s3Url;
-        } else if (ep.localUrl && ep.localUrl.includes('master.m3u8')) {
-          shouldComplete = true;
-          resolvedUrl = ep.localUrl;
-        } else {
-          // Condition B: Check local filesystem for master.m3u8
-          const cleanKey = `videos/show_${ep.showId}/ep_${ep.id}`;
-          const localMaster = path.join(uploadsDir, cleanKey, 'master.m3u8');
-          if (fs.existsSync(localMaster)) {
-            resolvedUrl = `/uploads/${cleanKey}/master.m3u8`;
-            shouldComplete = true;
-          } else {
-            // Condition C: If transcoding was 68%+ or upload was finished, check S3
-            let sDetails = null;
-            try { sDetails = JSON.parse(ep.stageDetails); } catch (e) { }
-            const transcodePct = sDetails?.transcoding?.percent || 0;
-            if (transcodePct >= 50 && process.env.AWS_S3_BUCKET) {
-              const bucket = process.env.AWS_S3_BUCKET;
-              const region = process.env.AWS_REGION || 'ap-south-1';
-              resolvedUrl = `https://${bucket}.s3.${region}.amazonaws.com/${cleanKey}/master.m3u8`;
-              shouldComplete = true;
-            }
-          }
-        }
+      // Do NOT touch episodes that are actively running or recently updated by a worker
+      if (isJobRunning || isRecentlyActive) {
+        continue;
+      }
 
-        if (shouldComplete && resolvedUrl) {
+      // Only heal orphaned jobs that are stuck in PROCESSING or PENDING
+      if (ep.transcodeStatus === 'PROCESSING' || ep.transcodeStatus === 'PENDING') {
+        const cleanKey = `videos/show_${ep.showId}/ep_${ep.id}`;
+        const localMaster = path.join(uploadsDir, cleanKey, 'master.m3u8');
+
+        // Only mark COMPLETED if master.m3u8 ACTUALLY exists on disk
+        if (fs.existsSync(localMaster)) {
+          const resolvedUrl = `/uploads/${cleanKey}/master.m3u8`;
           ep.transcodeStatus = 'COMPLETED';
           ep.videoUrl = resolvedUrl;
-          const isS3 = resolvedUrl.includes('amazonaws.com');
-          if (isS3) ep.s3Url = resolvedUrl;
-          else ep.localUrl = resolvedUrl;
+          if (prisma.episode.fields && prisma.episode.fields.localUrl) {
+            ep.localUrl = resolvedUrl;
+          }
 
           const completedStageDetails = JSON.stringify({
             uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
@@ -515,27 +497,14 @@ router.get('/tasks', authenticate, requireAdmin, async (req, res) => {
           });
           ep.stageDetails = completedStageDetails;
 
-          const healData = {
-            transcodeStatus: 'COMPLETED',
-            videoUrl: resolvedUrl,
-            s3Url: ep.s3Url,
-            stageDetails: completedStageDetails
-          };
-          if (prisma.episode.fields && prisma.episode.fields.localUrl && ep.localUrl) {
-            healData.localUrl = ep.localUrl;
-          }
-
           prisma.episode.update({
             where: { id: ep.id },
-            data: healData
-          }).catch(err => {
-            if (healData.localUrl && err.message && err.message.includes('localUrl')) {
-              delete healData.localUrl;
-              prisma.episode.update({ where: { id: ep.id }, data: healData }).catch(e => console.warn(`[Tasks Auto-Heal Retry] Ep #${ep.id}:`, e.message));
-            } else {
-              console.warn(`[Tasks Auto-Heal] Ep #${ep.id}:`, err.message);
+            data: {
+              transcodeStatus: 'COMPLETED',
+              videoUrl: resolvedUrl,
+              stageDetails: completedStageDetails
             }
-          });
+          }).catch(e => console.warn(`[Tasks Auto-Heal] Ep #${ep.id}:`, e.message));
         }
       }
     }
