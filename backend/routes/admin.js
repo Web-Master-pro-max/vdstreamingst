@@ -552,7 +552,7 @@ router.post('/tasks/:id/complete', authenticate, requireAdmin, async (req, res) 
     const uploadsDir = getUploadsDir();
     const cleanKey = `videos/show_${episode.showId}/ep_${episode.id}`;
     const localMaster = path.join(uploadsDir, cleanKey, 'master.m3u8');
-    
+
     let resolvedUrl = episode.videoUrl;
     if (!resolvedUrl || !resolvedUrl.includes('master.m3u8')) {
       if (fs.existsSync(localMaster)) {
