@@ -60,7 +60,7 @@ function uploadChunk(token, uploadId, chunkIndex, totalChunks, buffer) {
     body += `--${boundary}\r\nContent-Disposition: form-data; name="chunkIndex"\r\n\r\n${chunkIndex}\r\n`;
     body += `--${boundary}\r\nContent-Disposition: form-data; name="totalChunks"\r\n\r\n${totalChunks}\r\n`;
     body += `--${boundary}\r\nContent-Disposition: form-data; name="chunk"; filename="chunk_${chunkIndex}"\r\nContent-Type: application/octet-stream\r\n\r\n`;
-    
+
     const headerBuf = Buffer.from(body, 'utf8');
     const footerBuf = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf8');
     const payload = Buffer.concat([headerBuf, buffer, footerBuf]);

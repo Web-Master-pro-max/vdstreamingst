@@ -694,7 +694,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           const parts = level.attrs.RESOLUTION.split('x');
           if (parts.length === 2) height = parseInt(parts[1], 10);
         }
-        
+
         let badge = '';
         let badgeClass = '';
         if (height >= 1080) {

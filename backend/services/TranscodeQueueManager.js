@@ -68,7 +68,7 @@ class TranscodeQueueManager {
     }
 
     const formattedJob = { ...job, episodeId, showId };
-    
+
     // Check if job is already running
     if (this.currentJob && this.currentJob.episodeId === episodeId) {
       console.log(`[QueueManager] Episode ${episodeId} is currently being transcoded.`);
@@ -96,7 +96,7 @@ class TranscodeQueueManager {
     this.isPaused = false;
     this.queue.push(formattedJob);
     console.log(`[QueueManager] 📥 Enqueued Episode ${episodeId} for Show ${showId}. Total in queue: ${this.queue.length}`);
-    
+
     this.processNext();
   }
 
@@ -135,7 +135,7 @@ class TranscodeQueueManager {
             })
           }
         });
-      } catch (e) {}
+      } catch (e) { }
       this.finishCurrentJob();
       return;
     }
@@ -201,14 +201,14 @@ class TranscodeQueueManager {
       this.currentJobTimeout = setTimeout(async () => {
         console.error(`⏱️ [QueueManager] Transcode timeout reached for Episode ${episodeId}. Terminating process...`);
         if (this.activeChildProcess) {
-          try { this.activeChildProcess.kill('SIGKILL'); } catch (e) {}
+          try { this.activeChildProcess.kill('SIGKILL'); } catch (e) { }
         }
         try {
           await prisma.episode.update({
             where: { id: episodeId },
             data: { transcodeStatus: 'FAILED' }
           });
-        } catch (e) {}
+        } catch (e) { }
         this.finishCurrentJob();
       }, 60 * 60 * 1000);
 
@@ -249,7 +249,7 @@ class TranscodeQueueManager {
                   uploadS3: { percent: 0, speed: '0 MB/s', eta: 0, status: 'PENDING' }
                 })
               }
-            }).catch(() => {});
+            }).catch(() => { });
           } else if (uploadMatch && (now - lastProgressUpdateTime > 1000)) {
             lastProgressUpdateTime = now;
             const pct = parseFloat(uploadMatch[1]);
@@ -264,7 +264,7 @@ class TranscodeQueueManager {
                   uploadS3: { percent: pct, speed: spd, eta: 0, status: 'PROCESSING' }
                 })
               }
-            }).catch(() => {});
+            }).catch(() => { });
           }
         });
       });
@@ -282,7 +282,7 @@ class TranscodeQueueManager {
             where: { id: episodeId },
             data: { transcodeStatus: 'FAILED' }
           });
-        } catch (e) {}
+        } catch (e) { }
         this.finishCurrentJob();
       });
 
@@ -357,16 +357,16 @@ class TranscodeQueueManager {
                 ...prev,
                 transcoding: { ...prev.transcoding, status: 'FAILED', speed: lastErr.substring(0, 80), error: lastErr }
               };
-            } catch (e) {}
+            } catch (e) { }
           }
           await prisma.episode.update({
             where: { id: episodeId },
-            data: { 
+            data: {
               transcodeStatus: 'FAILED',
               stageDetails: JSON.stringify(stageObj)
             }
           });
-        } catch (e) {}
+        } catch (e) { }
 
         this.finishCurrentJob();
       });
@@ -375,7 +375,7 @@ class TranscodeQueueManager {
       try {
         await prisma.episode.update({
           where: { id: episodeId },
-          data: { 
+          data: {
             transcodeStatus: 'FAILED',
             stageDetails: JSON.stringify({
               uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
@@ -384,7 +384,7 @@ class TranscodeQueueManager {
             })
           }
         });
-      } catch (e) {}
+      } catch (e) { }
       this.finishCurrentJob();
     }
   }
@@ -405,7 +405,7 @@ class TranscodeQueueManager {
           where: { id: episodeId },
           data: { transcodeStatus: 'PAUSED' }
         });
-      } catch (e) {}
+      } catch (e) { }
       console.log(`⏸️ [QueueManager] Paused active transcoding for Episode ${episodeId}`);
       return { success: true, message: `Episode ${episodeId} transcoding paused.` };
     }
@@ -417,7 +417,7 @@ class TranscodeQueueManager {
           where: { id: episodeId },
           data: { transcodeStatus: 'PAUSED' }
         });
-      } catch (e) {}
+      } catch (e) { }
       return { success: true, message: `Queued Episode ${episodeId} marked as paused.` };
     }
 
@@ -440,7 +440,7 @@ class TranscodeQueueManager {
           where: { id: episodeId },
           data: { transcodeStatus: 'PROCESSING' }
         });
-      } catch (e) {}
+      } catch (e) { }
       console.log(`▶️ [QueueManager] Resumed active transcoding for Episode ${episodeId}`);
       return { success: true, message: `Episode ${episodeId} transcoding resumed.` };
     }
@@ -451,7 +451,7 @@ class TranscodeQueueManager {
         where: { id: episodeId },
         data: { transcodeStatus: 'PENDING' }
       });
-    } catch (e) {}
+    } catch (e) { }
     this.processNext();
     return { success: true, message: `Episode ${episodeId} queue resumed.` };
   }
@@ -471,14 +471,14 @@ class TranscodeQueueManager {
       if (this.activeChildProcess) {
         try {
           this.activeChildProcess.kill('SIGKILL');
-        } catch (e) {}
+        } catch (e) { }
       }
       try {
         await prisma.episode.update({
           where: { id: episodeId },
           data: { transcodeStatus: 'CANCELLED' }
         });
-      } catch (e) {}
+      } catch (e) { }
       return { success: true, message: `Stopped transcoding process for Episode ${episodeId}.` };
     }
 
@@ -490,7 +490,7 @@ class TranscodeQueueManager {
           where: { id: episodeId },
           data: { transcodeStatus: 'CANCELLED' }
         });
-      } catch (e) {}
+      } catch (e) { }
       console.log(`⏹️ [QueueManager] Removed Episode ${episodeId} from pending queue.`);
       return { success: true, message: `Episode ${episodeId} removed from transcoding queue.` };
     }
@@ -529,7 +529,7 @@ class TranscodeQueueManager {
     this.currentJob = null;
     this.activeChildProcess = null;
     this.isPaused = false;
-    
+
     if (this.queue.length > 0) {
       console.log(`\n[QueueManager] 🔄 Moving to next queued job in line (${this.queue.length} remaining)...`);
       setTimeout(() => this.processNext(), 1000);
@@ -572,10 +572,10 @@ class TranscodeQueueManager {
         let rawVideoPath = null;
         if (fs.existsSync(uploadsDir)) {
           const files = fs.readdirSync(uploadsDir);
-          const matchFile = files.find(f => 
+          const matchFile = files.find(f =>
             f.startsWith('raw-') && (
-              f.includes(`ep_${ep.id}-`) || 
-              f.includes(`ep_${ep.id}_`) || 
+              f.includes(`ep_${ep.id}-`) ||
+              f.includes(`ep_${ep.id}_`) ||
               f.includes(`_${ep.id}_`) ||
               f.includes(`_${ep.id}.`) ||
               f.includes(`ep${ep.id}`)

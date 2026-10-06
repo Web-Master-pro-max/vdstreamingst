@@ -16,7 +16,7 @@ const s3 = new S3Client({
 async function main() {
   const bucketName = 'server-3a';
   console.log(`Setting CORS configuration on bucket: ${bucketName}...`);
-  
+
   const corsConfiguration = {
     CORSRules: [
       {
@@ -34,7 +34,7 @@ async function main() {
       Bucket: bucketName,
       CORSConfiguration: corsConfiguration
     });
-    
+
     await s3.send(command);
     console.log(`🎉 SUCCESS! CORS policy applied to bucket ${bucketName}!`);
   } catch (err) {

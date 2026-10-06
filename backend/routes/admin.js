@@ -192,7 +192,7 @@ const episodeUploadHandler = async (req, res) => {
       if (fs.existsSync(rawVideoPath)) {
         fs.renameSync(rawVideoPath, dedicatedFilePath);
       }
-    } catch (e) {}
+    } catch (e) { }
     const activeRawPath = fs.existsSync(dedicatedFilePath) ? dedicatedFilePath : rawVideoPath;
 
     // Always enqueue into TranscodeQueueManager so transcoding starts immediately
@@ -219,7 +219,7 @@ const episodeUploadHandler = async (req, res) => {
           storageType: storageType || process.env.STORAGE_TYPE || 'local',
           localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
         }));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     res.status(201).json({
@@ -319,7 +319,7 @@ function reassembleChunks(chunksDir, totalChunks, finalRawPath) {
       });
 
       readStream.on('end', () => {
-        try { fs.unlinkSync(cPath); } catch (e) {}
+        try { fs.unlinkSync(cPath); } catch (e) { }
         index++;
         appendNext();
       });
@@ -374,7 +374,7 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
 
     try {
       fs.rmdirSync(chunksDir);
-    } catch(e) {}
+    } catch (e) { }
 
     const show = await prisma.show.findUnique({ where: { id: parsedShowId } });
     if (!show) {
@@ -406,7 +406,7 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
       if (fs.existsSync(finalRawPath)) {
         fs.renameSync(finalRawPath, dedicatedRawPath);
       }
-    } catch (e) {}
+    } catch (e) { }
     const activeRawPath = fs.existsSync(dedicatedRawPath) ? dedicatedRawPath : finalRawPath;
 
     // Always enqueue into TranscodeQueueManager so transcoding starts immediately
@@ -433,7 +433,7 @@ router.post('/upload-chunk-finalize', authenticate, requireAdmin, async (req, re
           storageType: storageType || process.env.STORAGE_TYPE || 'local',
           localStoragePath: localStoragePath || process.env.LOCAL_STORAGE_PATH || '',
         }));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return res.status(201).json({
@@ -512,10 +512,10 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
     if (fs.existsSync(activeUploadsDir)) {
       const files = fs.readdirSync(activeUploadsDir);
       // Priority 1: Match files with explicit ep_${episodeId}
-      let matchFile = files.find(f => 
+      let matchFile = files.find(f =>
         f.startsWith('raw-') && (
-          f.includes(`ep_${episodeId}-`) || 
-          f.includes(`ep_${episodeId}_`) || 
+          f.includes(`ep_${episodeId}-`) ||
+          f.includes(`ep_${episodeId}_`) ||
           f.includes(`_${episodeId}_`) ||
           f.includes(`_${episodeId}.`) ||
           f.includes(`ep${episodeId}`)
@@ -599,7 +599,7 @@ router.post('/tasks/:id/retry', authenticate, requireAdmin, async (req, res) => 
           storageType: process.env.STORAGE_TYPE || 'local',
           localStoragePath: process.env.LOCAL_STORAGE_PATH || '',
         }));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return res.json({
@@ -656,22 +656,22 @@ router.delete('/tasks/:id', authenticate, requireAdmin, async (req, res) => {
 router.delete('/shows/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const showId = parseInt(req.params.id);
-    
+
     // First delete episodes associated with the show
     await prisma.episode.deleteMany({
       where: { showId }
     });
-    
+
     // Delete categories links
     await prisma.categoryOnShow.deleteMany({
       where: { showId }
     });
-    
+
     // Finally, delete the show itself
     await prisma.show.delete({
       where: { id: showId }
     });
-    
+
     res.json({ message: 'Show and all its episodes deleted successfully.' });
   } catch (error) {
     console.error('Error deleting show:', error);
@@ -767,7 +767,7 @@ router.post('/clean-uploads', authenticate, requireAdmin, (req, res) => {
             deletedCount++;
           }
         }
-      } catch (err) {}
+      } catch (err) { }
     });
 
     const freedMB = (freedBytes / (1024 * 1024)).toFixed(1);
@@ -786,11 +786,11 @@ router.post('/clean-uploads', authenticate, requireAdmin, (req, res) => {
 router.delete('/episodes/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const episodeId = parseInt(req.params.id);
-    
+
     await prisma.episode.delete({
       where: { id: episodeId }
     });
-    
+
     res.json({ message: 'Episode deleted successfully.' });
   } catch (error) {
     console.error('Error deleting episode:', error);

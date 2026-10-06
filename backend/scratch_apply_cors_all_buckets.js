@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("🔍 Checking S3 Buckets for credentials...");
-  
+
   const corsConfiguration = {
     CORSRules: [
       {

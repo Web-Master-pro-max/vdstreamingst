@@ -45,7 +45,7 @@ const mockPrisma = {
 };
 
 // Override the global Prisma clients prior to loading routers
-jest = { mock: true }; 
+jest = { mock: true };
 console.log('🧪 Starting mock framework verification tests...');
 
 // Define a test app structure
@@ -90,7 +90,7 @@ async function runTests() {
   assert(userRouter !== undefined, 'User Router loaded successfully');
   assert(adminRouter !== undefined, 'Admin Router loaded successfully');
   assert(commentsRouter !== undefined, 'Comments Router loaded successfully');
-  
+
   // 2. Validate Endpoint routes definition maps correctly
   const routes = [];
   app._router.stack.forEach(middleware => {
@@ -104,7 +104,7 @@ async function runTests() {
       });
     }
   });
-  
+
   assert(routes.length > 0, `Mapped ${routes.length} API routes dynamically`);
   console.log(`\n🎉 Verification Completed! Status: ${passed} passed, ${failed} failed.\n`);
 }

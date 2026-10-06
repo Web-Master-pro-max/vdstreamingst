@@ -91,7 +91,7 @@ try {
       process.env.LOCAL_STORAGE_PATH = s.localStoragePath;
     }
   }
-} catch (e) {}
+} catch (e) { }
 
 // Resolve directories dynamically (supports custom laptop storage path, Docker, and native)
 const { getUploadsDir } = require('./s3');
@@ -105,7 +105,7 @@ app.get('/api/settings', (req, res) => {
     if (fs.existsSync(settingsPath)) {
       try {
         settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-      } catch (e) {}
+      } catch (e) { }
     }
     res.json({
       bannerSlideTime: settings.bannerSlideTime || 6000,
@@ -126,7 +126,7 @@ app.post('/api/settings', (req, res) => {
     if (fs.existsSync(settingsPath)) {
       try {
         settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-      } catch (e) {}
+      } catch (e) { }
     }
     if (bannerSlideTime) {
       settings.bannerSlideTime = parseInt(bannerSlideTime, 10) || 6000;
@@ -141,7 +141,7 @@ app.post('/api/settings', (req, res) => {
       settings.localStoragePath = cleanPath;
       process.env.LOCAL_STORAGE_PATH = cleanPath;
       if (cleanPath && !fs.existsSync(cleanPath)) {
-        try { fs.mkdirSync(cleanPath, { recursive: true }); } catch (e) {}
+        try { fs.mkdirSync(cleanPath, { recursive: true }); } catch (e) { }
       }
     }
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));

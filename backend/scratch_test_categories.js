@@ -15,7 +15,7 @@ async function main() {
   categories.forEach(c => {
     console.log(`[${c.id}] ${c.name} (slug: ${c.slug}) -> ${c.shows.length} shows`);
   });
-  
+
   await prisma.$disconnect();
 }
 

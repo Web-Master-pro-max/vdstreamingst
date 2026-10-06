@@ -32,7 +32,7 @@ async function main() {
         if (data.length > 0) {
           console.log("Sample task #", data[0].id, "stageDetails:", data[0].stageDetails);
         }
-      } catch(e) {
+      } catch (e) {
         console.log("Raw body:", body);
       }
     });

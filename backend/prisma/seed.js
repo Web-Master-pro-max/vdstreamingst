@@ -67,7 +67,7 @@ async function main() {
 
   // 3. Seed initial shows (Create missing, Update changed)
   console.log('Seeding initial mock shows...');
-  
+
   const showsData = [
     {
       title: "Demon Slayer: Infinity Castle",

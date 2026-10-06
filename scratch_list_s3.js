@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 
 const fs = require('fs');
-const envPath = fs.existsSync(path.join(__dirname, 'backend/.env')) 
+const envPath = fs.existsSync(path.join(__dirname, 'backend/.env'))
   ? path.join(__dirname, 'backend/.env')
   : fs.existsSync(path.join(__dirname, '.env'))
     ? path.join(__dirname, '.env')
