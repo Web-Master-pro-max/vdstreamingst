@@ -21,7 +21,7 @@ import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as NavigationBar from 'expo-navigation-bar';
 import { COLORS } from '../theme/colors';
-import { apiService, formatMediaUrl, recordWatchHistory } from '../services/api';
+import { apiService, formatMediaUrl, recordWatchHistory, getAuthSession } from '../services/api';
 
 const SAMPLE_STREAM = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
@@ -224,6 +224,7 @@ export const PlayerScreen = ({ route, navigation }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [playbackError, setPlaybackError] = useState(false);
+  const [isAuthRequired, setIsAuthRequired] = useState(false);
 
   // Brightness (Dimming Overlay) & Volume State
   const [brightness, setBrightness] = useState(1.0); // 0.1 to 1.0
@@ -511,30 +512,45 @@ export const PlayerScreen = ({ route, navigation }) => {
     setAvailableSubtitleTracks(result.subtitleTracks);
   };
 
-  // Sync active stream URL when episode updates
+  // Sync active stream URL when episode updates (strictly auth gated)
   useEffect(() => {
     let isMounted = true;
-    if (episode) {
-      const rawUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
-      const formatted = formatMediaUrl(rawUrl);
-      setPlaybackError(false);
-      hasAppliedInitialSeek.current = false;
-      setSelectedSubtitleIndex(-1);
-      setSubCues([]);
-      setActiveCaptionText('');
-
-      processHlsManifest(formatted).then((result) => {
+    const initStream = async () => {
+      const sess = await getAuthSession();
+      if (!sess?.token) {
         if (isMounted) {
-          setActiveStreamUrl(result.sanitizedUrl);
-          setAvailableAudioTracks(result.audioTracks);
-          setSelectedAudioTrackIndex(0);
-          setAvailableSubtitleTracks(result.subtitleTracks);
+          setIsPlaying(false);
+          setIsAuthRequired(true);
+          setActiveStreamUrl(null);
         }
-      }).catch(err => {
-        console.warn('Playlist prep error:', err);
-        if (isMounted) setActiveStreamUrl(formatted);
-      });
-    }
+        return;
+      }
+      if (isMounted) setIsAuthRequired(false);
+
+      if (episode) {
+        const rawUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
+        const formatted = formatMediaUrl(rawUrl);
+        setPlaybackError(false);
+        hasAppliedInitialSeek.current = false;
+        setSelectedSubtitleIndex(-1);
+        setSubCues([]);
+        setActiveCaptionText('');
+
+        try {
+          const result = await processHlsManifest(formatted);
+          if (isMounted) {
+            setActiveStreamUrl(result.sanitizedUrl);
+            setAvailableAudioTracks(result.audioTracks);
+            setSelectedAudioTrackIndex(0);
+            setAvailableSubtitleTracks(result.subtitleTracks);
+          }
+        } catch (err) {
+          console.warn('Playlist prep error:', err);
+          if (isMounted) setActiveStreamUrl(formatted);
+        }
+      }
+    };
+    initStream();
     return () => { isMounted = false; };
   }, [episode?.id, episode?.videoUrl]);
 
@@ -856,7 +872,40 @@ export const PlayerScreen = ({ route, navigation }) => {
         backgroundColor="transparent"
         barStyle="light-content"
       />
-      {loading || !streamUrl ? (
+      {isAuthRequired ? (
+        <View style={styles.authLockContainer}>
+          <View style={styles.authLockCard}>
+            <View style={styles.authLockBadge}>
+              <Ionicons name="lock-closed" size={32} color="#fff" />
+            </View>
+            <Text style={styles.authLockTitle}>Account Required to Stream</Text>
+            <Text style={styles.authLockDesc}>
+              You must sign up or sign in to watch any anime shows. Create your free account to unlock high definition playback!
+            </Text>
+            <TouchableOpacity
+              style={styles.authLockBtn}
+              onPress={() => {
+                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+                navigation.navigate('Library');
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <Text style={styles.authLockBtnText}>Sign In / Sign Up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.authLockBackBtn}
+              onPress={() => {
+                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+                navigation.goBack();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.authLockBackText}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : loading || !streamUrl ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading Stream...</Text>
@@ -1738,5 +1787,81 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontSize: 10,
     marginTop: 2,
+  },
+  authLockContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#05050c',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: 24,
+  },
+  authLockCard: {
+    backgroundColor: 'rgba(20, 20, 36, 0.98)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    maxWidth: 400,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  authLockBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  authLockTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  authLockDesc: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  authLockBtn: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    width: '100%',
+    marginBottom: 10,
+  },
+  authLockBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  authLockBackBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  authLockBackText: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

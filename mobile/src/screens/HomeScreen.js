@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,7 @@ import { HeroCarousel } from '../components/HeroCarousel';
 import { ShowCard } from '../components/ShowCard';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
 import { COLORS } from '../theme/colors';
-import { apiService, formatMediaUrl, isVideoMedia } from '../services/api';
+import { apiService, formatMediaUrl, isVideoMedia, getAuthSession } from '../services/api';
 
 const CACHE_KEY_CAROUSEL = '@infinx_cached_carousel';
 const CACHE_KEY_CATEGORIES = '@infinx_cached_categories';
@@ -105,7 +106,19 @@ export const HomeScreen = ({ navigation }) => {
     navigation.navigate('ShowDetail', { showId: show.id, show });
   };
 
-  const handlePlayPress = (show) => {
+  const handlePlayPress = async (show) => {
+    const sess = await getAuthSession();
+    if (!sess?.token) {
+      Alert.alert(
+        'Sign In Required',
+        'You must sign up or sign in to watch anime shows. Sign up now to start streaming!',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign Up / Sign In', onPress: () => navigation.navigate('Library') },
+        ]
+      );
+      return;
+    }
     const ep = show.episodes?.[0];
     if (ep && ep.id) {
       navigation.navigate('Player', { episodeId: ep.id, episode: ep, show });

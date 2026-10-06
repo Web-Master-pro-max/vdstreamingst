@@ -19,6 +19,7 @@ import {
   getShowBannerMedia,
   isWatchlisted,
   toggleWatchlist,
+  getAuthSession,
 } from '../services/api';
 
 export const ShowDetailScreen = ({ route, navigation }) => {
@@ -84,7 +85,19 @@ export const ShowDetailScreen = ({ route, navigation }) => {
     { id: 103, episodeNumber: 3, title: 'Episode 3: Unbreakable Bond', duration: '25m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
   ];
 
-  const handlePlayEpisode = (episode) => {
+  const handlePlayEpisode = async (episode) => {
+    const sess = await getAuthSession();
+    if (!sess?.token) {
+      Alert.alert(
+        'Sign In Required',
+        'You must sign up or sign in to watch anime shows. Sign up now to start streaming!',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign Up / Sign In', onPress: () => navigation.navigate('Library') },
+        ]
+      );
+      return;
+    }
     navigation.navigate('Player', { episodeId: episode.id, episode, show });
   };
 

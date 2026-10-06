@@ -188,6 +188,13 @@ export const LibraryScreen = ({ navigation }) => {
   }, []);
 
   const handleShowPress = useCallback((item) => {
+    if (!isLoggedIn) {
+      Alert.alert(
+        'Sign In Required',
+        'You must sign up or sign in to watch anime shows. Sign up now to start streaming!'
+      );
+      return;
+    }
     if (activeTab === 'history' && item.currentEpisode) {
       navigation.navigate('Player', {
         episodeId: item.currentEpisode.id,
@@ -198,7 +205,7 @@ export const LibraryScreen = ({ navigation }) => {
     } else {
       navigation.navigate('ShowDetail', { showId: item.id || item.showId, show: item });
     }
-  }, [activeTab, navigation]);
+  }, [activeTab, navigation, isLoggedIn]);
 
   const currentList = activeTab === 'watchlist' ? watchlist : history;
 
