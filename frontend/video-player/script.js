@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         html += `
           <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not uploaded to laptop server yet">
             <i class="fas fa-laptop"></i>
-            <span>Server 2: Laptop Local Storage</span>
+            <span>Server 2: Server-2</span>
             <span class="server-badge-pill" style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px;">Not Added</span>
           </div>
         `;
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         html += `
           <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not hosted on AWS S3">
             <i class="fas fa-cloud"></i>
-            <span>Server 1: AWS Cloud</span>
+            <span>Server 1: Server-1 (Cloud)</span>
             <span class="server-badge-pill" style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px;">Not Added</span>
           </div>
         `;
@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             resumeSavedProgress();
           }
           if (autoPlay) {
-            mainVideo.play().catch(e => {});
+            mainVideo.play().catch(e => { });
           }
 
           if (mainVideo.audioTracks && mainVideo.audioTracks.length > 0) {
