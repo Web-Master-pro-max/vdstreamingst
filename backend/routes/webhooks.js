@@ -9,7 +9,7 @@ const WEBHOOK_SECRET = process.env.WORKER_WEBHOOK_SECRET || 'infinx_webhook_shar
 // POST /api/webhooks/transcode-status - Worker status update webhook
 router.post('/transcode-status', async (req, res) => {
   try {
-    const { episodeId, status, videoUrl, secret, stageDetails, error } = req.body;
+    const { episodeId, status, videoUrl, s3Url, localUrl, storageType, secret, stageDetails, error } = req.body;
 
     if (!episodeId || !status || !secret) {
       return res.status(400).json({ error: 'Missing required parameters: episodeId, status, secret.' });
@@ -30,7 +30,15 @@ router.post('/transcode-status', async (req, res) => {
     const updateData = { transcodeStatus: status };
     if (videoUrl) {
       updateData.videoUrl = videoUrl;
+      const isS3 = videoUrl.includes('amazonaws.com') || (videoUrl.startsWith('http') && !videoUrl.includes('/uploads/'));
+      if (storageType === 's3' || isS3) {
+        updateData.s3Url = videoUrl;
+      } else {
+        updateData.localUrl = videoUrl;
+      }
     }
+    if (s3Url) updateData.s3Url = s3Url;
+    if (localUrl) updateData.localUrl = localUrl;
 
     if (status === 'COMPLETED') {
       updateData.stageDetails = JSON.stringify({

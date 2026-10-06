@@ -313,17 +313,24 @@ class TranscodeQueueManager {
           if (playbackUrl) {
             console.log(`✅ [QueueManager] Episode ${episodeId} Transcoding COMPLETED! Playback URL: ${playbackUrl}`);
             try {
+              const completeData = {
+                transcodeStatus: 'COMPLETED',
+                videoUrl: playbackUrl,
+                stageDetails: JSON.stringify({
+                  uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
+                  uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
+                })
+              };
+              if (job.storageType === 's3' || playbackUrl.includes('amazonaws.com')) {
+                completeData.s3Url = playbackUrl;
+              } else {
+                completeData.localUrl = playbackUrl;
+              }
+
               await prisma.episode.update({
                 where: { id: episodeId },
-                data: {
-                  transcodeStatus: 'COMPLETED',
-                  videoUrl: playbackUrl,
-                  stageDetails: JSON.stringify({
-                    uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
-                    transcoding: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
-                    uploadS3: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' }
-                  })
-                }
+                data: completeData
               });
             } catch (e) {
               console.error(`Error updating completed status for Ep ${episodeId}:`, e.message);

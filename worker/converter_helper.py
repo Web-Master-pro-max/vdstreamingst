@@ -21,7 +21,7 @@ for p in local_bin_paths:
     if os.path.exists(p) and p not in os.environ.get("PATH", ""):
         os.environ["PATH"] = p + os.pathsep + os.environ.get("PATH", "")
 
-def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCESSING", video_url=None, error=None):
+def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCESSING", video_url=None, error=None, storage_type=None):
     if not episode_id:
         return
     backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
@@ -54,6 +54,8 @@ def report_progress(episode_id, stage, percent, speed="0", eta=0, status="PROCES
         "secret": secret,
         "stageDetails": stage_details
     }
+    if storage_type:
+        payload["storageType"] = storage_type
     if video_url:
         payload["videoUrl"] = video_url
     if error or is_failed:

@@ -9,9 +9,17 @@ window.addEventListener('unhandledrejection', function (e) {
 
 document.addEventListener('DOMContentLoaded', async function () {
   try {
-    const SERVER_ORIGIN = (window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
-      ? (localStorage.getItem('infinx_server_url') || 'http://13.202.95.5:8000')
-      : '';
+    const getSavedServer = () => {
+      const saved = localStorage.getItem('infinx_server_url');
+      return (saved && !saved.startsWith('file:')) ? saved.replace(/\/$/, '') : null;
+    };
+    const isHttps = window.location.protocol === 'https:';
+    const savedServer = getSavedServer();
+    const SERVER_ORIGIN = (isHttps && !savedServer)
+      ? ''
+      : ((window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
+        ? (savedServer || 'http://13.202.95.5:8000')
+        : '');
     const API_BASE = `${SERVER_ORIGIN}/api`;
 
     // Get episode ID from URL params
@@ -115,8 +123,172 @@ document.addEventListener('DOMContentLoaded', async function () {
     let lastProgressReportTime = 0;
     const episodesPerPage = 6;
 
+    // URL resolver for local vs cloud media
+    function resolveMediaUrl(url) {
+      if (!url) return '';
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `${SERVER_ORIGIN}${url}`;
+    }
+
+    // Available streaming servers for current episode
+    let availableServers = [];
+    let activeServerId = 's3';
+
+    function getAvailableServers(ep) {
+      if (!ep) return [];
+      if (ep.servers && Array.isArray(ep.servers) && ep.servers.length > 0) {
+        return ep.servers;
+      }
+      const isS3 = (u) => u && (u.includes('amazonaws.com') || (u.startsWith('http') && !u.includes('/uploads/')));
+      const isLocal = (u) => u && (u.startsWith('/uploads') || u.includes('/uploads/'));
+
+      const s3Url = ep.s3Url || (isS3(ep.videoUrl) ? ep.videoUrl : null);
+      const localUrl = ep.localUrl || (isLocal(ep.videoUrl) ? ep.videoUrl : null);
+
+      const list = [];
+      if (s3Url) {
+        list.push({
+          id: 's3',
+          name: 'Server 1: AWS Cloud',
+          shortName: 'Server 1 (AWS)',
+          badge: 'AWS S3',
+          url: s3Url,
+          type: 'cloud'
+        });
+      }
+      if (localUrl) {
+        list.push({
+          id: 'local',
+          name: 'Server 2: Laptop Local Storage',
+          shortName: 'Server 2 (Laptop)',
+          badge: 'Local Disk',
+          url: localUrl,
+          type: 'local'
+        });
+      }
+      if (list.length === 0 && ep.videoUrl) {
+        list.push({
+          id: 'default',
+          name: 'Default Server',
+          shortName: 'Server 1',
+          badge: 'Online',
+          url: ep.videoUrl,
+          type: 'default'
+        });
+      }
+      return list;
+    }
+
+    function updateServerOptions() {
+      availableServers = getAvailableServers(currentEpisode);
+      const serverDropdown = document.getElementById('server-dropdown');
+      const playerServerOptions = document.getElementById('player-server-options');
+      const serverSelector = document.getElementById('server-selector');
+      const playerServerSection = document.getElementById('player-server-section');
+
+      if (!availableServers || availableServers.length === 0) {
+        if (serverSelector) serverSelector.style.display = 'none';
+        if (playerServerSection) playerServerSection.style.display = 'none';
+        return;
+      }
+
+      if (serverSelector) serverSelector.style.display = 'block';
+      if (playerServerSection) playerServerSection.style.display = 'block';
+
+      // Pick preferred server if available, else first available
+      const preferred = localStorage.getItem('infinx_preferred_server');
+      const match = availableServers.find(s => s.id === preferred) || availableServers[0];
+      activeServerId = match ? match.id : availableServers[0].id;
+
+      // Update button text
+      const curDisplay = document.getElementById('current-server-display');
+      if (curDisplay && match) {
+        curDisplay.textContent = match.shortName || match.name;
+      }
+
+      const renderServerItem = (s) => {
+        const isActive = s.id === activeServerId;
+        const icon = s.id === 's3' ? 'fas fa-cloud' : 'fas fa-laptop';
+        const badgeClass = s.id === 's3' ? 'server-badge-cloud' : 'server-badge-local';
+        return `
+          <div class="server-option ${isActive ? 'active' : ''}" data-server-id="${s.id}">
+            <i class="${icon}"></i>
+            <span>${s.name}</span>
+            <span class="server-badge-pill ${badgeClass}">${s.badge}</span>
+          </div>
+        `;
+      };
+
+      if (serverDropdown) {
+        serverDropdown.innerHTML = availableServers.map(renderServerItem).join('');
+      }
+      if (playerServerOptions) {
+        playerServerOptions.innerHTML = availableServers.map(renderServerItem).join('');
+      }
+    }
+
+    function switchServer(serverId, preserveTime = true) {
+      if (!availableServers || availableServers.length === 0) return;
+      const target = availableServers.find(s => s.id === serverId);
+      if (!target) {
+        showPlayerToast('Selected server is not available for this episode.');
+        return;
+      }
+
+      if (target.id === activeServerId && hls && hls.url) {
+        closeAllDropdowns();
+        closeSettingsDropdown();
+        return;
+      }
+
+      activeServerId = target.id;
+      localStorage.setItem('infinx_preferred_server', target.id);
+
+      const curDisplay = document.getElementById('current-server-display');
+      if (curDisplay) {
+        curDisplay.textContent = target.shortName || target.name;
+      }
+
+      document.querySelectorAll('.server-option').forEach(opt => {
+        opt.classList.toggle('active', opt.getAttribute('data-server-id') === target.id);
+      });
+
+      closeAllDropdowns();
+      closeSettingsDropdown();
+
+      const savedTime = (preserveTime && !isNaN(mainVideo.currentTime)) ? mainVideo.currentTime : null;
+      const wasPlaying = !mainVideo.paused;
+
+      showPlayerToast(`Switched to ${target.name}`);
+      initHLS(target.url, savedTime, wasPlaying);
+    }
+
+    function setupServerEventListeners() {
+      const serverDropdown = document.getElementById('server-dropdown');
+      if (serverDropdown) {
+        serverDropdown.addEventListener('click', function (e) {
+          const opt = e.target.closest('.server-option');
+          if (!opt) return;
+          e.stopPropagation();
+          const sId = opt.getAttribute('data-server-id');
+          switchServer(sId, true);
+        });
+      }
+
+      const playerServerOptions = document.getElementById('player-server-options');
+      if (playerServerOptions) {
+        playerServerOptions.addEventListener('click', function (e) {
+          const opt = e.target.closest('.server-option');
+          if (!opt) return;
+          e.stopPropagation();
+          const sId = opt.getAttribute('data-server-id');
+          switchServer(sId, true);
+        });
+      }
+    }
+
     // Initialize HLS
-    function initHLS(videoSrc) {
+    function initHLS(videoSrc, seekTime = null, autoPlay = true) {
       if (!videoSrc) {
         videoPlayer.classList.remove('loading');
         const container = document.querySelector('.video-container') || videoPlayer;
@@ -138,14 +310,16 @@ document.addEventListener('DOMContentLoaded', async function () {
           overlay.style.padding = '20px';
           overlay.style.textAlign = 'center';
           overlay.innerHTML = `
-            <div style="font-size: 5rem; margin-bottom: 20px; color: var(--primary); animation: fa-spin 4s linear infinite;"><i class="fas fa-cog"></i></div>
-            <h2 style="font-size: 2.2rem; font-family: 'Outfit'; color: white; margin-bottom: 10px;">HLS Transcoding in Progress...</h2>
-            <p style="font-size: 1.4rem; color: var(--gray-text); max-width: 400px; line-height: 1.6;">Our background workers are currently parsing audio tracks and rendering HLS master playlists. Please check back in a moment!</p>
+            <div style="font-size: 5rem; margin-bottom: 20px; color: var(--primary); animation: fa-spin 4s linear infinite;"><i class="fas fa-server"></i></div>
+            <h2 style="font-size: 2.2rem; font-family: 'Outfit'; color: white; margin-bottom: 10px;">Stream Not Available on This Server</h2>
+            <p style="font-size: 1.4rem; color: var(--gray-text); max-width: 420px; line-height: 1.6;">This episode is not hosted on the selected server. Please switch to the other server using the Server selector button below!</p>
           `;
           container.appendChild(overlay);
         }
         return;
       }
+
+      const resolvedVideoSrc = resolveMediaUrl(videoSrc);
 
       // Manually parse master playlist for subtitles as a robust fallback for raw VTTs
       async function parseMasterPlaylist(videoSrc) {
@@ -192,7 +366,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
 
       // Start manual parsing immediately for raw VTT track resolution
-      parseMasterPlaylist(videoSrc);
+      parseMasterPlaylist(resolvedVideoSrc);
 
       videoPlayer.classList.add('loading');
 
@@ -214,7 +388,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           capLevelToPlayerSize: true,
         });
 
-        hls.loadSource(videoSrc);
+        hls.loadSource(resolvedVideoSrc);
         hls.attachMedia(mainVideo);
 
         hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
@@ -239,13 +413,19 @@ document.addEventListener('DOMContentLoaded', async function () {
             updateSubtitleOptions();
           }
 
-          // Resume saved progress if any
-          resumeSavedProgress();
+          // Restore position when switching servers or resume saved progress
+          if (seekTime !== null && !isNaN(seekTime) && seekTime > 0) {
+            mainVideo.currentTime = seekTime;
+          } else {
+            resumeSavedProgress();
+          }
 
-          mainVideo.play().catch(e => {
-            console.log("Autoplay prevented:", e);
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-          });
+          if (autoPlay) {
+            mainVideo.play().catch(e => {
+              console.log("Autoplay prevented:", e);
+              playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            });
+          }
         });
 
         hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function (event, data) {
@@ -320,10 +500,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       } else if (mainVideo.canPlayType('application/vnd.apple.mpegurl')) {
         videoPlayer.classList.remove('loading');
-        mainVideo.src = videoSrc;
+        mainVideo.src = resolvedVideoSrc;
         mainVideo.addEventListener('loadedmetadata', function () {
           videoPlayer.classList.remove('loading');
-          resumeSavedProgress();
+          if (seekTime !== null && !isNaN(seekTime) && seekTime > 0) {
+            mainVideo.currentTime = seekTime;
+          } else {
+            resumeSavedProgress();
+          }
+          if (autoPlay) {
+            mainVideo.play().catch(e => {});
+          }
 
           if (mainVideo.audioTracks && mainVideo.audioTracks.length > 0) {
             audioTracks = Array.from(mainVideo.audioTracks);
@@ -511,10 +698,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Close all dropdowns
     function closeAllDropdowns() {
-      document.querySelectorAll('.quality-dropdown, .audio-dropdown, .subtitle-dropdown, .speed-dropdown').forEach(dropdown => {
+      document.querySelectorAll('.server-dropdown, .quality-dropdown, .audio-dropdown, .subtitle-dropdown, .speed-dropdown').forEach(dropdown => {
         dropdown.style.display = 'none';
       });
-      document.querySelectorAll('.quality-selector, .audio-selector, .subtitle-selector, .playback-speed-selector').forEach(selector => {
+      document.querySelectorAll('.server-selector, .quality-selector, .audio-selector, .subtitle-selector, .playback-speed-selector').forEach(selector => {
         selector.classList.remove('active');
       });
     }
@@ -1374,7 +1561,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (isSettingsMenuOpen && !settingsMenu.contains(event.target) && !settingsBtn.contains(event.target)) {
         closeSettingsDropdown();
       }
-      if (!event.target.closest('.quality-selector') &&
+      if (!event.target.closest('.server-selector') &&
+        !event.target.closest('.quality-selector') &&
         !event.target.closest('.audio-selector') &&
         !event.target.closest('.subtitle-selector') &&
         !event.target.closest('.playback-speed-selector') &&
@@ -1383,7 +1571,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     });
 
-    document.querySelectorAll('.quality-btn, .audio-btn, .speed-btn').forEach(btn => {
+    document.querySelectorAll('.server-btn, .quality-btn, .audio-btn, .speed-btn').forEach(btn => {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
         const dropdown = this.nextElementSibling;
@@ -1395,7 +1583,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (!isVisible) {
           dropdown.style.display = 'block';
-          const container = this.closest('.quality-selector, .audio-selector, .subtitle-selector, .playback-speed-selector');
+          const container = this.closest('.server-selector, .quality-selector, .audio-selector, .subtitle-selector, .playback-speed-selector');
           if (container) container.classList.add('active');
         }
       });
@@ -2410,6 +2598,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Initialize
     function initializePlayer() {
+      setupServerEventListeners();
       setupQualityEventListeners();
       setupAudioEventListeners();
       setupSubtitleEventListeners();
@@ -2438,7 +2627,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
 
       initializePlaylist();
-      initHLS(currentEpisode.videoUrl);
+      updateServerOptions();
+
+      const initialServer = (availableServers && availableServers.find(s => s.id === activeServerId)) || (availableServers && availableServers[0]) || null;
+      const initialVideoUrl = initialServer ? initialServer.url : (currentEpisode.videoUrl || null);
+      initHLS(initialVideoUrl);
 
       if (autoNextCheckbox && autoNextCheckbox.checked) {
         if (autoNextLabel) {

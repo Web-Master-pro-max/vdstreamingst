@@ -682,7 +682,7 @@ router.delete('/shows/:id', authenticate, requireAdmin, async (req, res) => {
 // POST /api/admin/episodes/manual - Add episode manually without raw video upload
 router.post('/episodes/manual', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { showId, title, episodeNumber, description, duration, videoUrl, transcodeStatus } = req.body;
+    const { showId, title, episodeNumber, description, duration, videoUrl, s3Url, localUrl, transcodeStatus } = req.body;
 
     if (!showId || !title || !episodeNumber) {
       return res.status(400).json({ error: 'Show ID, title, and episode number are required.' });
@@ -696,7 +696,10 @@ router.post('/episodes/manual', authenticate, requireAdmin, async (req, res) => 
       return res.status(404).json({ error: 'Show not found.' });
     }
 
-    const status = transcodeStatus || (videoUrl ? 'COMPLETED' : 'PENDING');
+    const cleanS3 = s3Url && s3Url.trim() ? s3Url.trim() : null;
+    const cleanLocal = localUrl && localUrl.trim() ? localUrl.trim() : null;
+    const effectiveVideoUrl = videoUrl && videoUrl.trim() ? videoUrl.trim() : (cleanLocal || cleanS3 || null);
+    const status = transcodeStatus || (effectiveVideoUrl ? 'COMPLETED' : 'PENDING');
 
     const episode = await prisma.episode.create({
       data: {
@@ -705,12 +708,14 @@ router.post('/episodes/manual', authenticate, requireAdmin, async (req, res) => 
         episodeNumber: parsedEpNum,
         description: description || '',
         duration: duration || '',
-        videoUrl: videoUrl || null,
+        videoUrl: effectiveVideoUrl,
+        s3Url: cleanS3,
+        localUrl: cleanLocal,
         transcodeStatus: status,
         stageDetails: JSON.stringify({
           uploadServer: { percent: 100, speed: 'Done', eta: 0, status: 'COMPLETED' },
-          transcoding: { percent: videoUrl ? 100 : 0, speed: 'Done', eta: 0, status: videoUrl ? 'COMPLETED' : 'PENDING' },
-          uploadS3: { percent: videoUrl ? 100 : 0, speed: 'Done', eta: 0, status: videoUrl ? 'COMPLETED' : 'PENDING' }
+          transcoding: { percent: effectiveVideoUrl ? 100 : 0, speed: 'Done', eta: 0, status: effectiveVideoUrl ? 'COMPLETED' : 'PENDING' },
+          uploadS3: { percent: effectiveVideoUrl ? 100 : 0, speed: 'Done', eta: 0, status: effectiveVideoUrl ? 'COMPLETED' : 'PENDING' }
         })
       }
     });
@@ -913,13 +918,25 @@ router.delete('/users/:id', authenticate, requireAdmin, async (req, res) => {
 router.put('/episodes/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const episodeId = parseInt(req.params.id);
-    const { title, episodeNumber, description, duration, videoUrl, transcodeStatus } = req.body;
+    const { title, episodeNumber, description, duration, videoUrl, s3Url, localUrl, transcodeStatus } = req.body;
     const data = {};
     if (title) data.title = title;
     if (episodeNumber) data.episodeNumber = parseInt(episodeNumber);
     if (description !== undefined) data.description = description;
     if (duration !== undefined) data.duration = duration;
-    if (videoUrl !== undefined) data.videoUrl = videoUrl;
+
+    // Both server URLs: Server 1 (AWS S3) and Server 2 (Laptop Local Storage)
+    if (s3Url !== undefined) data.s3Url = s3Url && s3Url.trim() ? s3Url.trim() : null;
+    if (localUrl !== undefined) data.localUrl = localUrl && localUrl.trim() ? localUrl.trim() : null;
+
+    if (videoUrl !== undefined && videoUrl.trim()) {
+      data.videoUrl = videoUrl.trim();
+    } else if (data.localUrl || data.s3Url) {
+      data.videoUrl = data.localUrl || data.s3Url;
+    } else if (s3Url !== undefined || localUrl !== undefined) {
+      data.videoUrl = null;
+    }
+
     if (transcodeStatus !== undefined) data.transcodeStatus = transcodeStatus;
     const episode = await prisma.episode.update({
       where: { id: episodeId },
@@ -1017,6 +1034,43 @@ router.put('/shows/:id', authenticate, requireAdmin, imageUpload.fields([{ name:
         }
       }
     });
+
+    // If movie/show stream URLs provided
+    if (req.body.s3Url !== undefined || req.body.localUrl !== undefined) {
+      const cleanS3 = req.body.s3Url ? req.body.s3Url.trim() : null;
+      const cleanLocal = req.body.localUrl ? req.body.localUrl.trim() : null;
+      const effectiveVideoUrl = cleanLocal || cleanS3 || null;
+
+      const firstEp = await prisma.episode.findFirst({
+        where: { showId: id },
+        orderBy: { episodeNumber: 'asc' }
+      });
+      if (firstEp) {
+        await prisma.episode.update({
+          where: { id: firstEp.id },
+          data: {
+            s3Url: cleanS3,
+            localUrl: cleanLocal,
+            videoUrl: effectiveVideoUrl || firstEp.videoUrl,
+            transcodeStatus: effectiveVideoUrl ? 'COMPLETED' : firstEp.transcodeStatus
+          }
+        });
+      } else if (effectiveVideoUrl) {
+        await prisma.episode.create({
+          data: {
+            showId: id,
+            title: title || 'Full Movie',
+            episodeNumber: 1,
+            description: description || '',
+            duration: runtime || '',
+            videoUrl: effectiveVideoUrl,
+            s3Url: cleanS3,
+            localUrl: cleanLocal,
+            transcodeStatus: 'COMPLETED'
+          }
+        });
+      }
+    }
 
     res.json(updatedShow);
   } catch (error) {

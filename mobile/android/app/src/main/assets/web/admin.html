@@ -2324,6 +2324,7 @@
                 if (res.ok) {
                     const show = await res.json();
                     const eps = show.episodes || [];
+                    window.currentShowEpisodesList = eps;
 
                     if (eps.length === 0) {
                         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--gray-text);">No episodes added to this show yet.</td></tr>`;
@@ -2336,17 +2337,22 @@
                         const isPaused = ep.transcodeStatus === 'PAUSED';
                         const isPending = ep.transcodeStatus === 'PENDING';
 
+                        const hasS3 = ep.s3Url || (ep.videoUrl && (ep.videoUrl.includes('amazonaws.com') || (ep.videoUrl.startsWith('http') && !ep.videoUrl.includes('/uploads/'))));
+                        const hasLocal = ep.localUrl || (ep.videoUrl && (ep.videoUrl.startsWith('/uploads') || ep.videoUrl.includes('/uploads/')));
+                        const s3Badge = hasS3 ? '<span style="font-size: 0.8rem; padding: 2px 6px; background: rgba(255,0,85,0.15); color: var(--primary); border: 1px solid var(--primary); border-radius: 4px; margin-left: 4px;" title="Server 1: AWS S3"><i class="fas fa-cloud"></i> S3</span>' : '';
+                        const localBadge = hasLocal ? '<span style="font-size: 0.8rem; padding: 2px 6px; background: rgba(0,168,255,0.15); color: var(--secondary); border: 1px solid var(--secondary); border-radius: 4px; margin-left: 4px;" title="Server 2: Laptop Local Storage"><i class="fas fa-laptop"></i> Laptop</span>' : '';
+
                         return `
                             <tr>
                                 <td><strong>Ep ${ep.episodeNumber}</strong></td>
-                                <td>${ep.title}</td>
+                                <td>${ep.title} ${s3Badge}${localBadge}</td>
                                 <td><span class="status-badge ${statusClass}">${ep.transcodeStatus || 'COMPLETED'}</span></td>
                                 <td>
                                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                         ${isTranscoding ? `<button onclick="pauseTranscodeTask(${ep.id})" style="background: rgba(241, 196, 15, 0.15); border: 1px solid var(--warning); color: var(--warning); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-pause"></i> Pause</button>` : ''}
                                         ${isPaused ? `<button onclick="resumeTranscodeTask(${ep.id})" style="background: rgba(46, 204, 113, 0.15); border: 1px solid var(--success); color: var(--success); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-play"></i> Resume</button>` : ''}
                                         ${(isTranscoding || isPending || isPaused) ? `<button onclick="stopTranscodeTask(${ep.id})" style="background: rgba(231, 76, 60, 0.15); border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-stop"></i> Stop</button>` : ''}
-                                        <button onclick="openEditEpisodeModal(${ep.id}, '${ep.title.replace(/'/g, "\\'")}', ${ep.episodeNumber}, '${(ep.duration || '').replace(/'/g, "\\'")}', '${(ep.videoUrl || '').replace(/'/g, "\\'")}', '${ep.transcodeStatus}')" style="background: rgba(0, 168, 255, 0.1); border: 1px solid var(--secondary); color: var(--secondary); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-edit"></i> Edit</button>
+                                        <button onclick="openEditEpisodeModal(${ep.id})" style="background: rgba(0, 168, 255, 0.1); border: 1px solid var(--secondary); color: var(--secondary); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-edit"></i> Edit</button>
                                         <button onclick="deleteEpisode(${ep.id}, ${ep.episodeNumber})" style="background: rgba(231, 76, 60, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-trash-alt"></i> Delete</button>
                                     </div>
                                 </td>
@@ -2442,7 +2448,9 @@
             }
             document.getElementById('manualEpNumber').value = '';
             document.getElementById('manualEpTitle').value = '';
-            document.getElementById('manualEpVideoUrl').value = '';
+            if (document.getElementById('manualEpS3Url')) document.getElementById('manualEpS3Url').value = '';
+            if (document.getElementById('manualEpLocalUrl')) document.getElementById('manualEpLocalUrl').value = '';
+            if (document.getElementById('manualEpVideoUrl')) document.getElementById('manualEpVideoUrl').value = '';
             document.getElementById('manualEpDuration').value = '';
             document.getElementById('manualEpDesc').value = '';
             document.getElementById('addEpisodeManualModal').style.display = 'flex';
@@ -2457,7 +2465,10 @@
             const showId = currentActiveShowId;
             const episodeNumber = document.getElementById('manualEpNumber').value;
             const title = document.getElementById('manualEpTitle').value;
-            const videoUrl = document.getElementById('manualEpVideoUrl').value;
+            const s3Url = (document.getElementById('manualEpS3Url')?.value || '').trim();
+            const localUrl = (document.getElementById('manualEpLocalUrl')?.value || '').trim();
+            const fallbackVideo = (document.getElementById('manualEpVideoUrl')?.value || '').trim();
+            const videoUrl = localUrl || s3Url || fallbackVideo || null;
             const duration = document.getElementById('manualEpDuration').value;
             const description = document.getElementById('manualEpDesc').value;
 
@@ -2478,7 +2489,9 @@
                         showId,
                         episodeNumber,
                         title,
-                        videoUrl: videoUrl.trim() || null,
+                        videoUrl,
+                        s3Url: s3Url || null,
+                        localUrl: localUrl || null,
                         duration: duration.trim() || null,
                         description: description.trim() || ''
                     })
@@ -2831,13 +2844,33 @@
         }
 
         // ======= EPISODE CUSTOMIZATION & EDITING =======
-        function openEditEpisodeModal(id, title, epNum, duration, videoUrl, status) {
+        function openEditEpisodeModal(id, title, epNum, duration, videoUrl, status, s3Url, localUrl) {
             document.getElementById('editEpisodeId').value = id;
-            document.getElementById('editEpisodeTitle').value = title;
-            document.getElementById('editEpisodeNumber').value = epNum;
-            document.getElementById('editEpisodeDuration').value = duration || '';
-            document.getElementById('editEpisodeVideoUrl').value = videoUrl || '';
-            document.getElementById('editEpisodeStatus').value = status || 'COMPLETED';
+            
+            let epObj = null;
+            if (window.currentShowEpisodesList && Array.isArray(window.currentShowEpisodesList)) {
+                epObj = window.currentShowEpisodesList.find(e => e.id === id);
+            }
+
+            document.getElementById('editEpisodeTitle').value = (epObj ? epObj.title : title) || '';
+            document.getElementById('editEpisodeNumber').value = (epObj ? epObj.episodeNumber : epNum) || 1;
+            document.getElementById('editEpisodeDuration').value = (epObj ? epObj.duration : duration) || '';
+
+            let s3Val = (epObj && epObj.s3Url) || s3Url || '';
+            let localVal = (epObj && epObj.localUrl) || localUrl || '';
+            const rawVideo = (epObj && epObj.videoUrl) || videoUrl || '';
+
+            if (!s3Val && rawVideo && (rawVideo.includes('amazonaws.com') || (rawVideo.startsWith('http') && !rawVideo.includes('/uploads/')))) {
+                s3Val = rawVideo;
+            }
+            if (!localVal && rawVideo && (rawVideo.startsWith('/uploads') || rawVideo.includes('/uploads/'))) {
+                localVal = rawVideo;
+            }
+
+            if (document.getElementById('editEpisodeS3Url')) document.getElementById('editEpisodeS3Url').value = s3Val;
+            if (document.getElementById('editEpisodeLocalUrl')) document.getElementById('editEpisodeLocalUrl').value = localVal;
+            if (document.getElementById('editEpisodeVideoUrl')) document.getElementById('editEpisodeVideoUrl').value = rawVideo;
+            document.getElementById('editEpisodeStatus').value = (epObj && epObj.transcodeStatus) || status || 'COMPLETED';
             document.getElementById('editEpisodeModal').style.display = 'flex';
         }
 
@@ -2851,7 +2884,10 @@
             const title = document.getElementById('editEpisodeTitle').value;
             const episodeNumber = parseInt(document.getElementById('editEpisodeNumber').value);
             const duration = document.getElementById('editEpisodeDuration').value;
-            const videoUrl = document.getElementById('editEpisodeVideoUrl').value;
+            const s3Url = document.getElementById('editEpisodeS3Url') ? document.getElementById('editEpisodeS3Url').value.trim() : '';
+            const localUrl = document.getElementById('editEpisodeLocalUrl') ? document.getElementById('editEpisodeLocalUrl').value.trim() : '';
+            const fallbackVideo = document.getElementById('editEpisodeVideoUrl') ? document.getElementById('editEpisodeVideoUrl').value.trim() : '';
+            const videoUrl = localUrl || s3Url || fallbackVideo || null;
             const transcodeStatus = document.getElementById('editEpisodeStatus').value;
             const token = localStorage.getItem('infinx_token');
 
@@ -2862,7 +2898,15 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ title, episodeNumber, duration, videoUrl, transcodeStatus })
+                    body: JSON.stringify({
+                        title,
+                        episodeNumber,
+                        duration,
+                        videoUrl,
+                        s3Url: s3Url || null,
+                        localUrl: localUrl || null,
+                        transcodeStatus
+                    })
                 });
 
                 if (res.ok) {
@@ -2935,6 +2979,22 @@
                     });
                 }
 
+                // Server streaming URLs for movies / first episode
+                const firstEp = (show.episodes && show.episodes[0]) || null;
+                let s3Val = (firstEp && firstEp.s3Url) || '';
+                let localVal = (firstEp && firstEp.localUrl) || '';
+                const epVid = (firstEp && firstEp.videoUrl) || '';
+
+                if (!s3Val && epVid && (epVid.includes('amazonaws.com') || (epVid.startsWith('http') && !epVid.includes('/uploads/')))) {
+                    s3Val = epVid;
+                }
+                if (!localVal && epVid && (epVid.startsWith('/uploads') || epVid.includes('/uploads/'))) {
+                    localVal = epVid;
+                }
+
+                if (document.getElementById('editShowS3Url')) document.getElementById('editShowS3Url').value = s3Val;
+                if (document.getElementById('editShowLocalUrl')) document.getElementById('editShowLocalUrl').value = localVal;
+
                 document.getElementById('editShowModal').style.display = 'flex';
             } catch (err) {
                 console.error(err);
@@ -2965,6 +3025,8 @@
             const isFeatured = document.getElementById('editShowIsFeatured').checked;
             const posterFile = document.getElementById('editShowPosterFile').files[0];
             const bannerFile = document.getElementById('editShowBannerFile').files[0];
+            const s3Url = document.getElementById('editShowS3Url') ? document.getElementById('editShowS3Url').value.trim() : '';
+            const localUrl = document.getElementById('editShowLocalUrl') ? document.getElementById('editShowLocalUrl').value.trim() : '';
 
             // Collect selected categories
             const selectedOptions = Array.from(document.getElementById('editShowCategories').selectedOptions);
@@ -2980,6 +3042,8 @@
             formData.append('runtime', runtime);
             formData.append('description', description);
             formData.append('isFeatured', isFeatured);
+            formData.append('s3Url', s3Url);
+            formData.append('localUrl', localUrl);
             if (posterFile) {
                 formData.append('poster', posterFile);
             }
@@ -3274,9 +3338,14 @@
                     <input type="text" id="manualEpTitle" placeholder="e.g. Stone World" required>
                 </div>
                 <div class="form-group">
-                    <label for="manualEpVideoUrl">Video / HLS Master URL (Optional)</label>
-                    <input type="url" id="manualEpVideoUrl" placeholder="e.g. https://.../master.m3u8">
+                    <label for="manualEpS3Url"><i class="fas fa-cloud" style="color: var(--primary);"></i> Server 1: AWS S3 HLS Stream URL (master.m3u8)</label>
+                    <input type="url" id="manualEpS3Url" placeholder="https://serverbuket-12.s3.ap-south-1.amazonaws.com/.../master.m3u8">
                 </div>
+                <div class="form-group">
+                    <label for="manualEpLocalUrl"><i class="fas fa-laptop" style="color: var(--secondary);"></i> Server 2: Laptop Local Storage URL (master.m3u8)</label>
+                    <input type="text" id="manualEpLocalUrl" placeholder="/uploads/videos/show_X/ep_Y/master.m3u8">
+                </div>
+                <input type="hidden" id="manualEpVideoUrl">
                 <div class="form-group">
                     <label for="manualEpDuration">Duration (Optional)</label>
                     <input type="text" id="manualEpDuration" placeholder="e.g. 24:00">
@@ -3450,6 +3519,19 @@
                             <input type="file" id="editShowBannerFile" accept="image/*">
                         </div>
                     </div>
+                    <div class="form-group full-width" style="grid-column: span 2; background: rgba(255, 255, 255, 0.03); padding: 18px; border-radius: 8px; border: 1px solid var(--gray-border); margin-top: 5px;">
+                        <h4 style="font-size: 1.4rem; color: white; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-server" style="color: var(--secondary);"></i> Streaming Server Sources (For Movies / Direct Stream)
+                        </h4>
+                        <div style="margin-bottom: 12px;">
+                            <label for="editShowS3Url"><i class="fas fa-cloud" style="color: var(--primary);"></i> Server 1: AWS S3 HLS Playlist URL (master.m3u8)</label>
+                            <input type="text" id="editShowS3Url" placeholder="https://serverbuket-12.s3.ap-south-1.amazonaws.com/.../master.m3u8">
+                        </div>
+                        <div>
+                            <label for="editShowLocalUrl"><i class="fas fa-laptop" style="color: var(--secondary);"></i> Server 2: Laptop Local Storage URL (master.m3u8)</label>
+                            <input type="text" id="editShowLocalUrl" placeholder="/uploads/videos/show_X/ep_1/master.m3u8">
+                        </div>
+                    </div>
                 </div>
                 <button type="submit" class="btn-submit" style="width: 100%; margin-top: 20px;"><i
                         class="fas fa-save"></i> Save Show Changes</button>
@@ -3484,9 +3566,14 @@
                     <input type="text" id="editEpisodeDuration" placeholder="e.g. 24:00">
                 </div>
                 <div class="form-group">
-                    <label for="editEpisodeVideoUrl">HLS Stream Playlist URL (master.m3u8)</label>
-                    <input type="text" id="editEpisodeVideoUrl" placeholder="Direct AWS S3 URL link">
+                    <label for="editEpisodeS3Url"><i class="fas fa-cloud" style="color: var(--primary);"></i> Server 1: AWS S3 HLS Stream URL (master.m3u8)</label>
+                    <input type="text" id="editEpisodeS3Url" placeholder="https://serverbuket-12.s3.ap-south-1.amazonaws.com/.../master.m3u8">
                 </div>
+                <div class="form-group">
+                    <label for="editEpisodeLocalUrl"><i class="fas fa-laptop" style="color: var(--secondary);"></i> Server 2: Laptop Local Storage URL (master.m3u8)</label>
+                    <input type="text" id="editEpisodeLocalUrl" placeholder="/uploads/videos/show_X/ep_Y/master.m3u8">
+                </div>
+                <input type="hidden" id="editEpisodeVideoUrl">
                 <div class="form-group">
                     <label for="editEpisodeStatus">Transcode Pipeline Status</label>
                     <select id="editEpisodeStatus">

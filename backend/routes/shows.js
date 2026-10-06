@@ -143,6 +143,46 @@ router.get('/search', async (req, res) => {
   }
 });
 
+function formatEpisodeWithServers(ep) {
+  if (!ep) return ep;
+  const isS3 = (url) => url && (url.includes('amazonaws.com') || (url.startsWith('http') && !url.includes('/uploads/')));
+  const isLocal = (url) => url && (url.startsWith('/uploads') || url.includes('/uploads/'));
+
+  const s3Url = ep.s3Url || (isS3(ep.videoUrl) ? ep.videoUrl : null);
+  const localUrl = ep.localUrl || (isLocal(ep.videoUrl) ? ep.videoUrl : null);
+
+  const servers = [];
+  if (s3Url) {
+    servers.push({
+      id: 's3',
+      name: 'Server 1: AWS Cloud',
+      shortName: 'Server 1 (AWS)',
+      badge: 'AWS S3',
+      url: s3Url,
+      type: 'cloud'
+    });
+  }
+  if (localUrl) {
+    servers.push({
+      id: 'local',
+      name: 'Server 2: Laptop Local Storage',
+      shortName: 'Server 2 (Laptop)',
+      badge: 'Local Disk',
+      url: localUrl,
+      type: 'local'
+    });
+  }
+
+  return {
+    ...ep,
+    s3Url,
+    localUrl,
+    servers,
+    defaultServer: servers.length > 0 ? servers[0].id : null,
+    videoUrl: ep.videoUrl || (servers.length > 0 ? servers[0].url : null)
+  };
+}
+
 // Get single show by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -169,7 +209,11 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Show not found.' });
     }
 
-    res.json(show);
+    const enrichedEpisodes = (show.episodes || []).map(formatEpisodeWithServers);
+    res.json({
+      ...show,
+      episodes: enrichedEpisodes
+    });
   } catch (error) {
     console.error('Error fetching show:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -201,6 +245,9 @@ router.get('/episodes/:id', async (req, res) => {
                 episodeNumber: true,
                 title: true,
                 duration: true,
+                videoUrl: true,
+                s3Url: true,
+                localUrl: true,
                 transcodeStatus: true,
               },
             },
@@ -219,7 +266,11 @@ router.get('/episodes/:id', async (req, res) => {
       data: { views: { increment: 1 } },
     });
 
-    res.json(episode);
+    if (episode.show && episode.show.episodes) {
+      episode.show.episodes = episode.show.episodes.map(formatEpisodeWithServers);
+    }
+
+    res.json(formatEpisodeWithServers(episode));
   } catch (error) {
     console.error('Error fetching episode:', error);
     res.status(500).json({ error: 'Internal server error.' });
