@@ -154,8 +154,10 @@
                 </button>
                 <div class="settings-dropdown">
                   <div class="settings-section" id="player-server-section">
-                    <div class="settings-title"><i class="fas fa-server" style="color: var(--secondary);"></i> Streaming Server</div>
-                    <div class="server-options" id="player-server-options" style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="settings-title"><i class="fas fa-server" style="color: var(--secondary);"></i> Streaming
+                      Server</div>
+                    <div class="server-options" id="player-server-options"
+                      style="display: flex; flex-direction: column; gap: 6px;">
                       <!-- Populated dynamically by JavaScript -->
                     </div>
                   </div>
@@ -259,9 +261,12 @@
                 <span class="skeleton" style="width: 40%; height: 24px; border-radius: 4px;"></span>
               </h2>
               <div class="video-meta">
-                <span class="episode"><span class="skeleton" style="width: 80px; height: 16px; border-radius: 2px;"></span></span>
-                <span class="views"><span class="skeleton" style="width: 60px; height: 16px; border-radius: 2px;"></span></span>
-                <span class="current-audio-display"><span class="skeleton" style="width: 100px; height: 16px; border-radius: 2px;"></span></span>
+                <span class="episode"><span class="skeleton"
+                    style="width: 80px; height: 16px; border-radius: 2px;"></span></span>
+                <span class="views"><span class="skeleton"
+                    style="width: 60px; height: 16px; border-radius: 2px;"></span></span>
+                <span class="current-audio-display"><span class="skeleton"
+                    style="width: 100px; height: 16px; border-radius: 2px;"></span></span>
               </div>
             </div>
           </div>
@@ -279,8 +284,8 @@
           <div class="settings-left">
             <div class="server-selector" id="server-selector">
               <button class="settings-btn server-btn" id="server-btn" title="Choose Streaming Server">
-                <i class="fas fa-server"></i> <span class="btn-text">Server</span> <span
-                  class="current-server" id="current-server-display">Server 1 (AWS)</span> <i class="fas fa-chevron-down"></i>
+                <i class="fas fa-server"></i> <span class="btn-text">Server</span> <span class="current-server"
+                  id="current-server-display">Server 1</span> <i class="fas fa-chevron-down"></i>
               </button>
               <div class="server-dropdown" id="server-dropdown">
                 <!-- Populated dynamically: Server 1: AWS and Server 2: Laptop -->
@@ -390,21 +395,24 @@
 
       <div class="playlist-items" id="playlist-items-container">
         <!-- Playlist items will be populated by JavaScript -->
-        <div class="playlist-item skeleton-playlist-item" style="display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
+        <div class="playlist-item skeleton-playlist-item"
+          style="display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
           <div class="skeleton" style="width: 80px; height: 50px; border-radius: 4px; flex-shrink: 0;"></div>
           <div style="flex-grow: 1; display:flex; flex-direction:column; gap:6px;">
             <div class="skeleton" style="width: 80%; height: 14px; border-radius: 2px;"></div>
             <div class="skeleton" style="width: 40%; height: 10px; border-radius: 2px;"></div>
           </div>
         </div>
-        <div class="playlist-item skeleton-playlist-item" style="display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
+        <div class="playlist-item skeleton-playlist-item"
+          style="display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
           <div class="skeleton" style="width: 80px; height: 50px; border-radius: 4px; flex-shrink: 0;"></div>
           <div style="flex-grow: 1; display:flex; flex-direction:column; gap:6px;">
             <div class="skeleton" style="width: 80%; height: 14px; border-radius: 2px;"></div>
             <div class="skeleton" style="width: 40%; height: 10px; border-radius: 2px;"></div>
           </div>
         </div>
-        <div class="playlist-item skeleton-playlist-item" style="display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
+        <div class="playlist-item skeleton-playlist-item"
+          style="display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
           <div class="skeleton" style="width: 80px; height: 50px; border-radius: 4px; flex-shrink: 0;"></div>
           <div style="flex-grow: 1; display:flex; flex-direction:column; gap:6px;">
             <div class="skeleton" style="width: 80%; height: 14px; border-radius: 2px;"></div>
@@ -424,7 +432,8 @@
     <!-- ====== COMMENTS SECTION ====== -->
     <div class="comments-section" id="commentsSection">
       <div class="comments-header">
-        <h3><i class="fas fa-comments"></i> Comments <span id="comments-count-badge" class="comments-count-badge">(0)</span></h3>
+        <h3><i class="fas fa-comments"></i> Comments <span id="comments-count-badge"
+            class="comments-count-badge">(0)</span></h3>
         <div class="comments-sort">
           <button class="sort-tab active" id="sort-top">Top Comments</button>
           <button class="sort-tab" id="sort-newest">Newest First</button>
@@ -439,7 +448,8 @@
       <!-- Comments List -->
       <div class="comments-list" id="comments-list">
         <!-- Loaded dynamically -->
-        <div style="display:flex; gap:15px; padding:16px; margin-bottom:15px; background:rgba(255,255,255,0.01); border-radius:12px;">
+        <div
+          style="display:flex; gap:15px; padding:16px; margin-bottom:15px; background:rgba(255,255,255,0.01); border-radius:12px;">
           <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;"></div>
           <div style="flex-grow:1; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; gap:10px;">
@@ -450,7 +460,8 @@
             <div class="skeleton" style="width: 90%; height: 16px; border-radius: 2px;"></div>
           </div>
         </div>
-        <div style="display:flex; gap:15px; padding:16px; margin-bottom:15px; background:rgba(255,255,255,0.01); border-radius:12px;">
+        <div
+          style="display:flex; gap:15px; padding:16px; margin-bottom:15px; background:rgba(255,255,255,0.01); border-radius:12px;">
           <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;"></div>
           <div style="flex-grow:1; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; gap:10px;">
