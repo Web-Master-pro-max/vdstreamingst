@@ -158,8 +158,8 @@ function formatEpisodeWithServers(ep) {
   if (s3Url) {
     servers.push({
       id: 's3',
-      name: 'Server 1: AWS Cloud',
-      shortName: 'Server 1 (AWS)',
+      name: 'Server 1',
+      shortName: 'Server 1',
       badge: 'AWS S3',
       url: s3Url,
       type: 'cloud'
@@ -168,8 +168,8 @@ function formatEpisodeWithServers(ep) {
   if (localUrl) {
     servers.push({
       id: 'local',
-      name: 'Server 2: Laptop Local Storage',
-      shortName: 'Server 2 (Laptop)',
+      name: 'Server 2',
+      shortName: 'Server 2',
       badge: 'Local Disk',
       url: localUrl,
       type: 'local'

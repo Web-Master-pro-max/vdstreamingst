@@ -183,8 +183,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (s3Url) {
         list.push({
           id: 's3',
-          name: 'Server 1: AWS Cloud',
-          shortName: 'Server 1 (AWS)',
+          name: 'Server 1',
+          shortName: 'Server 1',
           badge: 'AWS S3',
           url: s3Url,
           type: 'cloud'
@@ -193,8 +193,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (localUrl) {
         list.push({
           id: 'local',
-          name: 'Server 2: Laptop Local Storage',
-          shortName: 'Server 2 (Laptop)',
+          name: 'Server 2',
+          shortName: 'Server 2',
           badge: 'Local Disk',
           url: localUrl,
           type: 'local'
@@ -228,8 +228,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (currentEpisode && currentEpisode.videoUrl) {
           availableServers = [{
             id: 's3',
-            name: 'Server 1: AWS Cloud',
-            shortName: 'Server 1 (AWS)',
+            name: 'Server 1',
+            shortName: 'Server 1',
             badge: 'AWS S3',
             url: currentEpisode.videoUrl,
             type: 'cloud'
@@ -271,17 +271,17 @@ document.addEventListener('DOMContentLoaded', async function () {
       // If Server 2 has not been uploaded yet for this episode, show it clearly as not uploaded yet
       if (hasS3 && !hasLocal) {
         html += `
-          <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not uploaded to laptop server yet">
+          <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not uploaded to Server 2 yet">
             <i class="fas fa-laptop"></i>
-            <span>Server 2: Server-2</span>
+            <span>Server 2</span>
             <span class="server-badge-pill" style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px;">Not Added</span>
           </div>
         `;
       } else if (!hasS3 && hasLocal) {
         html += `
-          <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not hosted on AWS S3">
+          <div class="server-option disabled" style="opacity: 0.5; cursor: not-allowed;" title="Not hosted on Server 1">
             <i class="fas fa-cloud"></i>
-            <span>Server 1: Server-1 (Cloud)</span>
+            <span>Server 1</span>
             <span class="server-badge-pill" style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px;">Not Added</span>
           </div>
         `;
