@@ -2,7 +2,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const STORAGE_KEY_API_URL = '@infinx_api_url';
-const DEFAULT_URL = 'http://13.202.95.5:8000';
+export const DEFAULT_URL = 'http://13.202.95.5:8000';
+
+export const PRESET_SERVERS = [
+  {
+    id: 'server_cloud',
+    name: 'Cloud Stream Network',
+    url: 'http://13.202.95.5:8000',
+    description: 'High-speed dedicated cloud delivery network',
+    tag: 'Primary CDN',
+  },
+  {
+    id: 'server_laptop',
+    name: 'Edge Relay Tunnel',
+    url: 'https://skirt-guided-dressing-fantastic.trycloudflare.com',
+    description: 'Low-latency direct edge streaming relay node',
+    tag: 'Edge Node',
+  },
+];
 
 let cachedApiUrl = null;
 
@@ -226,9 +243,201 @@ export const recordWatchHistory = async (show, episode, positionMillis, duration
     const updated = [historyItem, ...filtered].slice(0, 50); // Keep up to 50 items
 
     await saveStoredHistory(updated);
+
+    // Synchronize episode-level detailed progress for show episode list tracking
+    if (episode && (episode.id || episode.episodeNumber)) {
+      await saveEpisodeProgress(showId, episode, positionMillis, durationMillis);
+    }
+
     return updated;
   } catch (e) {
     console.warn('Error recording watch history:', e);
+  }
+};
+
+/* =========================================================
+   AUDIO TRACK PREFERENCE MEMORY
+   ========================================================= */
+export const STORAGE_KEY_AUDIO_PREF_GLOBAL = '@infinx_audio_pref_global';
+export const STORAGE_KEY_AUDIO_PREF_SHOW_PREFIX = '@infinx_audio_pref_show_';
+
+export const getPreferredAudioTrack = async (showId) => {
+  try {
+    if (showId) {
+      const showPref = await AsyncStorage.getItem(`${STORAGE_KEY_AUDIO_PREF_SHOW_PREFIX}${showId}`);
+      if (showPref) return JSON.parse(showPref);
+    }
+    const globalPref = await AsyncStorage.getItem(STORAGE_KEY_AUDIO_PREF_GLOBAL);
+    if (globalPref) return JSON.parse(globalPref);
+  } catch (e) {
+    console.warn('Error reading preferred audio track:', e);
+  }
+  return null;
+};
+
+export const setPreferredAudioTrack = async (showId, track) => {
+  try {
+    if (!track) return;
+    const data = JSON.stringify({
+      language: track.language || '',
+      name: track.name || '',
+      displayName: track.displayName || '',
+      index: track.index,
+    });
+    if (showId) {
+      await AsyncStorage.setItem(`${STORAGE_KEY_AUDIO_PREF_SHOW_PREFIX}${showId}`, data);
+    }
+    await AsyncStorage.setItem(STORAGE_KEY_AUDIO_PREF_GLOBAL, data);
+  } catch (e) {
+    console.warn('Error saving preferred audio track:', e);
+  }
+};
+
+/* =========================================================
+   SUBTITLE APPEARANCE SETTINGS
+   ========================================================= */
+export const STORAGE_KEY_SUBTITLE_SETTINGS = '@infinx_subtitle_settings';
+
+export const DEFAULT_SUBTITLE_SETTINGS = {
+  size: 'medium', // 'small' (16), 'medium' (20), 'large' (25), 'huge' (30)
+  color: '#ffffff', // '#ffffff', '#FFE600', '#00f0ff', '#55ff55'
+  style: 'shadow', // 'shadow' (clean outlined shadow), 'box' (semi-translucent), 'solid' (opaque)
+  position: 'bottom', // 'bottom', 'raised'
+};
+
+export const getSubtitleSettings = async () => {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEY_SUBTITLE_SETTINGS);
+    if (json) {
+      return { ...DEFAULT_SUBTITLE_SETTINGS, ...JSON.parse(json) };
+    }
+  } catch (e) {
+    console.warn('Error reading subtitle settings:', e);
+  }
+  return DEFAULT_SUBTITLE_SETTINGS;
+};
+
+export const saveSubtitleSettings = async (settings) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY_SUBTITLE_SETTINGS, JSON.stringify(settings));
+    return settings;
+  } catch (e) {
+    console.warn('Error saving subtitle settings:', e);
+  }
+};
+
+/* =========================================================
+   AUTO SKIP INTRO & OUTRO PREFERENCES
+   ========================================================= */
+export const STORAGE_KEY_AUTO_SKIP_INTRO = '@infinx_auto_skip_intro';
+export const STORAGE_KEY_AUTO_SKIP_OUTRO = '@infinx_auto_skip_outro';
+export const STORAGE_KEY_SKIP_DURATION = '@infinx_skip_intro_duration';
+
+export const getAutoSkipIntroSetting = async () => {
+  try {
+    const val = await AsyncStorage.getItem(STORAGE_KEY_AUTO_SKIP_INTRO);
+    return val === 'true';
+  } catch (e) {
+    return false;
+  }
+};
+
+export const saveAutoSkipIntroSetting = async (enabled) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY_AUTO_SKIP_INTRO, enabled ? 'true' : 'false');
+    return enabled;
+  } catch (e) {
+    console.warn('Error saving auto skip intro setting:', e);
+  }
+};
+
+export const getAutoSkipOutroSetting = async () => {
+  try {
+    const val = await AsyncStorage.getItem(STORAGE_KEY_AUTO_SKIP_OUTRO);
+    return val === 'true';
+  } catch (e) {
+    return false;
+  }
+};
+
+export const saveAutoSkipOutroSetting = async (enabled) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY_AUTO_SKIP_OUTRO, enabled ? 'true' : 'false');
+    return enabled;
+  } catch (e) {
+    console.warn('Error saving auto skip outro setting:', e);
+  }
+};
+
+export const getSkipDurationSetting = async () => {
+  try {
+    const val = await AsyncStorage.getItem(STORAGE_KEY_SKIP_DURATION);
+    return val || 'auto';
+  } catch (e) {
+    return 'auto';
+  }
+};
+
+export const saveSkipDurationSetting = async (val) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY_SKIP_DURATION, val || 'auto');
+    return val;
+  } catch (e) {
+    console.warn('Error saving skip duration setting:', e);
+  }
+};
+
+/* =========================================================
+   EPISODES PROGRESS TRACKING (SHOW DETAIL SCREEN)
+   ========================================================= */
+export const STORAGE_KEY_EPISODES_PROGRESS = '@infinx_episodes_progress';
+
+export const getShowEpisodesProgress = async (showId) => {
+  if (!showId) return { episodes: {}, lastWatched: null };
+  try {
+    const json = await AsyncStorage.getItem(`${STORAGE_KEY_EPISODES_PROGRESS}_${showId}`);
+    return json ? JSON.parse(json) : { episodes: {}, lastWatched: null };
+  } catch (e) {
+    return { episodes: {}, lastWatched: null };
+  }
+};
+
+export const saveEpisodeProgress = async (showId, episode, positionMillis, durationMillis) => {
+  if (!showId || !episode) return;
+  const epId = episode.id || `ep_${episode.episodeNumber}`;
+  try {
+    const current = await getShowEpisodesProgress(showId);
+    const pos = Math.max(0, positionMillis || 0);
+    const dur = Math.max(0, durationMillis || 0);
+    const progressPercent = dur > 0
+      ? Math.min(100, Math.max(1, Math.round((pos / dur) * 100)))
+      : 0;
+    const isCompleted = progressPercent >= 88;
+
+    const epProgress = {
+      episodeId: epId,
+      episodeNumber: episode.episodeNumber,
+      title: episode.title,
+      positionMillis: pos,
+      durationMillis: dur,
+      progressPercent,
+      completed: isCompleted,
+      lastWatchedAt: Date.now(),
+    };
+
+    const updated = {
+      ...current,
+      lastWatched: epProgress,
+      episodes: {
+        ...(current.episodes || {}),
+        [epId]: epProgress,
+      },
+    };
+
+    await AsyncStorage.setItem(`${STORAGE_KEY_EPISODES_PROGRESS}_${showId}`, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.warn('Error saving episode progress:', e);
   }
 };
 

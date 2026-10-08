@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Switch,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,10 +21,13 @@ import {
   apiService,
   getAuthSession,
   clearAuthSession,
+  PRESET_SERVERS,
 } from '../services/api';
 
 const SETTING_AUTOPLAY = '@infinx_setting_autoplay';
-const SETTING_SKIP_INTRO = '@infinx_setting_skip_intro';
+const SETTING_SKIP_INTRO = '@infinx_auto_skip_intro';
+const SETTING_SKIP_OUTRO = '@infinx_auto_skip_outro';
+const SETTING_SKIP_DURATION = '@infinx_skip_intro_duration';
 const SETTING_WIFI_ONLY = '@infinx_setting_wifi_only';
 const SETTING_HW_ACCEL = '@infinx_setting_hw_accel';
 const SETTING_STREAM_QUALITY = '@infinx_setting_stream_quality';
@@ -35,6 +39,13 @@ const QUALITY_OPTIONS = ['Auto', '1080p', '720p', '480p'];
 const AUDIO_OPTIONS = ['Japanese', 'English Dub', 'Hindi Dub'];
 const SUB_OPTIONS = ['English', 'Hindi', 'Off'];
 const DOWNLOAD_OPTIONS = ['1080p High', '720p Standard', '480p Saver'];
+const SKIP_DURATION_OPTIONS = [
+  { id: 'auto', label: 'Smart Auto' },
+  { id: '60', label: '60s' },
+  { id: '75', label: '75s' },
+  { id: '85', label: '85s' },
+  { id: '90', label: '90s (TV)' },
+];
 
 export const SettingsScreen = ({ navigation }) => {
   // Account state
@@ -44,6 +55,8 @@ export const SettingsScreen = ({ navigation }) => {
   // Playback toggles
   const [autoPlay, setAutoPlay] = useState(true);
   const [skipIntro, setSkipIntro] = useState(true);
+  const [skipOutro, setSkipOutro] = useState(true);
+  const [skipDuration, setSkipDuration] = useState('auto');
   const [wifiOnly, setWifiOnly] = useState(false);
   const [hwAccel, setHwAccel] = useState(true);
 
@@ -68,6 +81,8 @@ export const SettingsScreen = ({ navigation }) => {
           sess,
           savedAutoplay,
           savedSkipIntro,
+          savedSkipOutro,
+          savedSkipDuration,
           savedWifiOnly,
           savedHwAccel,
           savedQuality,
@@ -79,6 +94,8 @@ export const SettingsScreen = ({ navigation }) => {
           getAuthSession(),
           AsyncStorage.getItem(SETTING_AUTOPLAY),
           AsyncStorage.getItem(SETTING_SKIP_INTRO),
+          AsyncStorage.getItem(SETTING_SKIP_OUTRO),
+          AsyncStorage.getItem(SETTING_SKIP_DURATION),
           AsyncStorage.getItem(SETTING_WIFI_ONLY),
           AsyncStorage.getItem(SETTING_HW_ACCEL),
           AsyncStorage.getItem(SETTING_STREAM_QUALITY),
@@ -95,6 +112,8 @@ export const SettingsScreen = ({ navigation }) => {
 
         if (savedAutoplay !== null) setAutoPlay(savedAutoplay === 'true');
         if (savedSkipIntro !== null) setSkipIntro(savedSkipIntro === 'true');
+        if (savedSkipOutro !== null) setSkipOutro(savedSkipOutro === 'true');
+        if (savedSkipDuration !== null) setSkipDuration(savedSkipDuration);
         if (savedWifiOnly !== null) setWifiOnly(savedWifiOnly === 'true');
         if (savedHwAccel !== null) setHwAccel(savedHwAccel === 'true');
         if (savedQuality) setStreamQuality(savedQuality);
@@ -111,42 +130,52 @@ export const SettingsScreen = ({ navigation }) => {
   // Handlers for toggles
   const handleToggleAutoplay = async (val) => {
     setAutoPlay(val);
-    await AsyncStorage.setItem(SETTING_AUTOPLAY, String(val)).catch(() => {});
+    await AsyncStorage.setItem(SETTING_AUTOPLAY, String(val)).catch(() => { });
   };
 
   const handleToggleSkipIntro = async (val) => {
     setSkipIntro(val);
-    await AsyncStorage.setItem(SETTING_SKIP_INTRO, String(val)).catch(() => {});
+    await AsyncStorage.setItem(SETTING_SKIP_INTRO, String(val)).catch(() => { });
+  };
+
+  const handleToggleSkipOutro = async (val) => {
+    setSkipOutro(val);
+    await AsyncStorage.setItem(SETTING_SKIP_OUTRO, String(val)).catch(() => { });
+  };
+
+  const handleSelectSkipDuration = async (val) => {
+    setSkipDuration(val);
+    await AsyncStorage.setItem(SETTING_SKIP_DURATION, String(val)).catch(() => { });
   };
 
   const handleToggleWifiOnly = async (val) => {
     setWifiOnly(val);
-    await AsyncStorage.setItem(SETTING_WIFI_ONLY, String(val)).catch(() => {});
+    await AsyncStorage.setItem(SETTING_WIFI_ONLY, String(val)).catch(() => { });
   };
 
   const handleToggleHwAccel = async (val) => {
     setHwAccel(val);
-    await AsyncStorage.setItem(SETTING_HW_ACCEL, String(val)).catch(() => {});
+    await AsyncStorage.setItem(SETTING_HW_ACCEL, String(val)).catch(() => { });
   };
 
   const handleSelectQuality = async (q) => {
     setStreamQuality(q);
-    await AsyncStorage.setItem(SETTING_STREAM_QUALITY, q).catch(() => {});
+    await AsyncStorage.setItem(SETTING_STREAM_QUALITY, q).catch(() => { });
   };
 
   const handleSelectAudio = async (a) => {
     setAudioLang(a);
-    await AsyncStorage.setItem(SETTING_AUDIO_LANG, a).catch(() => {});
+    await AsyncStorage.setItem(SETTING_AUDIO_LANG, a).catch(() => { });
   };
 
   const handleSelectSub = async (s) => {
     setSubLang(s);
-    await AsyncStorage.setItem(SETTING_SUB_LANG, s).catch(() => {});
+    await AsyncStorage.setItem(SETTING_SUB_LANG, s).catch(() => { });
   };
 
   const handleSelectDlQuality = async (dq) => {
     setDownloadQuality(dq);
-    await AsyncStorage.setItem(SETTING_DOWNLOAD_QUALITY, dq).catch(() => {});
+    await AsyncStorage.setItem(SETTING_DOWNLOAD_QUALITY, dq).catch(() => { });
   };
 
   // Clear App Cache
@@ -332,8 +361,8 @@ export const SettingsScreen = ({ navigation }) => {
 
           <View style={styles.toggleRow}>
             <View style={{ flex: 1, paddingRight: 8 }}>
-              <Text style={styles.toggleTitle}>Auto-Skip Opening & Ending</Text>
-              <Text style={styles.toggleDesc}>Fast-forward past opening themes and recaps</Text>
+              <Text style={styles.toggleTitle}>Auto-Skip Opening (Intro)</Text>
+              <Text style={styles.toggleDesc}>Fast-forward past anime OP themes using smart AI subtitle analysis</Text>
             </View>
             <Switch
               value={skipIntro}
@@ -341,6 +370,44 @@ export const SettingsScreen = ({ navigation }) => {
               trackColor={{ false: '#262635', true: COLORS.primary }}
               thumbColor="#fff"
             />
+          </View>
+
+          <View style={styles.toggleRow}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.toggleTitle}>Auto-Skip Ending (Outro)</Text>
+              <Text style={styles.toggleDesc}>Trigger seamless Next Episode countdown when credits begin</Text>
+            </View>
+            <Switch
+              value={skipOutro}
+              onValueChange={handleToggleSkipOutro}
+              trackColor={{ false: '#262635', true: COLORS.primary }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          {/* Intro Skip Duration Selector */}
+          <View style={{ paddingVertical: 12 }}>
+            <Text style={styles.toggleTitle}>Intro Skip Duration</Text>
+            <Text style={[styles.toggleDesc, { marginBottom: 10 }]}>Fine-tune duration or let smart detector auto-adapt</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {SKIP_DURATION_OPTIONS.map((opt) => {
+                const isSelected = skipDuration === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    onPress={() => handleSelectSkipDuration(opt.id)}
+                    style={[
+                      styles.chip,
+                      isSelected && { backgroundColor: COLORS.primary, borderColor: COLORS.primary }
+                    ]}
+                  >
+                    <Text style={[styles.chipText, isSelected && { color: '#fff', fontWeight: '800' }]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           <View style={styles.toggleRow}>
@@ -462,6 +529,102 @@ export const SettingsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
+        {/* 6. Streaming Server API Connection */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="server-outline" size={20} color={COLORS.primary} />
+            <Text style={styles.cardTitle}>Streaming Server Network Route</Text>
+          </View>
+          <Text style={styles.cardDesc}>
+            Select your preferred secure streaming network route for optimal latency and playback stability.
+          </Text>
+
+          {/* Quick Preset Selector */}
+          <Text style={styles.subLabel}>Network Edge Selector</Text>
+          <View style={{ gap: 8 }}>
+            {PRESET_SERVERS.map((srv) => {
+              const isSelected = apiUrl === srv.url;
+              return (
+                <TouchableOpacity
+                  key={srv.id}
+                  style={[styles.serverCard, isSelected && styles.serverCardSelected]}
+                  onPress={() => handleSaveUrl(srv.url)}
+                  disabled={testing}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={[styles.serverTitle, isSelected && styles.serverTitleSelected]}>
+                        {srv.name}
+                      </Text>
+                      <View style={[styles.serverTagBadge, isSelected && styles.serverTagBadgeSelected]}>
+                        <Text style={styles.serverTagText}>{srv.tag}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.serverDescText}>{srv.description}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                      <Ionicons name="shield-checkmark" size={11} color={COLORS.success} />
+                      <Text style={styles.serverSecureText}>Encrypted & Optimized Stream Route</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    {testing && apiUrl === srv.url ? (
+                      <ActivityIndicator size="small" color={COLORS.primary} />
+                    ) : isSelected ? (
+                      <View style={styles.activeCheckBadge}>
+                        <Ionicons name="checkmark" size={14} color="#fff" />
+                      </View>
+                    ) : (
+                      <Ionicons name="radio-button-off" size={20} color={COLORS.textMuted} />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/*{/* Custom Server URL 
+          <Text style={[styles.subLabel, { marginTop: 12 }]}>Custom Edge Node Address</Text>
+          <TextInput
+            style={styles.input}
+            value={apiUrl.includes('13.202.95.5') ? '' : apiUrl}
+            onChangeText={setUrl}
+            placeholder="https://your-custom-edge-relay.com"
+            placeholderTextColor="#666"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          <TouchableOpacity
+            style={styles.saveBtn}
+            onPress={() => handleSaveUrl(apiUrl)}
+            disabled={testing}
+            activeOpacity={0.8}
+          >
+            {testing ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="wifi-outline" size={18} color="#fff" />
+                <Text style={styles.saveBtnText}>Connect Network Route</Text>
+              </>
+            )}
+          </TouchableOpacity>*/}
+
+          {status && (
+            <View style={[styles.statusBadge, status.success ? styles.statusSuccess : styles.statusError]}>
+              <Ionicons
+                name={status.success ? "checkmark-circle" : "close-circle"}
+                size={18}
+                color={status.success ? COLORS.success : COLORS.error}
+              />
+              <Text style={[styles.statusText, status.success ? styles.statusSuccessText : styles.statusErrorText]}>
+                {status.message}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* 7. About & Build Info */}
         <View style={styles.card}>
@@ -817,5 +980,59 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 13,
     fontWeight: '700',
+  },
+  serverCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  serverCardSelected: {
+    backgroundColor: 'rgba(255, 0, 85, 0.1)',
+    borderColor: COLORS.primary,
+  },
+  serverTitle: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  serverTitleSelected: {
+    color: COLORS.primary,
+  },
+  serverTagBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  serverTagBadgeSelected: {
+    backgroundColor: COLORS.primary,
+  },
+  serverTagText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  serverDescText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  serverSecureText: {
+    color: '#00e699',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  activeCheckBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

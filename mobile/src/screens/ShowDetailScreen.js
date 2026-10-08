@@ -20,13 +20,27 @@ import {
   isWatchlisted,
   toggleWatchlist,
   getAuthSession,
+  getShowEpisodesProgress,
 } from '../services/api';
+
+const formatTime = (millis, totalMillis = 0) => {
+  if (!millis || millis <= 0) return '0:00';
+  const totalSeconds = Math.floor(millis / 1000);
+  const hrs = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  if (hrs > 0 || totalMillis >= 3600000) {
+    return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
 
 export const ShowDetailScreen = ({ route, navigation }) => {
   const { showId, show: initialShow } = route.params || {};
   const [show, setShow] = useState(initialShow || null);
   const [loading, setLoading] = useState(!initialShow);
   const [bookmarked, setBookmarked] = useState(false);
+  const [progressData, setProgressData] = useState({ episodes: {}, lastWatched: null });
 
   useEffect(() => {
     const onBackPress = () => {
@@ -49,6 +63,20 @@ export const ShowDetailScreen = ({ route, navigation }) => {
     }
   }, [showId, initialShow?.id]);
 
+  // Load episode progress on mount and every time screen gains focus
+  useEffect(() => {
+    const loadProgress = async () => {
+      const targetId = showId || show?.id || initialShow?.id;
+      if (targetId) {
+        const data = await getShowEpisodesProgress(targetId);
+        setProgressData(data);
+      }
+    };
+    loadProgress();
+    const unsubscribe = navigation.addListener('focus', loadProgress);
+    return unsubscribe;
+  }, [navigation, showId, show?.id, initialShow?.id]);
+
   useEffect(() => {
     const fetchDetails = async () => {
       if (!showId) return;
@@ -58,6 +86,8 @@ export const ShowDetailScreen = ({ route, navigation }) => {
         if (data?.id) {
           const isBookmarked = await isWatchlisted(data.id);
           setBookmarked(isBookmarked);
+          const prog = await getShowEpisodesProgress(data.id);
+          setProgressData(prog);
         }
       } catch (e) {
         console.error('Error fetching show details:', e);
@@ -85,7 +115,7 @@ export const ShowDetailScreen = ({ route, navigation }) => {
     { id: 103, episodeNumber: 3, title: 'Episode 3: Unbreakable Bond', duration: '25m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
   ];
 
-  const handlePlayEpisode = async (episode) => {
+  const handlePlayEpisode = async (episode, seekMillis = 0) => {
     const sess = await getAuthSession();
     if (!sess?.token) {
       Alert.alert(
@@ -98,7 +128,12 @@ export const ShowDetailScreen = ({ route, navigation }) => {
       );
       return;
     }
-    navigation.navigate('Player', { episodeId: episode.id, episode, show });
+    navigation.navigate('Player', {
+      episodeId: episode.id,
+      episode,
+      show,
+      initialPositionMillis: seekMillis || 0,
+    });
   };
 
   const toggleBookmark = async () => {
@@ -166,48 +201,195 @@ export const ShowDetailScreen = ({ route, navigation }) => {
           </View>
 
           {/* Main Action Play Button */}
-          <TouchableOpacity 
-            style={styles.mainPlayBtn}
-            onPress={() => handlePlayEpisode(episodes[0])}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="play" size={22} color="#fff" />
-            <Text style={styles.mainPlayText}>PLAY EPISODE 1</Text>
-          </TouchableOpacity>
+          {(() => {
+            const episodesProgress = progressData.episodes || {};
+            const lastWatched = progressData.lastWatched;
 
-          {/* Description */}
-          <Text style={styles.sectionHeading}>Synopsis</Text>
-          <Text style={styles.description}>
-            {show.description || "No synopsis available for this show."}
-          </Text>
+            const completedEpisodesCount = episodes.filter((ep) => {
+              const epProg = episodesProgress[ep.id] || episodesProgress[`ep_${ep.episodeNumber}`];
+              return epProg?.completed;
+            }).length;
 
-          {/* Episodes List */}
-          <Text style={styles.sectionHeading}>Episodes ({episodes.length})</Text>
-          <View style={styles.episodesList}>
-            {episodes.map((ep) => (
-              <TouchableOpacity 
-                key={ep.id} 
-                style={styles.episodeCard}
-                onPress={() => handlePlayEpisode(ep)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.epNumBadge}>
-                  <Text style={styles.epNumText}>EP {ep.episodeNumber}</Text>
-                </View>
+            const totalEpisodesCount = episodes.length;
+            const remainingEpisodesCount = Math.max(0, totalEpisodesCount - completedEpisodesCount);
+            const overallCompletionPercent = totalEpisodesCount > 0
+              ? Math.round((completedEpisodesCount / totalEpisodesCount) * 100)
+              : 0;
 
-                <View style={styles.epInfo}>
-                  <Text style={styles.epTitle} numberOfLines={1}>
-                    {ep.title}
+            let resumeEpisode = episodes[0];
+            let resumeProgress = null;
+            if (lastWatched) {
+              const matched = episodes.find(e => e.id === lastWatched.episodeId || e.episodeNumber === lastWatched.episodeNumber);
+              if (matched) {
+                resumeEpisode = matched;
+                resumeProgress = lastWatched;
+              }
+            }
+
+            const hasResumeProgress = resumeProgress && resumeProgress.positionMillis > 1000 && !resumeProgress.completed;
+
+            return (
+              <>
+                <TouchableOpacity 
+                  style={styles.mainPlayBtn}
+                  onPress={() => handlePlayEpisode(resumeEpisode, hasResumeProgress ? resumeProgress.positionMillis : 0)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="play" size={22} color="#fff" />
+                  <Text style={styles.mainPlayText}>
+                    {hasResumeProgress
+                      ? `RESUME EPISODE ${resumeEpisode.episodeNumber} (${formatTime(resumeProgress.positionMillis, resumeProgress.durationMillis)})`
+                      : `PLAY EPISODE ${resumeEpisode.episodeNumber || 1}`}
                   </Text>
-                  <Text style={styles.epDuration}>{ep.duration || '24m'}</Text>
+                </TouchableOpacity>
+
+                {/* Requirement 5: Overall Series Progress Tracker Card */}
+                <View style={styles.seriesProgressCard}>
+                  <View style={styles.progressCardHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="pie-chart-outline" size={16} color={COLORS.primary} />
+                      <Text style={styles.progressCardTitle}>Watch Progress</Text>
+                    </View>
+                    <Text style={styles.progressCardPercent}>{overallCompletionPercent}% Completed</Text>
+                  </View>
+
+                  {/* Overall Progress Bar Track */}
+                  <View style={styles.overallTrack}>
+                    <View style={[styles.overallFill, { width: `${overallCompletionPercent}%` }]} />
+                  </View>
+
+                  {/* Detailed Stats Chips */}
+                  <View style={styles.progressStatsRow}>
+                    <View style={styles.statChip}>
+                      <Ionicons name="checkmark-circle" size={14} color="#00ff88" />
+                      <Text style={styles.statChipText}>
+                        <Text style={styles.statChipBold}>{completedEpisodesCount}</Text> Completed
+                      </Text>
+                    </View>
+
+                    <View style={styles.statChip}>
+                      <Ionicons name="time-outline" size={14} color="#ffaa00" />
+                      <Text style={styles.statChipText}>
+                        <Text style={styles.statChipBold}>{remainingEpisodesCount}</Text> Left
+                      </Text>
+                    </View>
+
+                    <View style={styles.statChip}>
+                      <Ionicons name="layers-outline" size={14} color={COLORS.secondary} />
+                      <Text style={styles.statChipText}>
+                        <Text style={styles.statChipBold}>{totalEpisodesCount}</Text> Total
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
-                <View style={styles.epPlayBtn}>
-                  <Ionicons name="play" size={16} color={COLORS.primary} />
+                {/* Description */}
+                <Text style={styles.sectionHeading}>Synopsis</Text>
+                <Text style={styles.description}>
+                  {show.description || "No synopsis available for this show."}
+                </Text>
+
+                {/* Episodes List Header */}
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionHeading}>Episodes ({episodes.length})</Text>
+                  <Text style={styles.sectionProgressSub}>
+                    {completedEpisodesCount} Watched • {remainingEpisodesCount} Left
+                  </Text>
                 </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+
+                {/* Episodes List */}
+                <View style={styles.episodesList}>
+                  {episodes.map((ep) => {
+                    const epProg = episodesProgress[ep.id] || episodesProgress[`ep_${ep.episodeNumber}`];
+                    const isCompleted = epProg?.completed;
+                    const isInProgress = epProg && epProg.positionMillis > 1000 && !isCompleted;
+                    const isCurrentResume = resumeEpisode && (resumeEpisode.id === ep.id || resumeEpisode.episodeNumber === ep.episodeNumber);
+
+                    return (
+                      <TouchableOpacity 
+                        key={ep.id} 
+                        style={[
+                          styles.episodeCard,
+                          isCurrentResume && styles.episodeCardCurrent,
+                          isCompleted && styles.episodeCardCompleted,
+                        ]}
+                        onPress={() => handlePlayEpisode(ep, epProg?.positionMillis || 0)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[
+                          styles.epNumBadge,
+                          isCurrentResume && styles.epNumBadgeCurrent,
+                          isCompleted && styles.epNumBadgeCompleted,
+                        ]}>
+                          <Text style={[
+                            styles.epNumText,
+                            (isCurrentResume || isCompleted) && styles.epNumTextHighlight,
+                          ]}>
+                            EP {ep.episodeNumber}
+                          </Text>
+                        </View>
+
+                        <View style={styles.epInfo}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <Text style={[styles.epTitle, isCurrentResume && styles.epTitleCurrent]} numberOfLines={1}>
+                              {ep.title}
+                            </Text>
+                            {isCompleted && (
+                              <View style={styles.completedBadge}>
+                                <Ionicons name="checkmark-circle" size={11} color="#00ff88" />
+                                <Text style={styles.completedBadgeText}>Watched</Text>
+                              </View>
+                            )}
+                            {isInProgress && (
+                              <View style={styles.inProgressBadge}>
+                                <Text style={styles.inProgressBadgeText}>{epProg.progressPercent}%</Text>
+                              </View>
+                            )}
+                          </View>
+
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                            <Text style={styles.epDuration}>{ep.duration || '24m'}</Text>
+                            {isInProgress && (
+                              <Text style={styles.epResumeTime}>
+                                • Left at {formatTime(epProg.positionMillis, epProg.durationMillis)}
+                              </Text>
+                            )}
+                          </View>
+
+                          {/* Progress Fill Bar inside episode card */}
+                          {(isInProgress || isCompleted) && (
+                            <View style={styles.cardProgressTrack}>
+                              <View
+                                style={[
+                                  styles.cardProgressFill,
+                                  {
+                                    width: `${isCompleted ? 100 : epProg.progressPercent}%`,
+                                    backgroundColor: isCompleted ? '#00ff88' : COLORS.primary,
+                                  }
+                                ]}
+                              />
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={[
+                          styles.epPlayBtn,
+                          isCompleted && styles.epPlayBtnCompleted,
+                          isCurrentResume && styles.epPlayBtnCurrent,
+                        ]}>
+                          <Ionicons
+                            name={isCompleted ? "checkmark" : (isCurrentResume ? "play-circle" : "play")}
+                            size={isCurrentResume ? 18 : 15}
+                            color={isCompleted ? "#00ff88" : COLORS.primary}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            );
+          })()}
         </View>
 
         <View style={{ height: 40 }} />
@@ -403,12 +585,164 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   epPlayBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingLeft: 2,
+  },
+  epPlayBtnCompleted: {
+    backgroundColor: 'rgba(0, 255, 136, 0.12)',
+    paddingLeft: 0,
+  },
+  epPlayBtnCurrent: {
+    backgroundColor: COLORS.primary,
+    paddingLeft: 0,
+  },
+
+  /* Series Progress Card */
+  seriesProgressCard: {
+    backgroundColor: '#12121e',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 10,
+  },
+  progressCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressCardTitle: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  progressCardPercent: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  overallTrack: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  overallFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 3,
+  },
+  progressStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  statChipText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statChipBold: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+
+  /* Section Header with sub stats */
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginTop: 22,
+    marginBottom: 8,
+  },
+  sectionProgressSub: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  /* Episode Card States */
+  episodeCardCurrent: {
+    borderColor: COLORS.primary,
+    backgroundColor: 'rgba(255, 0, 85, 0.06)',
+  },
+  episodeCardCompleted: {
+    borderColor: 'rgba(0, 255, 136, 0.25)',
+    backgroundColor: 'rgba(0, 255, 136, 0.03)',
+  },
+  epNumBadgeCurrent: {
+    backgroundColor: COLORS.primary,
+  },
+  epNumBadgeCompleted: {
+    backgroundColor: 'rgba(0, 255, 136, 0.15)',
+  },
+  epNumTextHighlight: {
+    color: '#fff',
+  },
+  epTitleCurrent: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+  completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(0, 255, 136, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  completedBadgeText: {
+    color: '#00ff88',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  inProgressBadge: {
+    backgroundColor: 'rgba(255, 0, 85, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  inProgressBadgeText: {
+    color: COLORS.primary,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  epResumeTime: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  cardProgressTrack: {
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    width: '100%',
+    marginTop: 6,
+  },
+  cardProgressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 });

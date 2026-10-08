@@ -383,8 +383,8 @@ def create_video_hls(input_file, output_dir, total_duration=0.0, episode_id=None
         stderr_log_path = os.path.join(output_dir, f"ffmpeg_{r_name}_err.log")
         stderr_file = open(stderr_log_path, "w", encoding="utf-8", errors="ignore")
         
-        # Proportional scale preserving original aspect ratio without distortion
-        scale_filter = f"scale=w={rendition['width']}:h={rendition['height']}:force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"
+        # Proportional scale preserving original aspect ratio with strict 16-pixel alignment for mobile hardware decoders
+        scale_filter = f"scale=w={rendition['width']}:h={rendition['height']}:force_original_aspect_ratio=decrease,scale=trunc(iw/16)*16:trunc(ih/16)*16"
         
         # Configure video encoder parameters according to detected hardware
         if encoder == "h264_nvenc":
@@ -605,9 +605,12 @@ def create_master(audio_streams, subtitle_streams, renditions_or_output_dir, out
         if has_audio:
             for i, audio in enumerate(audio_streams):
                 uri = audio.get("uri", f"audio{i}.m3u8")
+                audio_name = audio.get("title") or audio.get("lang") or f"Audio {i+1}"
+                if not audio_name or not str(audio_name).strip() or str(audio_name).strip() == "und":
+                    audio_name = f"Audio {i+1}"
                 f.write(
                     f'#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",'
-                    f'NAME="{audio.get("title", f"Audio {i+1}")}",'
+                    f'NAME="{audio_name}",'
                     f'LANGUAGE="{audio.get("lang", "und")}",'
                     f'DEFAULT={"YES" if i==0 else "NO"},'
                     f'AUTOSELECT=YES,'
@@ -620,9 +623,12 @@ def create_master(audio_streams, subtitle_streams, renditions_or_output_dir, out
         if has_subs:
             for i, sub in enumerate(subtitle_streams):
                 uri = sub.get("uri", f"sub_{i}.vtt")
+                sub_name = sub.get("title") or sub.get("lang") or f"Subtitle {i+1}"
+                if not sub_name or not str(sub_name).strip() or str(sub_name).strip() == "und":
+                    sub_name = f"Subtitle {i+1}"
                 f.write(
                     f'#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",'
-                    f'NAME="{sub.get("title", f"Subtitle {i+1}")}",'
+                    f'NAME="{sub_name}",'
                     f'LANGUAGE="{sub.get("lang", "und")}",'
                     f'DEFAULT={"YES" if i==0 else "NO"},'
                     f'AUTOSELECT=YES,'
@@ -652,8 +658,9 @@ def create_master(audio_streams, subtitle_streams, renditions_or_output_dir, out
             stream_inf = f'#EXT-X-STREAM-INF:BANDWIDTH={bw},RESOLUTION={w}x{h},CODECS="{codecs_attr}",NAME="{name}"'
             if has_audio:
                 stream_inf += ',AUDIO="audio"'
-            if has_subs:
-                stream_inf += ',SUBTITLES="subs"'
+            # Do NOT attach SUBTITLES="subs" to STREAM-INF because URI points directly to .vtt WebVTT files,
+            # which causes ExoPlayer to crash with ParserException: Input does not start with the #EXTM3U header.
+            # Subtitles remain listed in #EXT-X-MEDIA:TYPE=SUBTITLES for web and mobile player UI parsers.
             f.write(stream_inf + "\n")
             f.write(f"{playlist}\n\n")
 

@@ -52,6 +52,7 @@ async function uploadToS3(key, buffer, mimeType, storageTypeOverride, storagePat
     Key: key,
     Body: buffer,
     ContentType: mimeType,
+    ACL: 'public-read',
   });
 
   await s3Client.send(command);

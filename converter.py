@@ -65,9 +65,11 @@ def create_video_hls(input_file):
         "ffmpeg",
         "-i", input_file,
         "-map", "0:v:0",
+        "-vf", "scale=trunc(iw/16)*16:trunc(ih/16)*16",
         "-c:v", "libx264",
         "-preset", "fast",
         "-crf", "23",
+        "-pix_fmt", "yuv420p",
         "-f", "hls",
         "-hls_time", "6",
         "-hls_playlist_type", "vod",
@@ -103,10 +105,13 @@ def create_master(audio_streams, subtitle_streams):
 
         # AUDIO GROUP
         for i, audio in enumerate(audio_streams):
+            audio_name = audio.get("title") or audio.get("lang") or f"Audio {i+1}"
+            if not audio_name or not str(audio_name).strip():
+                audio_name = f"Audio {i+1}"
             f.write(
                 f'#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",'
-                f'NAME="{audio["title"]}",'
-                f'LANGUAGE="{audio["lang"]}",'
+                f'NAME="{audio_name}",'
+                f'LANGUAGE="{audio.get("lang", "und")}",'
                 f'DEFAULT={"YES" if i==0 else "NO"},'
                 f'AUTOSELECT=YES,'
                 f'URI="audio{i}.m3u8"\n'
@@ -116,10 +121,13 @@ def create_master(audio_streams, subtitle_streams):
 
         # SUBTITLE GROUP
         for i, sub in enumerate(subtitle_streams):
+            sub_name = sub.get("title") or sub.get("lang") or f"Subtitle {i+1}"
+            if not sub_name or not str(sub_name).strip():
+                sub_name = f"Subtitle {i+1}"
             f.write(
                 f'#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",'
-                f'NAME="{sub["title"]}",'
-                f'LANGUAGE="{sub["lang"]}",'
+                f'NAME="{sub_name}",'
+                f'LANGUAGE="{sub.get("lang", "und")}",'
                 f'DEFAULT={"YES" if i==0 else "NO"},'
                 f'AUTOSELECT=YES,'
                 f'URI="sub_{i}.vtt"\n'
@@ -130,8 +138,7 @@ def create_master(audio_streams, subtitle_streams):
         # VIDEO STREAM
         f.write(
             '#EXT-X-STREAM-INF:BANDWIDTH=2000000,'
-            'AUDIO="audio",'
-            'SUBTITLES="subs"\n'
+            'AUDIO="audio"\n'
         )
         f.write("video.m3u8\n")
 

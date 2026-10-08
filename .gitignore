@@ -13,6 +13,7 @@ __pycache__/
 # Logs and database/system files
 *.log
 *.jpg
+*.png
 .DS_Store
 Thumbs.db
 *.db
