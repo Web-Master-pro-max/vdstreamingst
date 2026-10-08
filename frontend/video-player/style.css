@@ -3491,10 +3491,10 @@ video::-webkit-media-text-track-background {
    SERIES PROGRESS CARD & BADGES
    ======================================================== */
 .series-progress-card {
-  background: rgba(18, 18, 32, 0.7);
+  background: rgba(18, 18, 32, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  padding: 16px;
+  padding: 14px 16px;
   margin-bottom: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 }
@@ -3504,6 +3504,7 @@ video::-webkit-media-text-track-background {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  gap: 10px;
 }
 
 .series-progress-title {
@@ -3514,12 +3515,22 @@ video::-webkit-media-text-track-background {
   font-weight: 800;
   color: #fff;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.series-progress-title i {
+  color: var(--primary, #ff0055);
+  font-size: 1.4rem;
+  flex-shrink: 0;
 }
 
 .series-progress-percent {
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: 900;
   color: var(--primary, #ff0055);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .series-progress-track {
@@ -3544,16 +3555,73 @@ video::-webkit-media-text-track-background {
 
 .series-progress-stats .stat-chip {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 7px 6px;
-  border-radius: 8px;
-  font-size: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 8px 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.series-progress-stats .stat-chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.series-progress-stats .stat-chip .stat-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.series-progress-stats .stat-chip .stat-icon.stat-total {
+  color: #00f0ff;
+}
+
+.series-progress-stats .stat-chip .stat-icon.stat-watched {
+  color: #00ff88;
+}
+
+.series-progress-stats .stat-chip .stat-icon.stat-left {
+  color: #ffaa00;
+}
+
+.series-progress-stats .stat-chip .stat-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.series-progress-stats .stat-chip .stat-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8f94a6;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.series-progress-stats .stat-chip .stat-value {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.series-progress-stats .stat-chip span:not(.stat-label):not(.stat-value) {
+  font-size: 1.1rem;
   color: #a0a5b9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .series-progress-stats .stat-chip strong {
