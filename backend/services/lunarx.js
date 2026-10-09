@@ -634,7 +634,7 @@ class LunarXService {
       if (showInfo && (showInfo.status === 'NOT_YET_RELEASED' || showInfo.episodeCount === 0)) {
         return [];
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Fallback: Generate basic episodes list so player can load and request stream
     return [
@@ -661,14 +661,14 @@ class LunarXService {
   decodeKeys(e) {
     if (!e || typeof e !== 'object') return null;
     for (let t of Object.keys(e)) {
-      let r = (function(e, t) {
+      let r = (function (e, t) {
         let r;
         try {
           r = atob(t.split('').reverse().join(''));
         } catch {
           return null;
         }
-        let l = (function(e) {
+        let l = (function (e) {
           let t = 0;
           for (let r = 0; r < e.length; r++) t = 31 * t + e.charCodeAt(r) & 255;
           return t;
@@ -693,7 +693,7 @@ class LunarXService {
 
       if (!r) continue;
 
-      let l = (function(e, t) {
+      let l = (function (e, t) {
         let r = e.names.map(e => t[e] || '').join('');
         if (r.length < 2 || r.length % 2 !== 0) return null;
         let l = [], n = 255 & e.seed, o = 0;
@@ -701,7 +701,7 @@ class LunarXService {
           let i = parseInt(r.slice(t, t + 2), 16);
           if (isNaN(i)) return null;
           n = n * e.a + e.b & 255;
-          l.push((function(e, t, r, l) {
+          l.push((function (e, t, r, l) {
             let n = 255 & e;
             for (let e = l.length - 1; e >= 0; e--) {
               let a = l[e][0], f = l[e][1];
@@ -756,7 +756,7 @@ class LunarXService {
         const payload = JSON.parse(match[1]);
         const k = this.decodeKeys(payload);
         if (k && k[0] && k[1]) return k;
-      } catch (e) {}
+      } catch (e) { }
     }
     return null;
   }

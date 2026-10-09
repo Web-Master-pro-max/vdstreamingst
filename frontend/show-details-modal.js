@@ -808,9 +808,9 @@
 
     const apiBase = window.API_BASE || '/api';
     const isLunarShow = (typeof showInput === 'object' && (showInput.isLunar || showInput.anilistId)) ||
-                        (typeof showId === 'string' && showId.startsWith('lunar-'));
+      (typeof showId === 'string' && showId.startsWith('lunar-'));
     const anilistId = (typeof showInput === 'object' && showInput.anilistId) ||
-                      (typeof showId === 'string' && showId.startsWith('lunar-') ? showId.replace('lunar-', '') : null);
+      (typeof showId === 'string' && showId.startsWith('lunar-') ? showId.replace('lunar-', '') : null);
 
     if (isLunarShow && anilistId) {
       try {

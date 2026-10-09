@@ -1007,9 +1007,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       siblingEpisodes.forEach(ep => {
         const epNumVal = ep.episodeNumber || ep.number;
         const p = episodesMap[ep.id] ||
-                  (epNumVal && episodesMap[epNumVal]) ||
-                  (epNumVal && episodesMap[String(epNumVal)]) ||
-                  (lunarId && epNumVal && episodesMap[`lunar-${lunarId}-${epNumVal}`]);
+          (epNumVal && episodesMap[epNumVal]) ||
+          (epNumVal && episodesMap[String(epNumVal)]) ||
+          (lunarId && epNumVal && episodesMap[`lunar-${lunarId}-${epNumVal}`]);
         if (p) {
           if (p.completed || (p.progressPercent && p.progressPercent >= 88)) {
             completedCount++;

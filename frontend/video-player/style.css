@@ -431,8 +431,15 @@ video::cue,
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .caption-settings-panel {
@@ -1107,18 +1114,39 @@ video::cue,
 }
 
 @keyframes settingsViewFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes settingsSlideInRight {
-  from { opacity: 0; transform: translateX(18px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes settingsSlideInLeft {
-  from { opacity: 0; transform: translateX(-18px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Panel Header (Root View) */
@@ -1666,12 +1694,12 @@ video::cue,
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: var(--primary, #ff0055);
   border-color: var(--primary, #ff0055);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(16px);
 }
 
@@ -1917,7 +1945,7 @@ input:checked + .slider:before {
     bottom: 3px !important;
   }
 
-  input:checked + .slider:before {
+  input:checked+.slider:before {
     transform: translateX(20px) !important;
   }
 
@@ -2465,7 +2493,8 @@ input:checked + .slider:before {
   transition: all 0.2s ease;
 }
 
-.player-season-select:hover, .player-season-select:focus {
+.player-season-select:hover,
+.player-season-select:focus {
   background: rgba(255, 255, 255, 0.16);
   border-color: var(--primary, #ff0055);
 }
@@ -3142,6 +3171,7 @@ input:checked + .slider:before {
 /* Fullscreen on Desktop / Standard Height (> 520px and > 768px):
    Elegantly floats above the bottom controls bar, pinned to bottom: 84px and right: 24px */
 @media (min-height: 521px) and (min-width: 769px) {
+
   .video-player.is-fullscreen .settings-dropdown,
   .video-player:fullscreen .settings-dropdown,
   .video-player:-webkit-full-screen .settings-dropdown,
@@ -3204,6 +3234,7 @@ input:checked + .slider:before {
 /* Fullscreen on Portrait Mobile (> 520px and <= 768px):
    Bottom sheet pinned to bottom: 0, left: 0, right: 0 */
 @media (min-height: 521px) and (max-width: 768px) {
+
   .video-player.is-fullscreen .settings-dropdown,
   .video-player:fullscreen .settings-dropdown,
   .video-player:-webkit-full-screen .settings-dropdown,
@@ -4357,10 +4388,12 @@ video::-webkit-media-text-track-background {
     transform: scale(0.7);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.08);
     opacity: 1;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -4452,6 +4485,7 @@ video::-webkit-media-text-track-background {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -5015,4 +5049,4 @@ video::-webkit-media-text-track-background {
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 6px !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
-}
+}
