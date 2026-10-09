@@ -149,6 +149,38 @@ function fetchWithRedirects(targetUrl, headers, maxRedirects = 3) {
   });
 }
 
+function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
+  let referer = reqReferer;
+  let origin = reqOrigin;
+
+  if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
+    referer = 'https://zokoanime.video/';
+    origin = 'https://zokoanime.video';
+  } else if (targetUrl.includes('nexabloom') || targetUrl.includes('silentvoyage') || targetUrl.includes('megaplay') || targetUrl.includes('oakhorizon')) {
+    referer = 'https://megaplay.buzz/';
+    origin = 'https://megaplay.buzz';
+  } else if (targetUrl.includes('krussdomi') || targetUrl.includes('kaa.lt')) {
+    referer = 'https://kaa.lt/';
+    origin = 'https://kaa.lt';
+  } else if (targetUrl.includes('echovideo')) {
+    referer = (reqReferer && reqReferer.includes('echovideo')) ? reqReferer : 'https://play.echovideo.ru/';
+    origin = 'https://play.echovideo.ru';
+  } else if (!referer) {
+    referer = 'https://lunarx.to/';
+    origin = 'https://lunarx.to';
+  }
+
+  return {
+    referer,
+    origin,
+    headers: {
+      ...(referer ? { 'Referer': referer } : {}),
+      ...(origin ? { 'Origin': origin } : {}),
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    }
+  };
+}
+
 // 7. HLS M3U8 Playlist Stream Proxy (attaches required Referer header and rewrites playlist URLs)
 router.get('/proxy/m3u8', async (req, res) => {
   try {
@@ -157,30 +189,7 @@ router.get('/proxy/m3u8', async (req, res) => {
       return res.status(400).send('Missing url parameter');
     }
 
-    let referer = req.query.ref;
-    let origin = req.query.orig;
-
-    if (!referer) {
-      if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
-        referer = 'https://zokoanime.video/';
-        origin = 'https://zokoanime.video';
-      } else if (targetUrl.includes('nexabloom') || targetUrl.includes('silentvoyage') || targetUrl.includes('megaplay')) {
-        referer = 'https://megaplay.buzz/';
-        origin = 'https://megaplay.buzz';
-      } else if (targetUrl.includes('krussdomi') || targetUrl.includes('kaa.lt')) {
-        referer = 'https://kaa.lt/';
-        origin = 'https://kaa.lt';
-      } else {
-        referer = 'https://lunarx.to/';
-        origin = 'https://lunarx.to';
-      }
-    }
-
-    const headers = {
-      ...(referer ? { 'Referer': referer } : {}),
-      ...(origin ? { 'Origin': origin } : {}),
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-    };
+    const { referer, origin, headers } = getUpstreamHeaders(targetUrl, req.query.ref, req.query.orig);
 
     const { res: upstreamRes, finalUrl } = await fetchWithRedirects(targetUrl, headers);
 
@@ -198,7 +207,6 @@ router.get('/proxy/m3u8', async (req, res) => {
     upstreamRes.on('data', chunk => body += chunk);
     upstreamRes.on('end', () => {
       const baseUrl = finalUrl.substring(0, finalUrl.lastIndexOf('/') + 1);
-      const queryParams = `&ref=${encodeURIComponent(referer)}${origin ? `&orig=${encodeURIComponent(origin)}` : ''}`;
       const lines = body.split('\n');
       const rewritten = lines.map(line => {
         const trimmed = line.trim();
@@ -209,10 +217,12 @@ router.get('/proxy/m3u8', async (req, res) => {
           if (trimmed.includes('URI="')) {
             return trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
               const fullUri = uri.startsWith('http') ? uri : (baseUrl + uri);
+              const up = getUpstreamHeaders(fullUri, referer, origin);
+              const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}`;
               if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
-                return `URI="/api/lunarx/proxy/m3u8?url=${encodeURIComponent(fullUri)}${queryParams}"`;
+                return `URI="/api/lunarx/proxy/m3u8?url=${encodeURIComponent(fullUri)}${qParams}"`;
               }
-              return `URI="/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUri)}${queryParams}"`;
+              return `URI="/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUri)}${qParams}"`;
             });
           }
           return line;
@@ -220,10 +230,12 @@ router.get('/proxy/m3u8', async (req, res) => {
 
         // Line is a URI: sub-playlist or segment
         const fullUrl = trimmed.startsWith('http') ? trimmed : (baseUrl + trimmed);
+        const up = getUpstreamHeaders(fullUrl, referer, origin);
+        const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}`;
         if (fullUrl.includes('.m3u8') || fullUrl.includes('manifest') || fullUrl.includes('playlist')) {
-          return `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(fullUrl)}${queryParams}`;
+          return `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(fullUrl)}${qParams}`;
         }
-        return `/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUrl)}${queryParams}`;
+        return `/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUrl)}${qParams}`;
       }).join('\n');
 
       res.send(rewritten);
@@ -242,31 +254,10 @@ router.get('/proxy/segment', async (req, res) => {
       return res.status(400).send('Missing url parameter');
     }
 
-    let referer = req.query.ref;
-    let origin = req.query.orig;
-
-    if (!referer) {
-      if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
-        referer = 'https://zokoanime.video/';
-        origin = 'https://zokoanime.video';
-      } else if (targetUrl.includes('nexabloom') || targetUrl.includes('silentvoyage') || targetUrl.includes('megaplay')) {
-        referer = 'https://megaplay.buzz/';
-        origin = 'https://megaplay.buzz';
-      } else if (targetUrl.includes('krussdomi') || targetUrl.includes('kaa.lt')) {
-        referer = 'https://kaa.lt/';
-        origin = 'https://kaa.lt';
-      } else {
-        referer = 'https://lunarx.to/';
-        origin = 'https://lunarx.to';
-      }
+    const { referer, origin, headers } = getUpstreamHeaders(targetUrl, req.query.ref, req.query.orig);
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range;
     }
-
-    const headers = {
-      ...(referer ? { 'Referer': referer } : {}),
-      ...(origin ? { 'Origin': origin } : {}),
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      ...(req.headers.range ? { 'Range': req.headers.range } : {})
-    };
 
     const { res: upstreamRes } = await fetchWithRedirects(targetUrl, headers);
 

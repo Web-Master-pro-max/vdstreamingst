@@ -542,6 +542,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (currentEpisode && currentEpisode.isLunar && target.host) {
           try {
             const epNumVal = currentEpisode.episodeNumber || epNum || 1;
+            const isDubServer = target.id === 'server-2' || (target.badge && target.badge.toLowerCase().includes('dub'));
+            if (isDubServer) {
+              currentAudioType = 'dub';
+              localStorage.setItem('infinx_preferred_audio_type', 'dub');
+              updateAudioOptions();
+            } else if (target.id === 'server-1' || target.id === 'server-3') {
+              currentAudioType = 'sub';
+              localStorage.setItem('infinx_preferred_audio_type', 'sub');
+              updateAudioOptions();
+            }
             const hostParam = (currentAudioType === 'dub' && target.host === 'zuna') ? 'yuki' : target.host;
             const sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${hostParam}&type=${currentAudioType}`);
             if (sRes.ok) {
@@ -1496,6 +1506,27 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (res.ok) {
           const data = await res.json();
           if (data && data.streamUrl) {
+            // Also sync active server indicator with the chosen audio
+            if (targetType === 'dub') {
+              activeServerId = 'server-2';
+              const curDisplay = document.getElementById('current-server-display');
+              if (curDisplay) curDisplay.textContent = 'Server 2';
+              const miniServerDisp = document.getElementById('current-server-mini-display');
+              if (miniServerDisp) miniServerDisp.textContent = 'Server 2';
+              document.querySelectorAll('.server-option').forEach(opt => {
+                opt.classList.toggle('active', opt.getAttribute('data-server-id') === 'server-2');
+              });
+            } else {
+              activeServerId = 'server-1';
+              const curDisplay = document.getElementById('current-server-display');
+              if (curDisplay) curDisplay.textContent = 'Server 1';
+              const miniServerDisp = document.getElementById('current-server-mini-display');
+              if (miniServerDisp) miniServerDisp.textContent = 'Server 1';
+              document.querySelectorAll('.server-option').forEach(opt => {
+                opt.classList.toggle('active', opt.getAttribute('data-server-id') === 'server-1');
+              });
+            }
+
             const activeServer = (availableServers && availableServers.find(s => s.id === activeServerId)) || (availableServers && availableServers[0]);
             if (activeServer) activeServer.url = data.streamUrl;
             if (data.intro || data.outro) {
@@ -1508,7 +1539,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
             updateAudioOptions();
             initHLS(data.streamUrl, savedTime, wasPlaying);
-            showPlayerToast(`Audio: ${targetLabel}`);
+            if (data.isFallbackSub && targetType === 'dub') {
+              showPlayerToast(`English Dub not available for this episode. Playing Japanese.`);
+            } else {
+              showPlayerToast(`Audio: ${targetLabel}`);
+            }
             closeAllDropdowns();
             closeSettingsDropdown();
             return;
@@ -4540,6 +4575,16 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       if (currentEpisode && currentEpisode.isLunar) {
         try {
+          if (currentAudioType === 'dub') {
+            activeServerId = 'server-2';
+            const curDisplay = document.getElementById('current-server-display');
+            if (curDisplay) curDisplay.textContent = 'Server 2';
+            const miniServerDisp = document.getElementById('current-server-mini-display');
+            if (miniServerDisp) miniServerDisp.textContent = 'Server 2';
+            document.querySelectorAll('.server-option').forEach(opt => {
+              opt.classList.toggle('active', opt.getAttribute('data-server-id') === 'server-2');
+            });
+          }
           const host = (currentAudioType === 'dub') ? 'yuki' : (initialServer?.host || 'zuna');
           const epNumVal = currentEpisode.episodeNumber || epNum || 1;
           const sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${host}&type=${currentAudioType}`);

@@ -832,7 +832,7 @@ class LunarXService {
         }
       });
       req.on('error', () => resolve(false));
-      req.setTimeout(6000, () => {
+      req.setTimeout(10000, () => {
         req.destroy();
         resolve(false);
       });
@@ -899,12 +899,12 @@ class LunarXService {
     // For SUB: prioritize zuna (Dramahot 1080p stereo AAC)
     let hostsToTry = [];
     if (type === 'dub') {
-      hostsToTry = ['yuki', 'sora', requestedHost].filter(
-        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna' && h !== 'loli' && h !== '3rdprovider'
+      hostsToTry = ['yuki', 'loli', 'sora', requestedHost].filter(
+        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna' && h !== '3rdprovider'
       );
     } else {
-      hostsToTry = [requestedHost, 'zuna', 'sora', 'yuki'].filter(
-        (h, idx, self) => self.indexOf(h) === idx && h !== '3rdprovider' && h !== 'loli'
+      hostsToTry = [requestedHost, 'zuna', 'sora', 'yuki', 'loli'].filter(
+        (h, idx, self) => self.indexOf(h) === idx && h !== '3rdprovider'
       );
     }
 
@@ -954,17 +954,20 @@ class LunarXService {
           // Determine upstream referer and origin for stream verification and proxy routing
           let reqReferer = res.data?.headers?.Referer;
           let reqOrigin = res.data?.headers?.Origin;
-          if (!reqReferer && candidateStreamUrl) {
-            if (candidateStreamUrl.includes('nexabloom') || candidateStreamUrl.includes('silentvoyage') || candidateStreamUrl.includes('megaplay')) {
+          if (candidateStreamUrl) {
+            if (candidateStreamUrl.includes('dramahot') || candidateStreamUrl.includes('drama1.cfd') || candidateStreamUrl.includes('zokoanime')) {
+              reqReferer = 'https://zokoanime.video/';
+              reqOrigin = 'https://zokoanime.video';
+            } else if (candidateStreamUrl.includes('nexabloom') || candidateStreamUrl.includes('silentvoyage') || candidateStreamUrl.includes('megaplay') || candidateStreamUrl.includes('oakhorizon')) {
               reqReferer = 'https://megaplay.buzz/';
               reqOrigin = 'https://megaplay.buzz';
             } else if (candidateStreamUrl.includes('krussdomi') || candidateStreamUrl.includes('kaa.lt')) {
               reqReferer = 'https://kaa.lt/';
               reqOrigin = 'https://kaa.lt';
-            } else if (candidateStreamUrl.includes('dramahot') || candidateStreamUrl.includes('drama1.cfd') || candidateStreamUrl.includes('zokoanime')) {
-              reqReferer = 'https://zokoanime.video/';
-              reqOrigin = 'https://zokoanime.video';
-            } else {
+            } else if (candidateStreamUrl.includes('echovideo')) {
+              reqReferer = (reqReferer && reqReferer.includes('echovideo')) ? reqReferer : 'https://play.echovideo.ru/';
+              reqOrigin = 'https://play.echovideo.ru';
+            } else if (!reqReferer) {
               reqReferer = 'https://lunarx.to/';
               reqOrigin = 'https://lunarx.to';
             }
@@ -1023,7 +1026,11 @@ class LunarXService {
     // If dub was requested but no playable dub stream exists, gracefully fall back to clear Japanese sub stream
     if (type === 'dub') {
       console.log(`[LunarX] Dub unavailable for Anime #${id} Ep #${ep}, falling back to clear sub stream...`);
-      return this.getStream(id, ep, 'zuna', 'sub');
+      const fallbackResult = await this.getStream(id, ep, 'zuna', 'sub');
+      return {
+        ...fallbackResult,
+        isFallbackSub: true
+      };
     }
 
     throw new Error(`Failed to retrieve playable stream for Anime #${id} Episode #${ep}: ${lastError ? lastError.message : 'No active sources'}`);

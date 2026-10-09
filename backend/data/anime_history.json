@@ -1,6 +1,36 @@
 {
   "1": [
     {
+      "id": "lunar-21-222",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "21",
+      "episodeId": "lunar-21-222",
+      "episodeNumber": 222,
+      "episodeTitle": "Now, Let`s Get Back Our Memories! The Pirate Crew Lands on the Island",
+      "showTitle": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "",
+      "progress": 270,
+      "duration": 1437,
+      "watchedAt": "2026-10-09T14:36:47.121Z"
+    },
+    {
+      "id": "lunar-139587-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "139587",
+      "episodeId": "lunar-139587-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Catgirl Meets Sword",
+      "showTitle": "Reincarnated as a Sword",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
+      "banner": "",
+      "progress": 112,
+      "duration": 1471,
+      "watchedAt": "2026-10-09T14:27:00.818Z"
+    },
+    {
       "id": "lunar-189046-1",
       "userId": 1,
       "isLunar": true,
@@ -11,9 +41,9 @@
       "showTitle": "Re:ZERO -Starting Life in Another World- Season 4",
       "poster": "https://artworks.thetvdb.com/banners/v4/series/305089/posters/60aa37d7c847b.jpg",
       "banner": "",
-      "progress": 361,
+      "progress": 376,
       "duration": 1420,
-      "watchedAt": "2026-10-09T13:20:34.484Z"
+      "watchedAt": "2026-10-09T14:09:03.714Z"
     }
   ],
   "6": [
