@@ -53,6 +53,24 @@ class LunarXService {
     }
   }
 
+  // Sanitize AniList descriptions (strip raw HTML tags like <br>, <i>, <p> while preserving spacing)
+  cleanDescription(desc) {
+    if (!desc) return '';
+    return String(desc)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&#039;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+
   // Universal GET JSON helper with LunarX headers
   async get(path) {
     const cacheKey = `GET:${path}`;
@@ -190,7 +208,7 @@ class LunarXService {
               rating: m.averageScore ? (m.averageScore / 10).toFixed(1) : '8.5',
               genres: m.genres || [],
               year: m.seasonYear || null,
-              description: m.description,
+              description: this.cleanDescription(m.description),
               isLunar: true
             }));
             resolve(results);
@@ -299,7 +317,7 @@ class LunarXService {
                 year: m.seasonYear || null,
                 season: m.season,
                 status: m.status,
-                description: m.description,
+                description: this.cleanDescription(m.description),
                 isLunar: true
               }))
             };
@@ -423,7 +441,7 @@ class LunarXService {
               title: title,
               englishTitle: m.title?.english,
               romajiTitle: m.title?.romaji,
-              description: m.description || '',
+              description: this.cleanDescription(m.description || ''),
               rating: m.averageScore ? (m.averageScore / 10).toFixed(1) : '8.5',
               year: m.seasonYear || null,
               season: m.season,
@@ -557,7 +575,7 @@ class LunarXService {
         title: res.englishTitle || res.romajiTitle || 'Untitled Anime',
         englishTitle: res.englishTitle,
         romajiTitle: res.romajiTitle,
-        description: res.synopsis || res.description || '',
+        description: this.cleanDescription(res.synopsis || res.description || ''),
         rating: res.averageScore ? (res.averageScore / 10).toFixed(1) : (res.rating || '8.8'),
         year: res.seasonYear || res.year || null,
         season: res.season,
@@ -612,7 +630,7 @@ class LunarXService {
           anilistId: id,
           number: ep.number || (idx + 1),
           title: ep.title || `Episode ${ep.number || (idx + 1)}`,
-          description: ep.description || '',
+          description: this.cleanDescription(ep.description || ''),
           airDate: ep.airDate || ep.airDateUtc || null,
           thumbnail: ep.thumbnail || ep.img || null,
           hasSub: ep.hasSub !== false,
@@ -761,6 +779,50 @@ class LunarXService {
     return null;
   }
 
+  // Universal HTML fetcher with cross-platform fallback for dynamic key extraction
+  async fetchHtml(targetUrl) {
+    // 1. Try native https.get first (fast, cross-platform, works on Linux EC2 without external dependencies)
+    try {
+      const html = await new Promise((resolve, reject) => {
+        const client = targetUrl.startsWith('https://') ? https : http;
+        const headers = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        };
+        const req = client.get(targetUrl, { headers }, res => {
+          if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location) {
+            const redirect = res.headers.location.startsWith('http')
+              ? res.headers.location
+              : new URL(res.headers.location, targetUrl).href;
+            res.resume();
+            return resolve(this.fetchHtml(redirect));
+          }
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => resolve(data));
+        });
+        req.on('error', reject);
+        req.setTimeout(8000, () => {
+          req.destroy();
+          reject(new Error('HTML request timeout'));
+        });
+      });
+      if (html && html.includes('$L2d')) {
+        return html;
+      }
+    } catch (e) { }
+
+    // 2. Cross-platform curl fallback (curl on Linux/EC2, curl.exe on Windows)
+    try {
+      const curlBin = process.platform === 'win32' ? 'curl.exe' : 'curl';
+      const cmd = `${curlBin} -s -L -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" -H "Accept: text/html" "${targetUrl}"`;
+      const html = execSync(cmd, { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024, timeout: 8000 });
+      return html;
+    } catch (e) {
+      return '';
+    }
+  }
+
   // Obtain live decryption keys for an anime show
   async getDecryptionKeys(anilistId) {
     // 1. Check cached session keys (valid for 60 minutes)
@@ -780,8 +842,7 @@ class LunarXService {
       for (const slug of uniqueSlugs) {
         const url = `https://lunarx.to/anime/${slug}/1/1`;
         try {
-          const cmd = `curl.exe -s -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" -H "Accept: text/html" "${url}"`;
-          const html = execSync(cmd, { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024, timeout: 8000 });
+          const html = await this.fetchHtml(url);
           if (html.includes('$L2d')) {
             const keys = this.extractKeysFromHtml(html);
             if (keys && keys[0] && keys[1]) {

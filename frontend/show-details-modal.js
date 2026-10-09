@@ -4,6 +4,23 @@
  */
 
 (function () {
+  // Sanitize raw HTML tags like <br> and <i> from descriptions
+  function cleanHtmlText(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&#039;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
   // Ensure styles are injected
   function injectShowDetailsStyles() {
     if (document.getElementById('infinx-show-details-styles')) return;
@@ -822,7 +839,7 @@
             anilistId: anilistId,
             isLunar: true,
             title: lData.title || (show && show.title),
-            description: lData.description || (show && show.description),
+            description: cleanHtmlText(lData.description || (show && show.description)),
             rating: lData.rating || (show && show.rating) || '8.8',
             year: lData.year || (show && show.year) || '2024',
             poster: lData.poster || (show && show.poster),
@@ -836,7 +853,7 @@
               number: e.number,
               episodeNumber: e.number,
               title: e.title,
-              description: e.description,
+              description: cleanHtmlText(e.description),
               thumbnail: e.thumbnail,
               duration: `${e.runtime || 24}m`,
               isLunar: true,
@@ -874,7 +891,7 @@
     if (titleEl) titleEl.textContent = show.title;
     if (ratingEl) ratingEl.innerHTML = `<i class="fas fa-star"></i> ${show.rating ? parseFloat(show.rating).toFixed(1) : '4.9'}`;
     if (yearEl) yearEl.textContent = show.year || '2024';
-    if (synopsisEl) synopsisEl.textContent = show.description || 'No synopsis available for this show.';
+    if (synopsisEl) synopsisEl.textContent = cleanHtmlText(show.description) || 'No synopsis available for this show.';
 
     const rawBanner = show.banner || show.poster;
     const bannerUrl = (typeof window.formatMediaUrl === 'function')

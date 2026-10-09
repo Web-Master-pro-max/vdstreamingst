@@ -2417,6 +2417,7 @@ input:checked+.slider:before {
   font-size: clamp(14px, 2vw, 15px);
   margin-bottom: 15px;
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .video-tags {

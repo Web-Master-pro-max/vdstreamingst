@@ -25,6 +25,24 @@ document.addEventListener('DOMContentLoaded', async function () {
           : ''));
     const API_BASE = `${SERVER_ORIGIN}/api`;
 
+    // Clean HTML tags from anime descriptions for clean text presentation
+    function stripHtmlTags(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+        .replace(/&#039;/g, "'")
+        .replace(/&apos;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+
     // Get episode ID or Lunar Anime ID from URL params
     const urlParams = new URLSearchParams(window.location.search);
     const episodeId = parseInt(urlParams.get('episodeId'));
@@ -216,7 +234,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const thisEp = eps.find(e => (e.number || e.episodeNumber) === epNum) || eps[0] || {
           number: epNum,
           title: `Episode ${epNum}`,
-          description: animeData.description
+          description: stripHtmlTags(animeData.description)
         };
 
         const resolvedEpNum = thisEp.number || thisEp.episodeNumber || epNum;
@@ -225,14 +243,14 @@ document.addEventListener('DOMContentLoaded', async function () {
           id: `lunar-${lunarId}-${resolvedEpNum}`,
           episodeNumber: resolvedEpNum,
           title: thisEp.title || `Episode ${resolvedEpNum}`,
-          description: thisEp.description || animeData.description,
+          description: stripHtmlTags(thisEp.description || animeData.description),
           thumbnail: thisEp.thumbnail || animeData.poster,
           isLunar: true,
           anilistId: lunarId,
           show: {
             id: `lunar-${lunarId}`,
             title: animeData.title,
-            description: animeData.description,
+            description: stripHtmlTags(animeData.description),
             poster: animeData.poster,
             banner: animeData.banner,
             artworks: animeData.artworks,
@@ -566,7 +584,26 @@ document.addEventListener('DOMContentLoaded', async function () {
                   subtitleTracks = sData.subtitles;
                   updateSubtitleOptions();
                 }
+                if (sData.isFallbackSub && currentAudioType === 'dub') {
+                  showPlayerToast('English Dub not available for this episode. Playing Japanese Sub.');
+                }
               }
+            }
+            if (!target.url && currentAudioType === 'dub') {
+              console.log('[Player] Dub unavailable on server switch, falling back to Japanese Sub...');
+              try {
+                const fbRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=zuna&type=sub`);
+                if (fbRes.ok) {
+                  const fbData = await fbRes.json();
+                  if (fbData.streamUrl) {
+                    target.url = fbData.streamUrl;
+                    currentAudioType = 'sub';
+                    localStorage.setItem('infinx_preferred_audio_type', 'sub');
+                    updateAudioOptions();
+                    showPlayerToast('English Dub not available on this server. Playing Japanese Sub.');
+                  }
+                }
+              } catch (fbErr) {}
             }
           } catch (e) {
             console.warn('Switch lunar stream failed:', e);
@@ -631,11 +668,26 @@ document.addEventListener('DOMContentLoaded', async function () {
           overlay.style.padding = '20px';
           overlay.style.textAlign = 'center';
           overlay.innerHTML = `
-            <div style="font-size: 5rem; margin-bottom: 20px; color: var(--primary); animation: fa-spin 4s linear infinite;"><i class="fas fa-server"></i></div>
+            <div style="font-size: 4.5rem; margin-bottom: 16px; color: var(--primary);"><i class="fas fa-server"></i></div>
             <h2 style="font-size: 2.2rem; font-family: 'Outfit'; color: white; margin-bottom: 10px;">Stream Not Available on This Server</h2>
-            <p style="font-size: 1.4rem; color: var(--gray-text); max-width: 420px; line-height: 1.6;">This episode is not hosted on the selected server. Please switch to the other server using the Server selector button below!</p>
+            <p style="font-size: 1.4rem; color: var(--gray-text); max-width: 440px; line-height: 1.6; margin-bottom: 22px;">This episode stream is not accessible on the selected server. Try switching to Server 1 (Sub) or reload.</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+              <button id="retry-server-1-btn" style="background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1.3rem; transition: transform 0.2s;">Try Server 1 (Sub)</button>
+              <button id="retry-reload-btn" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.25); padding: 10px 22px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1.3rem;">Retry</button>
+            </div>
           `;
           container.appendChild(overlay);
+          const btn1 = document.getElementById('retry-server-1-btn');
+          if (btn1) {
+            btn1.onclick = () => {
+              if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+              switchServer('server-1', true);
+            };
+          }
+          const btnReload = document.getElementById('retry-reload-btn');
+          if (btnReload) {
+            btnReload.onclick = () => window.location.reload();
+          }
         }
         return;
       }
@@ -3747,7 +3799,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (videoTitle) videoTitle.textContent = currentEpisode.show.title || currentEpisode.title;
         if (episodeElement) episodeElement.textContent = 'Movie';
         const descriptionText = document.querySelector('.description-text');
-        if (descriptionText) descriptionText.textContent = currentEpisode.show?.description || '';
+        if (descriptionText) descriptionText.textContent = stripHtmlTags(currentEpisode.show?.description || currentEpisode.description || '');
         return;
       }
 
@@ -3759,7 +3811,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (videoTitle) videoTitle.textContent = currentEpisode.title;
       if (episodeElement) episodeElement.textContent = `Episode ${currentEpisode.episodeNumber}`;
       const descriptionText = document.querySelector('.description-text');
-      if (descriptionText) descriptionText.textContent = currentEpisode.show?.description || '';
+      if (descriptionText) descriptionText.textContent = stripHtmlTags(currentEpisode.show?.description || currentEpisode.description || '');
 
       const totalEpisodes = (siblingEpisodes && Array.isArray(siblingEpisodes)) ? siblingEpisodes.length : 0;
       document.querySelector('.episode-count').textContent = `(${totalEpisodes} episodes)`;
@@ -4601,6 +4653,63 @@ document.addEventListener('DOMContentLoaded', async function () {
                 subtitleTracks = sData.subtitles;
                 updateSubtitleOptions();
               }
+              if (sData.isFallbackSub && currentAudioType === 'dub') {
+                showPlayerToast('English Dub not available for this episode. Playing Japanese Sub.');
+              }
+            }
+          }
+          // If dub was requested but failed or returned empty streamUrl, auto fallback to sub
+          if (!initialVideoUrl && currentAudioType === 'dub') {
+            console.log('[Player] Dub stream unavailable on initial load, attempting fallback to Japanese Sub...');
+            try {
+              const fbRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=zuna&type=sub`);
+              if (fbRes.ok) {
+                const fbData = await fbRes.json();
+                if (fbData.streamUrl) {
+                  initialVideoUrl = fbData.streamUrl;
+                  currentAudioType = 'sub';
+                  activeServerId = 'server-1';
+                  localStorage.setItem('infinx_preferred_audio_type', 'sub');
+                  const curDisplay = document.getElementById('current-server-display');
+                  if (curDisplay) curDisplay.textContent = 'Server 1';
+                  const miniServerDisp = document.getElementById('current-server-mini-display');
+                  if (miniServerDisp) miniServerDisp.textContent = 'Server 1';
+                  document.querySelectorAll('.server-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.getAttribute('data-server-id') === 'server-1');
+                  });
+                  updateAudioOptions();
+                  if (initialServer) initialServer.url = fbData.streamUrl;
+                  if (fbData.intro || fbData.outro) {
+                    detectedIntroOutro = { intro: fbData.intro, outro: fbData.outro };
+                    updateTimelineMarkers();
+                  }
+                  if (fbData.subtitles && fbData.subtitles.length > 0) {
+                    subtitleTracks = fbData.subtitles;
+                    updateSubtitleOptions();
+                  }
+                  showPlayerToast('English Dub not available. Playing Japanese Sub.');
+                }
+              }
+            } catch (fbErr) {
+              console.warn('[Player] Fallback to sub failed:', fbErr);
+            }
+          }
+          // If still no streamUrl, try alternative hosts (sora, 3rdprovider)
+          if (!initialVideoUrl) {
+            for (const altHost of ['sora', '3rdprovider']) {
+              try {
+                const altRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${altHost}&type=sub`);
+                if (altRes.ok) {
+                  const altData = await altRes.json();
+                  if (altData.streamUrl) {
+                    initialVideoUrl = altData.streamUrl;
+                    currentAudioType = 'sub';
+                    activeServerId = 'server-1';
+                    if (initialServer) initialServer.url = altData.streamUrl;
+                    break;
+                  }
+                }
+              } catch (altErr) { }
             }
           }
         } catch (streamErr) {
