@@ -32,6 +32,7 @@ const userRouter = require('./routes/user');
 const adminRouter = require('./routes/admin');
 const webhooksRouter = require('./routes/webhooks');
 const commentsRouter = require('./routes/comments');
+const lunarxRouter = require('./routes/lunarx');
 const transcodeQueueManager = require('./services/TranscodeQueueManager');
 
 // Auto-sync any unfinished transcode tasks from DB into sequential queue
@@ -57,6 +58,7 @@ app.use((req, res, next) => {
 // API Routes
 app.use('/api/auth', authRouter);
 app.use('/api/shows', showsRouter);
+app.use('/api/lunarx', lunarxRouter);
 app.use('/api/user', userRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/webhooks', webhooksRouter);

@@ -1,0 +1,36 @@
+{
+  "1": [
+    {
+      "id": "lunar-189046-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "189046",
+      "episodeId": "lunar-189046-1",
+      "episodeNumber": 1,
+      "episodeTitle": "The Reason I`m Taking You with Me / Gorgeous Tiger Reloaded",
+      "showTitle": "Re:ZERO -Starting Life in Another World- Season 4",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/305089/posters/60aa37d7c847b.jpg",
+      "banner": "",
+      "progress": 361,
+      "duration": 1420,
+      "watchedAt": "2026-10-09T13:20:34.484Z"
+    }
+  ],
+  "6": [
+    {
+      "id": "lunar-21-10",
+      "userId": 6,
+      "isLunar": true,
+      "lunarId": "21",
+      "episodeId": "lunar-21-10",
+      "episodeNumber": 10,
+      "episodeTitle": "The Weirdest Guy Ever! Jango the Hypnotist!",
+      "showTitle": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "",
+      "progress": 457,
+      "duration": 1476,
+      "watchedAt": "2026-10-09T11:38:47.331Z"
+    }
+  ]
+}

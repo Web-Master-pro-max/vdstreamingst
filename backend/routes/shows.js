@@ -112,19 +112,20 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// Search shows
+// Search shows (local database + LunarX anime shows)
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
-    if (!q) {
+    if (!q || !q.trim()) {
       return res.json([]);
     }
 
+    const searchTerm = q.trim();
     const shows = await prisma.show.findMany({
       where: {
         OR: [
-          { title: { contains: q } },
-          { description: { contains: q } },
+          { title: { contains: searchTerm } },
+          { description: { contains: searchTerm } },
         ],
       },
       include: {
@@ -139,7 +140,33 @@ router.get('/search', async (req, res) => {
       },
     });
 
-    res.json(shows);
+    // Also search LunarX anime catalog to offer complete anime coverage
+    try {
+      const lunarx = require('../services/lunarx');
+      const lunarResults = await lunarx.search(searchTerm, 15);
+      const formattedLunar = (lunarResults || []).map(l => ({
+        id: `lunar-${l.anilistId}`,
+        anilistId: l.anilistId,
+        title: l.title,
+        description: l.description || '',
+        rating: l.rating || '8.8',
+        year: l.year || 2024,
+        poster: l.poster,
+        banner: l.banner,
+        isLunar: true,
+        categories: (l.genres || []).map(g => ({ category: { name: g } })),
+        episodes: []
+      }));
+
+      // Deduplicate by title if locally existing
+      const localTitles = new Set(shows.map(s => s.title.toLowerCase().trim()));
+      const filteredLunar = formattedLunar.filter(l => !localTitles.has(l.title.toLowerCase().trim()));
+
+      return res.json([...shows, ...filteredLunar]);
+    } catch (lunarErr) {
+      console.warn('Anime search fallback:', lunarErr.message);
+      return res.json(shows);
+    }
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Internal server error.' });

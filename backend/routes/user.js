@@ -79,6 +79,49 @@ router.post('/watchlist', authenticate, async (req, res) => {
   }
 });
 
+const fs = require('fs');
+const path = require('path');
+
+const ANIME_HISTORY_DIR = path.join(__dirname, '../data');
+const ANIME_HISTORY_FILE = path.join(ANIME_HISTORY_DIR, 'anime_history.json');
+
+function getUserAnimeHistory(userId) {
+  try {
+    if (!fs.existsSync(ANIME_HISTORY_FILE)) return [];
+    const data = JSON.parse(fs.readFileSync(ANIME_HISTORY_FILE, 'utf8') || '{}');
+    return data[userId] || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveUserAnimeHistory(userId, item) {
+  try {
+    if (!fs.existsSync(ANIME_HISTORY_DIR)) {
+      fs.mkdirSync(ANIME_HISTORY_DIR, { recursive: true });
+    }
+    let data = {};
+    if (fs.existsSync(ANIME_HISTORY_FILE)) {
+      try {
+        data = JSON.parse(fs.readFileSync(ANIME_HISTORY_FILE, 'utf8') || '{}');
+      } catch (e) { data = {}; }
+    }
+    if (!data[userId]) data[userId] = [];
+
+    const showKey = item.lunarId || item.showId || item.episodeId;
+    data[userId] = data[userId].filter(existing => {
+      const existingKey = existing.lunarId || existing.showId || existing.episodeId;
+      return String(existingKey) !== String(showKey);
+    });
+
+    data[userId].unshift(item);
+    if (data[userId].length > 30) data[userId] = data[userId].slice(0, 30);
+    fs.writeFileSync(ANIME_HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Error saving anime history to file:', e);
+  }
+}
+
 // Get Watch History (for Continue Watching progress bar)
 router.get('/history', authenticate, async (req, res) => {
   try {
@@ -111,7 +154,40 @@ router.get('/history', authenticate, async (req, res) => {
       },
     }));
 
-    res.json(cleanedHistory);
+    // Retrieve synced anime history
+    const animeHistory = getUserAnimeHistory(req.user.id);
+    const cleanedAnimeHistory = animeHistory.map(item => ({
+      id: item.id || `lunar-${item.lunarId}-${item.episodeNumber}`,
+      isLunar: true,
+      lunarId: item.lunarId,
+      episodeId: item.episodeId,
+      episodeNumber: item.episodeNumber,
+      progress: item.progress,
+      duration: item.duration,
+      watchedAt: item.watchedAt,
+      episode: {
+        id: item.episodeId,
+        title: item.episodeTitle || `Episode ${item.episodeNumber}`,
+        episodeNumber: item.episodeNumber,
+        videoUrl: '',
+        show: {
+          id: `lunar-${item.lunarId}`,
+          anilistId: item.lunarId,
+          title: item.showTitle,
+          poster: item.poster,
+          banner: item.banner,
+          isLunar: true
+        }
+      }
+    }));
+
+    const combined = [...cleanedHistory, ...cleanedAnimeHistory].sort((a, b) => {
+      const timeA = new Date(a.watchedAt).getTime();
+      const timeB = new Date(b.watchedAt).getTime();
+      return timeB - timeA;
+    });
+
+    res.json(combined);
   } catch (error) {
     console.error('Error fetching watch history:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -121,10 +197,34 @@ router.get('/history', authenticate, async (req, res) => {
 // Save/Update watch progress
 router.post('/history', authenticate, async (req, res) => {
   try {
-    const { episodeId, progress, duration } = req.body;
+    const { episodeId, progress, duration, isLunar, lunarId } = req.body;
 
     if (!episodeId || progress === undefined || !duration) {
       return res.status(400).json({ error: 'Episode ID, progress, and duration are required.' });
+    }
+
+    // Handle dynamic Anime show progress
+    if (isLunar || lunarId || isNaN(parseInt(episodeId))) {
+      const anilistIdVal = lunarId || req.body.anilistId || (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? episodeId.split('-')[1] : null);
+      const epNumVal = req.body.episodeNumber || (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? parseInt(episodeId.split('-')[2]) : 1);
+
+      const animeHistoryItem = {
+        id: `lunar-${anilistIdVal}-${epNumVal}`,
+        userId: req.user.id,
+        isLunar: true,
+        lunarId: anilistIdVal,
+        episodeId: `lunar-${anilistIdVal}-${epNumVal}`,
+        episodeNumber: epNumVal,
+        episodeTitle: req.body.episodeTitle || `Episode ${epNumVal}`,
+        showTitle: req.body.showTitle || req.body.title || 'Anime Series',
+        poster: req.body.poster || '',
+        banner: req.body.banner || '',
+        progress: parseFloat(progress),
+        duration: parseFloat(duration),
+        watchedAt: new Date().toISOString()
+      };
+      saveUserAnimeHistory(req.user.id, animeHistoryItem);
+      return res.json({ success: true, isLunar: true, history: animeHistoryItem });
     }
 
     const episode = await prisma.episode.findUnique({ where: { id: parseInt(episodeId) } });
