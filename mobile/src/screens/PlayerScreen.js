@@ -13,6 +13,7 @@ import {
   BackHandler,
   StatusBar,
   useWindowDimensions,
+  Dimensions,
   PanResponder,
   Animated,
 } from 'react-native';
@@ -90,7 +91,7 @@ const parseVtt = (vttText) => {
     if (line.includes('-->')) {
       const times = line.split('-->');
       const startMs = timeToMs(times[0]);
-      const endMs = timeToMs(times[1]);
+      const endMs = timeToMs(times[1].trim().split(/\s+/)[0]);
       i++;
       let textLines = [];
       while (i < lines.length && lines[i].trim() !== '') {
@@ -1083,6 +1084,16 @@ export const PlayerScreen = ({ route, navigation }) => {
     windowWidthRef.current = windowWidth;
   }, [windowWidth]);
 
+  const settingsVisibleRef = useRef(settingsVisible);
+  useEffect(() => {
+    settingsVisibleRef.current = settingsVisible;
+  }, [settingsVisible]);
+
+  const episodesVisibleRef = useRef(episodesVisible);
+  useEffect(() => {
+    episodesVisibleRef.current = episodesVisible;
+  }, [episodesVisible]);
+
   const triggerDoubleTapSkipRef = useRef(null);
   triggerDoubleTapSkipRef.current = triggerDoubleTapSkip;
 
@@ -1097,11 +1108,26 @@ export const PlayerScreen = ({ route, navigation }) => {
   // Gesture PanResponder: Left = Brightness, Right = Volume, Double-Tap = Seek ±10s, Single Tap = Controls
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !showControlsRef.current,
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        return Math.abs(gestureState.dy) > 6 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      onStartShouldSetPanResponder: () => {
+        if (settingsVisibleRef.current || episodesVisibleRef.current || showControlsRef.current) {
+          return false;
+        }
+        return true;
       },
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        if (settingsVisibleRef.current || episodesVisibleRef.current || showControlsRef.current) {
+          return false;
+        }
+        return Math.abs(gestureState.dy) > 12 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.5;
+      },
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponderCapture: () => false,
+      onPanResponderTerminationRequest: () => true,
       onPanResponderGrant: (evt) => {
+        if (settingsVisibleRef.current || episodesVisibleRef.current || showControlsRef.current) {
+          activeGestureType.current = null;
+          return;
+        }
         hasMoved.current = false;
         const currentWidth = windowWidthRef.current || windowWidth;
         const touchX = evt.nativeEvent.pageX ?? evt.nativeEvent.locationX ?? (currentWidth * 0.5);
@@ -1115,7 +1141,11 @@ export const PlayerScreen = ({ route, navigation }) => {
         }
       },
       onPanResponderMove: (evt, gestureState) => {
-        if (Math.abs(gestureState.dy) > 6 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx)) {
+        if (settingsVisibleRef.current || episodesVisibleRef.current || showControlsRef.current) {
+          activeGestureType.current = null;
+          return;
+        }
+        if (Math.abs(gestureState.dy) > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.5) {
           hasMoved.current = true;
           if (!activeGestureType.current) return;
           const delta = -gestureState.dy / 220;
@@ -1139,6 +1169,10 @@ export const PlayerScreen = ({ route, navigation }) => {
         }
       },
       onPanResponderRelease: (evt, gestureState) => {
+        activeGestureType.current = null;
+        if (settingsVisibleRef.current || episodesVisibleRef.current) {
+          return;
+        }
         if (!hasMoved.current && Math.abs(gestureState.dx) < 16 && Math.abs(gestureState.dy) < 16) {
           const currentWidth = windowWidthRef.current || windowWidth;
           const touchX = evt.nativeEvent.pageX ?? evt.nativeEvent.locationX ?? (currentWidth * 0.5);
@@ -1565,9 +1599,9 @@ export const PlayerScreen = ({ route, navigation }) => {
         }
       }
 
-      // Match current timestamp with active subtitle cue
+      // Match current timestamp with active subtitle cue with seamless 80ms tolerance
       if (subCues.length > 0) {
-        const activeCue = subCues.find(c => c.startMs <= pos && pos <= c.endMs);
+        const activeCue = subCues.find(c => (c.startMs - 80) <= pos && pos <= (c.endMs + 80));
         setActiveCaptionText(activeCue ? activeCue.text : '');
       } else {
         setActiveCaptionText('');
@@ -1972,7 +2006,7 @@ export const PlayerScreen = ({ route, navigation }) => {
               shouldPlay={true}
               isMuted={isMuted}
               rate={playbackRate}
-              progressUpdateIntervalMillis={250.0}
+              progressUpdateIntervalMillis={120.0}
               onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
               onError={(err) => {
                 console.warn('Video load error:', err);
@@ -2504,38 +2538,47 @@ export const PlayerScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             )}
 
-            {/* ====== SETTINGS MODAL ====== */}
-            <Modal
-              visible={settingsVisible}
-              animationType="fade"
-              transparent={true}
-              onRequestClose={() => setSettingsVisible(false)}
-            >
-              <TouchableWithoutFeedback onPress={() => setSettingsVisible(false)}>
-                <View style={styles.modalBackdrop}>
-                  <TouchableWithoutFeedback>
-                    <View style={styles.settingsModalContent}>
-                      <View style={styles.modalHeader}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <View style={styles.modalHeaderIconBadge}>
-                            <Ionicons name="settings-sharp" size={16} color={COLORS.primary} />
-                          </View>
-                          <Text style={styles.modalTitle}>Playback & Stream Settings</Text>
-                        </View>
-                        <TouchableOpacity 
-                          style={styles.modalCloseBtn}
-                          onPress={() => setSettingsVisible(false)}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="close" size={20} color="#fff" />
-                        </TouchableOpacity>
-                      </View>
+          </View>
+        )}
 
-                      <ScrollView 
-                        style={{ maxHeight: isWidescreen ? 260 : 440 }}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: 16 }}
-                      >
+        {/* ====== SETTINGS MODAL (Decoupled from playerWrapper PanResponder) ====== */}
+        <Modal
+          visible={settingsVisible}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={() => setSettingsVisible(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setSettingsVisible(false)}>
+            <View style={[styles.modalBackdrop, isWidescreen && styles.modalBackdropLandscape]}>
+              <View 
+                style={[styles.settingsModalContent, isWidescreen && styles.settingsModalContentLandscape]}
+                onStartShouldSetResponder={() => true}
+                onTouchEnd={(e) => e?.stopPropagation?.()}
+              >
+                <View style={styles.modalHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={styles.modalHeaderIconBadge}>
+                      <Ionicons name="settings-sharp" size={16} color={COLORS.primary} />
+                    </View>
+                    <Text style={styles.modalTitle}>Playback & Stream Settings</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.modalCloseBtn}
+                    onPress={() => setSettingsVisible(false)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close" size={20} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView 
+                  style={{ maxHeight: isWidescreen ? '84%' : 460 }}
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{ paddingBottom: 28 }}
+                  bounces={true}
+                >
                         {/* 1. Video Quality Section (Exact Match to Main Site) */}
                         <View style={styles.settingsSectionCard}>
                           <View style={styles.settingsSectionHeader}>
@@ -3002,12 +3045,11 @@ export const PlayerScreen = ({ route, navigation }) => {
                         </View>
                       </ScrollView>
                     </View>
-                  </TouchableWithoutFeedback>
                 </View>
               </TouchableWithoutFeedback>
             </Modal>
 
-            {/* ====== EPISODES DRAWER MODAL ====== */}
+            {/* ====== EPISODES DRAWER MODAL (Decoupled from playerWrapper PanResponder) ====== */}
             <Modal
               visible={episodesVisible}
               animationType="slide"
@@ -3015,56 +3057,63 @@ export const PlayerScreen = ({ route, navigation }) => {
               onRequestClose={() => setEpisodesVisible(false)}
             >
               <TouchableWithoutFeedback onPress={() => setEpisodesVisible(false)}>
-                <View style={styles.modalBackdrop}>
-                  <TouchableWithoutFeedback>
-                    <View style={[styles.episodesModalContent, isWidescreen && { height: windowHeight * 0.85 }]}>
-                      <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Select Episode ({episodesList.length})</Text>
-                        <TouchableOpacity onPress={() => setEpisodesVisible(false)}>
-                          <Ionicons name="close" size={24} color="#fff" />
-                        </TouchableOpacity>
-                      </View>
-
-                      <ScrollView style={styles.episodesScroll}>
-                        {episodesList.map((ep) => {
-                          const isActive = episode?.id === ep.id || episode?.episodeNumber === ep.episodeNumber;
-                          return (
-                            <TouchableOpacity
-                              key={ep.id || ep.episodeNumber}
-                              style={[styles.drawerEpCard, isActive && styles.drawerEpCardActive]}
-                              onPress={() => {
-                                setEpisode(ep);
-                                setEpisodesVisible(false);
-                              }}
-                            >
-                              <View style={[styles.drawerEpBadge, isActive && styles.drawerEpBadgeActive]}>
-                                <Text style={[styles.drawerEpBadgeText, isActive && styles.drawerEpBadgeTextActive]}>
-                                  EP {ep.episodeNumber}
-                                </Text>
-                              </View>
-                              <View style={styles.drawerEpInfo}>
-                                <Text style={[styles.drawerEpTitle, isActive && styles.drawerEpTitleActive]} numberOfLines={1}>
-                                  {ep.title}
-                                </Text>
-                                <Text style={styles.drawerEpDur}>{ep.duration || '24m'}</Text>
-                              </View>
-                              {isActive ? (
-                                <Ionicons name="volume-high" size={20} color={COLORS.primary} />
-                              ) : (
-                                <Ionicons name="play" size={16} color={COLORS.textMuted} />
-                              )}
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
+                <View style={[styles.modalBackdrop, isWidescreen && styles.modalBackdropLandscape]}>
+                  <View 
+                    style={[
+                      styles.episodesModalContent, 
+                      isWidescreen && styles.episodesModalContentLandscape
+                    ]}
+                    onStartShouldSetResponder={() => true}
+                    onTouchEnd={(e) => e?.stopPropagation?.()}
+                  >
+                    <View style={styles.modalHeader}>
+                      <Text style={styles.modalTitle}>Select Episode ({episodesList.length})</Text>
+                      <TouchableOpacity onPress={() => setEpisodesVisible(false)}>
+                        <Ionicons name="close" size={24} color="#fff" />
+                      </TouchableOpacity>
                     </View>
-                  </TouchableWithoutFeedback>
+
+                    <ScrollView 
+                      style={styles.episodesScroll}
+                      showsVerticalScrollIndicator={true}
+                      nestedScrollEnabled={true}
+                      keyboardShouldPersistTaps="handled"
+                    >
+                      {episodesList.map((ep) => {
+                        const isActive = episode?.id === ep.id || episode?.episodeNumber === ep.episodeNumber;
+                        return (
+                          <TouchableOpacity
+                            key={ep.id || ep.episodeNumber}
+                            style={[styles.drawerEpCard, isActive && styles.drawerEpCardActive]}
+                            onPress={() => {
+                              setEpisode(ep);
+                              setEpisodesVisible(false);
+                            }}
+                          >
+                            <View style={[styles.drawerEpBadge, isActive && styles.drawerEpBadgeActive]}>
+                              <Text style={[styles.drawerEpBadgeText, isActive && styles.drawerEpBadgeTextActive]}>
+                                EP {ep.episodeNumber}
+                              </Text>
+                            </View>
+                            <View style={styles.drawerEpInfo}>
+                              <Text style={[styles.drawerEpTitle, isActive && styles.drawerEpTitleActive]} numberOfLines={1}>
+                                {ep.title}
+                              </Text>
+                              <Text style={styles.drawerEpDur}>{ep.duration || '24m'}</Text>
+                            </View>
+                            {isActive ? (
+                              <Ionicons name="volume-high" size={20} color={COLORS.primary} />
+                            ) : (
+                              <Ionicons name="play" size={16} color={COLORS.textMuted} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
                 </View>
               </TouchableWithoutFeedback>
             </Modal>
-
-          </View>
-        )}
       </View>
   );
 };
@@ -3345,8 +3394,14 @@ const styles = StyleSheet.create({
   /* Modal Backdrop & Shared Styles */
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
+  },
+  modalBackdropLandscape: {
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingRight: 12,
+    paddingVertical: 10,
   },
   settingsModalContent: {
     backgroundColor: '#12121c',
@@ -3357,6 +3412,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
+  settingsModalContentLandscape: {
+    width: Math.min(380, Dimensions.get('window').width * 0.55),
+    maxHeight: '94%',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(15, 15, 25, 0.96)',
+    padding: 16,
+    gap: 10,
+  },
   episodesModalContent: {
     backgroundColor: '#12121c',
     borderTopLeftRadius: 20,
@@ -3366,6 +3431,17 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
+  },
+  episodesModalContentLandscape: {
+    width: Math.min(380, Dimensions.get('window').width * 0.55),
+    maxHeight: '94%',
+    height: '94%',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(15, 15, 25, 0.96)',
+    padding: 16,
+    alignSelf: 'flex-end',
   },
   modalHeader: {
     flexDirection: 'row',

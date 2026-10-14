@@ -1,6 +1,66 @@
 {
   "1": [
     {
+      "id": "lunar-21-6",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "21",
+      "episodeId": "lunar-21-6",
+      "episodeNumber": 6,
+      "episodeTitle": "Desperate Situation! Beast Tamer Mohji vs. Luffy!",
+      "showTitle": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "",
+      "progress": 216,
+      "duration": 1476,
+      "watchedAt": "2026-10-14T08:27:20.777Z"
+    },
+    {
+      "id": "lunar-1735-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "1735",
+      "episodeId": "lunar-1735-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Homecoming",
+      "showTitle": "Naruto: Shippuden",
+      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "banner": "",
+      "progress": 681,
+      "duration": 1414,
+      "watchedAt": "2026-10-14T07:41:40.434Z"
+    },
+    {
+      "id": "lunar-207329-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "207329",
+      "episodeId": "lunar-207329-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Release: 2026/10/06 15:00 GMT - Everyone Knows What It's Like When Nothing Goes Right, but What Do I Do When That Happens? Why, It's Obvious! I Run and Scream My Head Off!",
+      "showTitle": "The Laid-Off Cheat-Granting Mage Enjoys a Second Lease on Life",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/473642/posters/6aaeb0b5086ef.jpg",
+      "banner": "",
+      "progress": 8,
+      "duration": 1420,
+      "watchedAt": "2026-10-14T07:39:46.888Z"
+    },
+    {
+      "id": "lunar-178434-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "178434",
+      "episodeId": "lunar-178434-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Promise",
+      "showTitle": "As a Reincarnated Aristocrat, I'll Use My Appraisal Skill to Rise in the World Season 2",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/434704/posters/667860af2f04c.jpg",
+      "banner": "",
+      "progress": 0,
+      "duration": 1419,
+      "watchedAt": "2026-10-14T07:15:43.886Z"
+    },
+    {
       "id": "lunar-139587-1",
       "userId": 1,
       "isLunar": true,
@@ -11,24 +71,24 @@
       "showTitle": "Reincarnated as a Sword",
       "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
       "banner": "",
-      "progress": 150,
+      "progress": 50,
       "duration": 1471,
-      "watchedAt": "2026-10-09T14:47:59.269Z"
+      "watchedAt": "2026-10-14T07:14:38.169Z"
     },
     {
-      "id": "lunar-21-222",
+      "id": "lunar-113415-1",
       "userId": 1,
       "isLunar": true,
-      "lunarId": "21",
-      "episodeId": "lunar-21-222",
-      "episodeNumber": 222,
-      "episodeTitle": "Now, Let`s Get Back Our Memories! The Pirate Crew Lands on the Island",
-      "showTitle": "ONE PIECE",
-      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "lunarId": "113415",
+      "episodeId": "lunar-113415-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Ryoumen Sukuna",
+      "showTitle": "JUJUTSU KAISEN",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/377543/posters/609cbb5bd37d8.jpg",
       "banner": "",
-      "progress": 270,
-      "duration": 1437,
-      "watchedAt": "2026-10-09T14:36:47.121Z"
+      "progress": 504,
+      "duration": 1435,
+      "watchedAt": "2026-10-14T06:11:14.597Z"
     },
     {
       "id": "lunar-189046-1",
@@ -41,26 +101,41 @@
       "showTitle": "Re:ZERO -Starting Life in Another World- Season 4",
       "poster": "https://artworks.thetvdb.com/banners/v4/series/305089/posters/60aa37d7c847b.jpg",
       "banner": "",
-      "progress": 376,
+      "progress": 384,
       "duration": 1420,
-      "watchedAt": "2026-10-09T14:09:03.714Z"
+      "watchedAt": "2026-10-14T06:08:24.427Z"
     }
   ],
   "6": [
     {
-      "id": "lunar-21-10",
+      "id": "lunar-21-387",
       "userId": 6,
       "isLunar": true,
       "lunarId": "21",
-      "episodeId": "lunar-21-10",
-      "episodeNumber": 10,
-      "episodeTitle": "The Weirdest Guy Ever! Jango the Hypnotist!",
+      "episodeId": "lunar-21-387",
+      "episodeNumber": 387,
+      "episodeTitle": "The Fated Reunion! Save the Imprisoned Fishman!",
       "showTitle": "ONE PIECE",
       "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
       "banner": "",
-      "progress": 457,
-      "duration": 1476,
-      "watchedAt": "2026-10-09T11:38:47.331Z"
+      "progress": 806,
+      "duration": 1437,
+      "watchedAt": "2026-10-14T08:29:53.109Z"
+    },
+    {
+      "id": "lunar-172463-1",
+      "userId": 6,
+      "isLunar": true,
+      "lunarId": "172463",
+      "episodeId": "lunar-172463-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Execution",
+      "showTitle": "JUJUTSU KAISEN Season 3: The Culling Game Part 1",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/377543/posters/609cbb5bd37d8.jpg",
+      "banner": "",
+      "progress": 102,
+      "duration": 1435,
+      "watchedAt": "2026-10-14T07:07:59.545Z"
     }
   ]
 }

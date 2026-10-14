@@ -1,11 +1,14 @@
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { execSync } = require('child_process');
 
-// Default extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = 'VBzPcykBjCy2WCirxgAnvKvPauq7gx5dDmwAz20t5USInX02rF7MKuC';
-const DEFAULT_PITCH = 'He3tzyfi5FC1frV0XwxjfiZcM3Oy7ZAwdadUwPmprtAlc9l5guwzruL';
+// Verified extraction keys for LunarX vermillion cipher
+const DEFAULT_AXIS = 'LqVVXhKGmruGmMDZyIWW5ZTkKz3IMChM6BzpJI2w02E9u8ivKdxYxxPgqMpPAVvUhjkk3WFYDirMyxLTDvbuq97FeotHEaHk';
+const DEFAULT_PITCH = 'HPt5vdm6L9e2IWeEXYbfP62Skug3nwvYiXUEey4OuGHy0nxV4GbXErmQNhQaF4N5KzKxwhqvutvkSFfh';
+const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {
   constructor() {
@@ -15,6 +18,45 @@ class LunarXService {
     this.globalKeys = null;
     this.cache = new Map();
     this.cacheTTL = 15 * 60 * 1000; // 15 minutes TTL for metadata
+    this.loadCachedKeysFromDisk();
+  }
+
+  loadCachedKeysFromDisk() {
+    try {
+      if (fs.existsSync(KEYS_CACHE_FILE)) {
+        const raw = fs.readFileSync(KEYS_CACHE_FILE, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.axis && parsed.pitch) {
+          this.axis = parsed.axis;
+          this.pitch = parsed.pitch;
+          this.globalKeys = {
+            axis: parsed.axis,
+            pitch: parsed.pitch,
+            timestamp: parsed.updatedAt || Date.now()
+          };
+          console.log('[LunarX] Loaded cipher keys from disk cache');
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn('[LunarX] Failed to read keys from disk:', e.message);
+    }
+    return false;
+  }
+
+  saveKeysToDisk(axis, pitch) {
+    try {
+      const dir = path.dirname(KEYS_CACHE_FILE);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(KEYS_CACHE_FILE, JSON.stringify({
+        axis,
+        pitch,
+        updatedAt: Date.now()
+      }, null, 2), 'utf8');
+      console.log('[LunarX] Saved live cipher keys to disk cache');
+    } catch (e) {
+      console.warn('[LunarX] Failed to save keys to disk:', e.message);
+    }
   }
 
   // Blend algorithm matching LunarX bundle 817263 / 148453
@@ -73,9 +115,12 @@ class LunarXService {
 
   // Universal GET JSON helper with LunarX headers
   async get(path) {
+    const isStreamSource = path.includes('/vermillion/sources') || path.includes('/3rdprovider');
+    const effectiveTTL = isStreamSource ? 60 * 1000 : this.cacheTTL;
+
     const cacheKey = `GET:${path}`;
     const cached = this.cache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp < this.cacheTTL)) {
+    if (cached && (Date.now() - cached.timestamp < effectiveTTL)) {
       return cached.data;
     }
 
@@ -763,19 +808,52 @@ class LunarXService {
       .trim();
   }
 
-  // Extract keys dynamically from watch page HTML
+  // Extract keys dynamically from watch page HTML using multiple resilient strategies
   extractKeysFromHtml(html) {
     if (!html) return null;
     const unescaped = html.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-    const regex = /\["\$","\$L2d","\d+",(\{.*?\})\]/g;
+
+    // Strategy 1: Match Next.js RSC component arrays with object payload: ["$","$Lxx","id",{...}]
+    const rscRegex = /\["\$","\$L[a-zA-Z0-9]+","\d+",(\{.*?\})\]/g;
     let match;
-    while ((match = regex.exec(unescaped)) !== null) {
+    while ((match = rscRegex.exec(unescaped)) !== null) {
       try {
         const payload = JSON.parse(match[1]);
         const k = this.decodeKeys(payload);
         if (k && k[0] && k[1]) return k;
       } catch (e) { }
     }
+
+    // Strategy 2: Match Next.js null-key component arrays: ["$","$Lxx",null,{...}]
+    const rscNullRegex = /\["\$","\$L[a-zA-Z0-9]+",null,(\{.*?\})\]/g;
+    while ((match = rscNullRegex.exec(unescaped)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        const k = this.decodeKeys(payload);
+        if (k && k[0] && k[1]) return k;
+      } catch (e) { }
+    }
+
+    // Strategy 3: Scan any JSON objects in unescaped script payloads
+    const jsonRegex = /\{("[a-zA-Z0-9_-]+":\s*(?:"[^"]*"|\d+|true|false|null)(?:,\s*"[a-zA-Z0-9_-]+":\s*(?:"[^"]*"|\d+|true|false|null))*)\}/g;
+    while ((match = jsonRegex.exec(unescaped)) !== null) {
+      try {
+        const obj = JSON.parse(match[0]);
+        const k = this.decodeKeys(obj);
+        if (k && k[0] && k[1]) return k;
+      } catch (e) { }
+    }
+
+    // Strategy 4: Larger JSON objects scan (objects with 100+ characters)
+    const anyObjRegex = /\{([^{}]{100,5000})\}/g;
+    while ((match = anyObjRegex.exec(unescaped)) !== null) {
+      try {
+        const obj = JSON.parse(match[0]);
+        const k = this.decodeKeys(obj);
+        if (k && k[0] && k[1]) return k;
+      } catch (e) { }
+    }
+
     return null;
   }
 
@@ -807,7 +885,7 @@ class LunarXService {
           reject(new Error('HTML request timeout'));
         });
       });
-      if (html && html.includes('$L2d')) {
+      if (html && (html.includes('$L') || html.includes('self.__next_f'))) {
         return html;
       }
     } catch (e) { }
@@ -823,45 +901,74 @@ class LunarXService {
     }
   }
 
-  // Obtain live decryption keys for an anime show
-  async getDecryptionKeys(anilistId) {
-    // 1. Check cached session keys (valid for 60 minutes)
-    if (this.globalKeys && (Date.now() - this.globalKeys.timestamp < 60 * 60 * 1000)) {
+  // Obtain live decryption keys with automatic multi-slug fallback and disk persistence
+  async getDecryptionKeys(anilistId, forceRefresh = false) {
+    // 1. Check cached session keys (valid for 24 hours unless forceRefresh requested)
+    if (!forceRefresh && this.globalKeys && (Date.now() - this.globalKeys.timestamp < 24 * 60 * 60 * 1000)) {
       return [this.globalKeys.axis, this.globalKeys.pitch];
     }
 
-    try {
-      const info = await this.getInfo(anilistId);
-      const candidates = [];
-      if (info?.romajiTitle) candidates.push(this.slugify(info.romajiTitle));
-      if (info?.englishTitle) candidates.push(this.slugify(info.englishTitle));
-      if (info?.title) candidates.push(this.slugify(info.title));
-
-      const uniqueSlugs = [...new Set(candidates.filter(Boolean))];
-
-      for (const slug of uniqueSlugs) {
-        const url = `https://lunarx.to/anime/${slug}/1/1`;
-        try {
-          const html = await this.fetchHtml(url);
-          if (html.includes('$L2d')) {
-            const keys = this.extractKeysFromHtml(html);
-            if (keys && keys[0] && keys[1]) {
-              console.log(`[LunarX] Extracted live cipher keys via slug "${slug}"`);
-              this.globalKeys = { axis: keys[0], pitch: keys[1], timestamp: Date.now() };
-              this.axis = keys[0];
-              this.pitch = keys[1];
-              return keys;
-            }
-          }
-        } catch (slugErr) {
-          // Continue to next slug candidate
-        }
-      }
-    } catch (err) {
-      console.warn('[LunarX] Dynamic key extraction error:', err.message);
+    const candidateSlugs = [];
+    if (anilistId) {
+      try {
+        const info = await this.getInfo(anilistId);
+        if (info?.romajiTitle) candidateSlugs.push(this.slugify(info.romajiTitle));
+        if (info?.englishTitle) candidateSlugs.push(this.slugify(info.englishTitle));
+        if (info?.title) candidateSlugs.push(this.slugify(info.title));
+      } catch (err) { }
     }
 
-    // Fallback to current axis / pitch
+    // Known stable high-traffic slugs that always have full player hydration on LunarX
+    const stableSlugs = [
+      'jujutsu-kaisen',
+      'solo-leveling',
+      'naruto',
+      'one-piece',
+      'attack-on-titan',
+      'demon-slayer',
+      'bleach',
+      'chainsaw-man'
+    ];
+
+    const allSlugs = [...new Set([...candidateSlugs, ...stableSlugs].filter(Boolean))];
+
+    for (const slug of allSlugs) {
+      const url = `https://lunarx.to/anime/${slug}/1/1`;
+      try {
+        const html = await this.fetchHtml(url);
+        if (html && (html.includes('$L') || html.includes('self.__next_f'))) {
+          const keys = this.extractKeysFromHtml(html);
+          if (keys && keys[0] && keys[1]) {
+            console.log(`[LunarX] Extracted live cipher keys via slug "${slug}"`);
+            this.globalKeys = { axis: keys[0], pitch: keys[1], timestamp: Date.now() };
+            this.axis = keys[0];
+            this.pitch = keys[1];
+            this.saveKeysToDisk(keys[0], keys[1]);
+            return keys;
+          }
+        }
+      } catch (slugErr) {
+        // Continue to next slug
+      }
+    }
+
+    // Try home page if watch pages fail
+    try {
+      const homeHtml = await this.fetchHtml('https://lunarx.to/');
+      if (homeHtml) {
+        const keys = this.extractKeysFromHtml(homeHtml);
+        if (keys && keys[0] && keys[1]) {
+          console.log('[LunarX] Extracted live cipher keys via home page');
+          this.globalKeys = { axis: keys[0], pitch: keys[1], timestamp: Date.now() };
+          this.axis = keys[0];
+          this.pitch = keys[1];
+          this.saveKeysToDisk(keys[0], keys[1]);
+          return keys;
+        }
+      }
+    } catch (e) { }
+
+    // Fallback to loaded or default keys
     return [this.axis, this.pitch];
   }
 
@@ -900,22 +1007,60 @@ class LunarXService {
     });
   }
 
-  // Helper to resolve and decrypt 3rdprovider stream (Flixcloud)
+  // Helper to resolve and decrypt 3rdprovider stream (Flixcloud / Zen)
   async resolve3rdProvider(id, ep, liveAxis, livePitch, fallbackSubtitles = [], type = 'sub') {
+    const aParam = type === 'dub' ? '1' : '0';
     try {
-      const res3rd = await this.get(`/api/3rdprovider?anilist=${id}&episode=${ep}&m3u8=true`);
+      const res3rd = await this.get(`/api/3rdprovider?anilist=${id}&episode=${ep}&m3u8=true&a=${aParam}&audio=${type}`);
       if (res3rd && res3rd.stream_data && res3rd.stream_data.m3u8_url) {
-        const decrypted3rd = this.decryptM3u8(res3rd.stream_data.m3u8_url, liveAxis, livePitch);
-        if (decrypted3rd && (decrypted3rd.startsWith('http://') || decrypted3rd.startsWith('https://'))) {
-          const subs = (res3rd.subtitles || []).map((s, idx) => ({
-            id: `sub-3rd-${idx}`,
-            label: s.lang || s.language || `Subtitle ${idx + 1}`,
-            lang: s.lang || 'en',
-            url: s.url,
-            default: idx === 0
-          }));
+        let decrypted3rd = this.decryptM3u8(res3rd.stream_data.m3u8_url, liveAxis, livePitch);
 
-          const finalStreamUrl = `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(decrypted3rd)}`;
+        // If decryption failed with current keys, try refreshing keys
+        if (!decrypted3rd) {
+          console.log('[LunarX] 3rdprovider decryption failed, refreshing live keys...');
+          const [refreshedAxis, refreshedPitch] = await this.getDecryptionKeys(id, true);
+          decrypted3rd = this.decryptM3u8(res3rd.stream_data.m3u8_url, refreshedAxis, refreshedPitch);
+        }
+
+        if (decrypted3rd && (decrypted3rd.startsWith('http://') || decrypted3rd.startsWith('https://'))) {
+          // Verify stream is alive with Flixcloud upstream headers
+          const isAlive = await this.verifyM3u8(decrypted3rd, 'https://lunarx.to/', 'https://lunarx.to');
+          if (!isAlive) {
+            console.warn('[LunarX] 3rdprovider stream manifest returned unplayable status');
+            return null;
+          }
+
+          const rawSubs = Array.isArray(res3rd.stream_data?.subtitles)
+            ? res3rd.stream_data.subtitles
+            : (Array.isArray(res3rd.subtitles) ? res3rd.subtitles : []);
+
+          const subs = rawSubs
+            .filter(s => s && s.url && !String(s.language || s.lang || '').toLowerCase().includes('thumb'))
+            .map((s, idx) => ({
+              id: `sub-3rd-${idx}`,
+              label: s.title || s.language_name || s.label || s.language || s.lang || `Subtitle ${idx + 1}`,
+              lang: s.language || s.lang || 'en',
+              url: s.url ? `/api/lunarx/proxy/subtitle?url=${encodeURIComponent(s.url)}` : '',
+              rawUrl: s.url,
+              default: !!s.is_default || idx === 0
+            }));
+
+          // Parse intro / outro from chapters if available
+          let intro = null;
+          let outro = null;
+          if (Array.isArray(res3rd.stream_data?.chapters)) {
+            for (const ch of res3rd.stream_data.chapters) {
+              const title = String(ch.title || '').toLowerCase();
+              if ((title.includes('opening') || title.includes('intro')) && typeof ch.start_time === 'number') {
+                intro = { start: ch.start_time, end: ch.end_time || (ch.start_time + 90) };
+              } else if ((title.includes('ending') || title.includes('outro')) && typeof ch.start_time === 'number') {
+                outro = { start: ch.start_time, end: ch.end_time || (ch.start_time + 90) };
+              }
+            }
+          }
+
+          const qParams = `&ref=${encodeURIComponent('https://lunarx.to/')}&orig=${encodeURIComponent('https://lunarx.to')}&type=${type}`;
+          const finalStreamUrl = `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(decrypted3rd)}${qParams}`;
 
           return {
             success: true,
@@ -927,10 +1072,10 @@ class LunarXService {
             rawStreamUrl: decrypted3rd,
             quality: 'auto',
             isM3U8: true,
-            intro: null,
-            outro: null,
-            subtitles: fallbackSubtitles.length > 0 ? fallbackSubtitles : subs,
-            availableHosts: ['zuna', 'yuki', 'sora']
+            intro: intro,
+            outro: outro,
+            subtitles: subs.length > 0 ? subs : fallbackSubtitles,
+            availableHosts: ['zuna', 'yuki', '3rdprovider', 'sora']
           };
         }
       }
@@ -947,25 +1092,23 @@ class LunarXService {
     if (!id) throw new Error('Invalid anilistId');
 
     // Obtain live cipher keys
-    const [liveAxis, livePitch] = await this.getDecryptionKeys(id);
-
-    // If 3rdprovider was specifically requested for SUB, resolve 3rdprovider
-    if (requestedHost === '3rdprovider' && type !== 'dub') {
-      const direct3rd = await this.resolve3rdProvider(id, ep, liveAxis, livePitch, [], type);
-      if (direct3rd) return direct3rd;
-    }
+    let [liveAxis, livePitch] = await this.getDecryptionKeys(id);
 
     // Determine host order based on audio type (sub vs dub)
-    // For DUB: prioritize verified high-quality English Dub providers (yuki = Megaplay/Nexabloom 1080p stereo AAC, sora = Krussdomi)
-    // For SUB: prioritize zuna (Dramahot 1080p stereo AAC)
+    // For DUB: prioritize verified English Dub providers
+    // 1. yuki (Megaplay/Nexabloom 1080p full English dub)
+    // 2. 3rdprovider (Flixcloud/Zen 1080p English dub)
+    // 3. sora (Krussdomi 1080p English dub)
+    // 4. loli (Echovideo English dub)
     let hostsToTry = [];
     if (type === 'dub') {
-      hostsToTry = ['yuki', 'loli', 'sora', requestedHost].filter(
-        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna' && h !== '3rdprovider'
+      const preferredHost = (requestedHost && requestedHost !== 'zuna') ? requestedHost : 'yuki';
+      hostsToTry = [preferredHost, 'yuki', '3rdprovider', 'sora', 'loli'].filter(
+        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna'
       );
     } else {
-      hostsToTry = [requestedHost, 'zuna', 'sora', 'yuki', 'loli'].filter(
-        (h, idx, self) => self.indexOf(h) === idx && h !== '3rdprovider'
+      hostsToTry = [requestedHost, 'zuna', '3rdprovider', 'sora', 'yuki', 'loli'].filter(
+        (h, idx, self) => self.indexOf(h) === idx
       );
     }
 
@@ -974,6 +1117,13 @@ class LunarXService {
 
     for (const host of hostsToTry) {
       try {
+        // If 3rdprovider is in the list, resolve via 3rdprovider handler
+        if (host === '3rdprovider') {
+          const direct3rd = await this.resolve3rdProvider(id, ep, liveAxis, livePitch, fallbackSubtitles, type);
+          if (direct3rd) return direct3rd;
+          continue;
+        }
+
         const path = `/api/animes/vermillion/sources?id=${id}&host=${host}&epNum=${ep}&type=${type}`;
         const res = await this.get(path);
 
@@ -986,7 +1136,8 @@ class LunarXService {
               id: sub.id || `sub-${i}`,
               label: sub.label || sub.lang || `Subtitle ${i + 1}`,
               lang: sub.lang || 'en',
-              url: sub.url,
+              url: sub.url ? `/api/lunarx/proxy/subtitle?url=${encodeURIComponent(sub.url)}` : '',
+              rawUrl: sub.url,
               default: !!sub.default
             }));
           }
@@ -998,14 +1149,22 @@ class LunarXService {
 
           // 2. Cipher decrypt using live keys
           if (!candidateStreamUrl && rawSource && rawSource.url) {
-            const dec = this.decryptM3u8(rawSource.url, liveAxis, livePitch);
+            let dec = this.decryptM3u8(rawSource.url, liveAxis, livePitch);
+            // If decryption failed, try force-refreshing keys and re-decrypt
+            if (!dec) {
+              console.log(`[LunarX] Decryption failed for host "${host}", refreshing live keys...`);
+              const refreshed = await this.getDecryptionKeys(id, true);
+              liveAxis = refreshed[0];
+              livePitch = refreshed[1];
+              dec = this.decryptM3u8(rawSource.url, liveAxis, livePitch);
+            }
             if (dec && (dec.startsWith('http://') || dec.startsWith('https://'))) {
               candidateStreamUrl = dec;
             }
           }
 
-          // 3. Dramahot subtitle master derivation
-          if (!candidateStreamUrl && Array.isArray(res.data.subtitles)) {
+          // 3. Dramahot subtitle master derivation (for sub only)
+          if (!candidateStreamUrl && type !== 'dub' && Array.isArray(res.data.subtitles)) {
             const dramahotSub = res.data.subtitles.find(s => s.url && s.url.includes('dramahot.top'));
             if (dramahotSub) {
               candidateStreamUrl = dramahotSub.url.replace('/v/', '/p/').replace(/\/subs\/.*$/, '/master.m3u8');
@@ -1028,6 +1187,9 @@ class LunarXService {
             } else if (candidateStreamUrl.includes('echovideo')) {
               reqReferer = (reqReferer && reqReferer.includes('echovideo')) ? reqReferer : 'https://play.echovideo.ru/';
               reqOrigin = 'https://play.echovideo.ru';
+            } else if (candidateStreamUrl.includes('flixcloud') || candidateStreamUrl.includes('matrixcdn')) {
+              reqReferer = 'https://lunarx.to/';
+              reqOrigin = 'https://lunarx.to';
             } else if (!reqReferer) {
               reqReferer = 'https://lunarx.to/';
               reqOrigin = 'https://lunarx.to';
@@ -1048,12 +1210,13 @@ class LunarXService {
               id: sub.id || `sub-${i}`,
               label: sub.label || sub.lang || `Subtitle ${i + 1}`,
               lang: sub.lang || 'en',
-              url: sub.url,
+              url: sub.url ? `/api/lunarx/proxy/subtitle?url=${encodeURIComponent(sub.url)}` : '',
+              rawUrl: sub.url,
               default: !!sub.default
             }));
 
-            // All streams are securely routed through our backend proxy with exact Referer and Origin parameters
-            const queryParams = `&ref=${encodeURIComponent(reqReferer)}${reqOrigin ? `&orig=${encodeURIComponent(reqOrigin)}` : ''}`;
+            // All streams are securely routed through our backend proxy with exact Referer, Origin, and type parameters
+            const queryParams = `&ref=${encodeURIComponent(reqReferer)}${reqOrigin ? `&orig=${encodeURIComponent(reqOrigin)}` : ''}&type=${type}`;
             const finalStreamUrl = `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(candidateStreamUrl)}${queryParams}`;
 
             return {
@@ -1069,7 +1232,7 @@ class LunarXService {
               intro: res.data.intro || null,
               outro: res.data.outro || null,
               subtitles: subtitles.length > 0 ? subtitles : fallbackSubtitles,
-              availableHosts: ['zuna', 'yuki', 'sora']
+              availableHosts: ['zuna', 'yuki', '3rdprovider', 'sora']
             };
           }
         }
@@ -1078,10 +1241,10 @@ class LunarXService {
       }
     }
 
-    // For sub, attempt 3rdprovider as fallback
-    if (type !== 'dub') {
-      const res3rd = await this.resolve3rdProvider(id, ep, liveAxis, livePitch, fallbackSubtitles, type);
-      if (res3rd) return res3rd;
+    // Safety net: Try 3rdprovider directly if not tried yet
+    if (!hostsToTry.includes('3rdprovider')) {
+      const direct3rd = await this.resolve3rdProvider(id, ep, liveAxis, livePitch, fallbackSubtitles, type);
+      if (direct3rd) return direct3rd;
     }
 
     // If dub was requested but no playable dub stream exists, gracefully fall back to clear Japanese sub stream

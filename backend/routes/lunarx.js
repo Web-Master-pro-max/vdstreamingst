@@ -156,7 +156,7 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
   if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
     referer = 'https://zokoanime.video/';
     origin = 'https://zokoanime.video';
-  } else if (targetUrl.includes('nexabloom') || targetUrl.includes('silentvoyage') || targetUrl.includes('megaplay') || targetUrl.includes('oakhorizon')) {
+  } else if (targetUrl.includes('nexabloom') || targetUrl.includes('silentvoyage') || targetUrl.includes('megaplay') || targetUrl.includes('oakhorizon') || targetUrl.includes('broforgotsave')) {
     referer = 'https://megaplay.buzz/';
     origin = 'https://megaplay.buzz';
   } else if (targetUrl.includes('krussdomi') || targetUrl.includes('kaa.lt')) {
@@ -165,6 +165,9 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
   } else if (targetUrl.includes('echovideo')) {
     referer = (reqReferer && reqReferer.includes('echovideo')) ? reqReferer : 'https://play.echovideo.ru/';
     origin = 'https://play.echovideo.ru';
+  } else if (targetUrl.includes('flixcloud') || targetUrl.includes('matrixcdn')) {
+    referer = 'https://lunarx.to/';
+    origin = 'https://lunarx.to';
   } else if (!referer) {
     referer = 'https://lunarx.to/';
     origin = 'https://lunarx.to';
@@ -176,7 +179,7 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
     headers: {
       ...(referer ? { 'Referer': referer } : {}),
       ...(origin ? { 'Origin': origin } : {}),
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
     }
   };
 }
@@ -189,6 +192,7 @@ router.get('/proxy/m3u8', async (req, res) => {
       return res.status(400).send('Missing url parameter');
     }
 
+    const isDub = req.query.type === 'dub';
     const { referer, origin, headers } = getUpstreamHeaders(targetUrl, req.query.ref, req.query.orig);
 
     const { res: upstreamRes, finalUrl } = await fetchWithRedirects(targetUrl, headers);
@@ -209,8 +213,20 @@ router.get('/proxy/m3u8', async (req, res) => {
       const baseUrl = finalUrl.substring(0, finalUrl.lastIndexOf('/') + 1);
       const lines = body.split('\n');
       const rewritten = lines.map(line => {
-        const trimmed = line.trim();
+        let trimmed = line.trim();
         if (!trimmed) return line;
+
+        // If English Dub is requested, ensure English audio track is marked DEFAULT=YES
+        if (isDub && trimmed.startsWith('#EXT-X-MEDIA:TYPE=AUDIO')) {
+          const isEng = trimmed.includes('LANGUAGE="eng"') || trimmed.includes('NAME="English"') || trimmed.includes('NAME="Dub"');
+          const isJpn = trimmed.includes('LANGUAGE="jpn"') || trimmed.includes('NAME="Japanese"') || trimmed.includes('NAME="Native"');
+          if (isEng) {
+            trimmed = trimmed.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=YES').replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
+            if (!trimmed.includes('DEFAULT=')) trimmed += ',DEFAULT=YES,AUTOSELECT=YES';
+          } else if (isJpn) {
+            trimmed = trimmed.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=NO');
+          }
+        }
 
         // Handle URI="..." tags (e.g. #EXT-X-KEY, #EXT-X-MEDIA)
         if (trimmed.startsWith('#')) {
@@ -218,20 +234,20 @@ router.get('/proxy/m3u8', async (req, res) => {
             return trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
               const fullUri = uri.startsWith('http') ? uri : (baseUrl + uri);
               const up = getUpstreamHeaders(fullUri, referer, origin);
-              const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}`;
+              const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
               if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
                 return `URI="/api/lunarx/proxy/m3u8?url=${encodeURIComponent(fullUri)}${qParams}"`;
               }
               return `URI="/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUri)}${qParams}"`;
             });
           }
-          return line;
+          return trimmed;
         }
 
         // Line is a URI: sub-playlist or segment
         const fullUrl = trimmed.startsWith('http') ? trimmed : (baseUrl + trimmed);
         const up = getUpstreamHeaders(fullUrl, referer, origin);
-        const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}`;
+        const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
         if (fullUrl.includes('.m3u8') || fullUrl.includes('manifest') || fullUrl.includes('playlist')) {
           return `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(fullUrl)}${qParams}`;
         }
@@ -277,6 +293,31 @@ router.get('/proxy/segment', async (req, res) => {
   } catch (err) {
     console.error('Segment proxy error:', err.message);
     if (!res.headersSent) res.status(502).send('Segment fetch error');
+  }
+});
+
+// 9. Subtitle VTT Proxy (ensures VTT files are served with proper Referer, UTF-8, and CORS)
+router.get('/proxy/subtitle', async (req, res) => {
+  try {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+      return res.status(400).send('Missing url parameter');
+    }
+
+    const { headers } = getUpstreamHeaders(targetUrl, req.query.ref, req.query.orig);
+    const { res: upstreamRes } = await fetchWithRedirects(targetUrl, headers);
+
+    res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+
+    res.status(upstreamRes.statusCode);
+    upstreamRes.pipe(res);
+  } catch (err) {
+    console.error('Subtitle proxy error:', err.message);
+    if (!res.headersSent) res.status(502).send('Subtitle fetch error');
   }
 });
 
