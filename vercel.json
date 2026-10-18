@@ -27,35 +27,39 @@
     },
     {
       "source": "/assets/:path*",
-      "destination": "/frontend/assets/:path*"
+      "destination": "http://13.202.95.5:8000/assets/:path*"
+    },
+    {
+      "source": "/av-:path*",
+      "destination": "http://13.202.95.5:8000/assets/avatars/av-:path*"
     },
     {
       "source": "/Postes/:path*",
-      "destination": "/frontend/Postes/:path*"
+      "destination": "http://13.202.95.5:8000/Postes/:path*"
     },
     {
       "source": "/img/:path*",
-      "destination": "/frontend/img/:path*"
+      "destination": "http://13.202.95.5:8000/img/:path*"
     },
     {
       "source": "/AMovies-Poster/:path*",
-      "destination": "/frontend/AMovies-Poster/:path*"
+      "destination": "http://13.202.95.5:8000/AMovies-Poster/:path*"
     },
     {
       "source": "/Horror-poster/:path*",
-      "destination": "/frontend/Horror-poster/:path*"
+      "destination": "http://13.202.95.5:8000/Horror-poster/:path*"
     },
     {
       "source": "/profile/assets/:path*",
-      "destination": "/frontend/assets/:path*"
+      "destination": "http://13.202.95.5:8000/assets/:path*"
     },
     {
       "source": "/watch/assets/:path*",
-      "destination": "/frontend/assets/:path*"
+      "destination": "http://13.202.95.5:8000/assets/:path*"
     },
     {
       "source": "/party/assets/:path*",
-      "destination": "/frontend/assets/:path*"
+      "destination": "http://13.202.95.5:8000/assets/:path*"
     },
     {
       "source": "/profile/uploads/:path*",
