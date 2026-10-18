@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { Server } = require('socket.io');
+let Server = null;
+try {
+  Server = require('socket.io').Server;
+} catch (e) {
+  console.warn('⚠️ [RealtimeService] socket.io module not found. Run "npm install" in the backend directory.');
+}
 
 const CHAT_DATA_FILE = path.join(__dirname, '../data/public_chat.json');
 
@@ -138,6 +143,11 @@ class RealtimeService {
   }
 
   attach(httpServer) {
+    if (!Server) {
+      console.warn('⚠️ [RealtimeService] socket.io is not installed. WebSocket features disabled. Run "npm install" in the backend directory.');
+      return;
+    }
+
     this.io = new Server(httpServer, {
       cors: {
         origin: '*',
