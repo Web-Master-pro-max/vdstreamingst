@@ -195,15 +195,43 @@ export const LibraryScreen = ({ navigation }) => {
       );
       return;
     }
+
+    const isLunar = Boolean(
+      item.isLunar ||
+      (item.id && String(item.id).startsWith('lunar-')) ||
+      (item.showId && String(item.showId).startsWith('lunar-'))
+    );
+    const anilistId =
+      item.anilistId ||
+      (item.id && String(item.id).startsWith('lunar-') ? String(item.id).replace('lunar-', '') : null) ||
+      (item.showId && String(item.showId).startsWith('lunar-') ? String(item.showId).replace('lunar-', '') : null);
+
     if (activeTab === 'history' && item.currentEpisode) {
       navigation.navigate('Player', {
         episodeId: item.currentEpisode.id,
-        episode: item.currentEpisode,
-        show: item,
+        episode: {
+          ...item.currentEpisode,
+          isLunar,
+          anilistId,
+        },
+        show: {
+          ...item,
+          isLunar,
+          anilistId,
+        },
         initialPositionMillis: item.positionMillis || 0,
       });
     } else {
-      navigation.navigate('ShowDetail', { showId: item.id || item.showId, show: item });
+      navigation.navigate('ShowDetail', {
+        showId: item.id || item.showId,
+        show: {
+          ...item,
+          isLunar,
+          anilistId,
+        },
+        isLunar,
+        anilistId,
+      });
     }
   }, [activeTab, navigation, isLoggedIn]);
 

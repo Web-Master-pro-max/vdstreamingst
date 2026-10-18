@@ -45,19 +45,36 @@ router.post('/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const formattedUser = formatUserResponse(user);
+
     res.status(201).json({
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user: formattedUser,
     });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
+
+function formatUserResponse(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username || (user.email ? user.email.split('@')[0] : 'OtakuFan'),
+    role: user.role || 'USER',
+    vipRank: user.vipRank || (user.role === 'ADMIN' ? 'HOKAGE_VIP' : 'GENIN'),
+    level: user.level || 1,
+    xp: user.xp || 0,
+    bio: user.bio || '',
+    avatarUrl: user.avatarUrl || null,
+    avatarFrame: user.avatarFrame || 'default',
+    bannerUrl: user.bannerUrl || null,
+    accentColor: user.accentColor || '#ff0055',
+    topAnime: user.topAnime || [],
+    isPrivate: Boolean(user.isPrivate)
+  };
+}
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -91,11 +108,7 @@ router.post('/login', async (req, res) => {
 
     res.json({
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -104,14 +117,20 @@ router.post('/login', async (req, res) => {
 });
 
 // Me endpoint (verify token and return user metadata)
-router.get('/me', authenticate, (req, res) => {
-  res.json({
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      role: req.user.role,
-    },
-  });
+router.get('/me', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: formatUserResponse(user) });
+  } catch (e) {
+    res.json({
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+      },
+    });
+  }
 });
 
 module.exports = router;

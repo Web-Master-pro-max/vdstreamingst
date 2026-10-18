@@ -968,17 +968,21 @@ router.post('/users', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /api/admin/users/:id - Edit user role, email, password, or ban status
+// PUT /api/admin/users/:id - Edit user role, Otaku rank promotion, email, password, or ban status
 router.put('/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    const { email, password, role, isBanned } = req.body;
+    const { email, password, role, vipRank, level, xp, username, isBanned } = req.body;
     const data = {};
     if (email) data.email = email;
+    if (username !== undefined) data.username = username ? String(username).trim() : null;
     if (password) {
       data.passwordHash = await bcrypt.hash(password, 10);
     }
     if (role) data.role = role;
+    if (vipRank) data.vipRank = vipRank;
+    if (level !== undefined) data.level = Math.max(1, parseInt(level) || 1);
+    if (xp !== undefined) data.xp = Math.max(0, parseInt(xp) || 0);
     if (isBanned !== undefined) {
       data.isBanned = isBanned === 'true' || isBanned === true;
     }
@@ -986,7 +990,16 @@ router.put('/users/:id', authenticate, requireAdmin, async (req, res) => {
       where: { id: userId },
       data
     });
-    res.json({ id: user.id, email: user.email, role: user.role, isBanned: user.isBanned });
+    res.json({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      vipRank: user.vipRank,
+      level: user.level,
+      xp: user.xp,
+      isBanned: user.isBanned
+    });
   } catch (error) {
     console.error('Error editing user:', error);
     res.status(500).json({ error: 'Internal server error.' });

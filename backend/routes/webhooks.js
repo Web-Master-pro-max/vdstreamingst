@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 
 const router = express.Router();
@@ -15,8 +16,10 @@ router.post('/transcode-status', async (req, res) => {
       return res.status(400).json({ error: 'Missing required parameters: episodeId, status, secret.' });
     }
 
-    // Verify webhook authentication secret
-    if (secret !== WEBHOOK_SECRET) {
+    // Verify webhook authentication secret using timing-safe comparison
+    const secretBuf = Buffer.from(String(secret));
+    const expectedBuf = Buffer.from(String(WEBHOOK_SECRET));
+    if (secretBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(secretBuf, expectedBuf)) {
       return res.status(401).json({ error: 'Unauthorized webhook request.' });
     }
 

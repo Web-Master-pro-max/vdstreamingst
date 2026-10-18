@@ -1,0 +1,114 @@
+{
+  "1": [
+    {
+      "id": "130298",
+      "lunarId": "130298",
+      "title": "The Eminence in Shadow",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/407520/posters/63aa960baeb43.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/v4/series/407520/posters/63aa960baeb43.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:27:48.781Z"
+    },
+    {
+      "id": "113415",
+      "lunarId": "113415",
+      "title": "JUJUTSU KAISEN",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/377543/posters/609cbb5bd37d8.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/v4/series/377543/posters/609cbb5bd37d8.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:26:39.838Z"
+    },
+    {
+      "id": "189046",
+      "lunarId": "189046",
+      "title": "Re:ZERO -Starting Life in Another World- Season 4",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/305089/posters/60aa37d7c847b.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/v4/series/305089/posters/60aa37d7c847b.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:26:37.626Z"
+    },
+    {
+      "id": "139587",
+      "lunarId": "139587",
+      "title": "Reincarnated as a Sword",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:26:33.265Z"
+    },
+    {
+      "id": "204389",
+      "lunarId": "204389",
+      "title": "A Wild Last Boss Appeared! Season 2",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/453694/posters/67a9e3f8478a2.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/v4/series/453694/posters/67a9e3f8478a2.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:26:30.626Z"
+    },
+    {
+      "id": "1735",
+      "lunarId": "1735",
+      "title": "Naruto: Shippuden",
+      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:26:26.411Z"
+    },
+    {
+      "id": "21",
+      "lunarId": "21",
+      "title": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 6,
+      "completedAt": "2026-10-18T11:26:25.855Z"
+    },
+    {
+      "id": "169581",
+      "lunarId": "169581",
+      "title": "Magical Explorer",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/440056/posters/6aa5c0c6e42cb.jpg",
+      "banner": "https://artworks.thetvdb.com/banners/v4/series/440056/posters/6aa5c0c6e42cb.jpg",
+      "rating": 8.5,
+      "type": "series",
+      "genres": "Anime",
+      "episodesCount": 1,
+      "completedAt": "2026-10-18T11:26:17.852Z"
+    }
+  ],
+  "9": [
+    {
+      "id": 14,
+      "showId": 14,
+      "title": "Loki",
+      "poster": "https://serverbuket-12.s3.ap-south-1.amazonaws.com/posters/1785566065355-loki.jpg",
+      "banner": "https://serverbuket-12.s3.ap-south-1.amazonaws.com/posters/1785566065355-loki.jpg",
+      "rating": 8.2,
+      "type": "series",
+      "genres": "Web Series",
+      "episodesCount": 6,
+      "completedAt": "2026-10-18T11:25:43.750Z"
+    }
+  ]
+}

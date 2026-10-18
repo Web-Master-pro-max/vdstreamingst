@@ -10,8 +10,19 @@ generator client {
 model User {
   id           Int            @id @default(autoincrement())
   email        String         @unique
+  username     String?
   passwordHash String
-  role         String         @default("USER") // USER, ADMIN
+  role         String         @default("USER") // USER, VIP, MODERATOR, ADMIN
+  vipRank      String         @default("GENIN") // GENIN, CHUNIN, JOUNIN, HASHIRA, HOKAGE_VIP
+  xp           Int            @default(0)
+  level        Int            @default(1)
+  bio          String?        @db.Text
+  avatarUrl    String?
+  avatarFrame  String?        @default("default")
+  bannerUrl    String?
+  accentColor  String         @default("#ff0055")
+  topAnime     Json?
+  isPrivate    Boolean        @default(false)
   isBanned     Boolean        @default(false)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt

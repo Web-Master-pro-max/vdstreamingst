@@ -975,6 +975,12 @@ class LunarXService {
   // Verify stream manifest playability
   verifyM3u8(url, referer, origin) {
     if (!url) return Promise.resolve(false);
+    // Disallow hosts known to serve obfuscated/encrypted fake-PNG segments (flixcloud, fallencdn, matrixcdn)
+    // Standard native Android ExoPlayer cannot find sync byte (0x47) on fake PNGs and fails with ParserException
+    if (/flixcloud|fallencdn|matrixcdn/i.test(url)) {
+      console.warn('[LunarX] Skipping obfuscated stream provider (flixcloud/fallencdn):', url);
+      return Promise.resolve(false);
+    }
     return new Promise(resolve => {
       const client = url.startsWith('https://') ? https : http;
       const headers = {
@@ -1060,7 +1066,7 @@ class LunarXService {
           }
 
           const qParams = `&ref=${encodeURIComponent('https://lunarx.to/')}&orig=${encodeURIComponent('https://lunarx.to')}&type=${type}`;
-          const finalStreamUrl = `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(decrypted3rd)}${qParams}`;
+          const finalStreamUrl = `/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(decrypted3rd)}${qParams}`;
 
           return {
             success: true,
@@ -1075,7 +1081,7 @@ class LunarXService {
             intro: intro,
             outro: outro,
             subtitles: subs.length > 0 ? subs : fallbackSubtitles,
-            availableHosts: ['zuna', 'yuki', '3rdprovider', 'sora']
+            availableHosts: ['zuna', 'yuki', 'sora', 'loli', '3rdprovider']
           };
         }
       }
@@ -1095,19 +1101,19 @@ class LunarXService {
     let [liveAxis, livePitch] = await this.getDecryptionKeys(id);
 
     // Determine host order based on audio type (sub vs dub)
-    // For DUB: prioritize verified English Dub providers
-    // 1. yuki (Megaplay/Nexabloom 1080p full English dub)
-    // 2. 3rdprovider (Flixcloud/Zen 1080p English dub)
-    // 3. sora (Krussdomi 1080p English dub)
-    // 4. loli (Echovideo English dub)
+    // Providers with verified clean MPEG-TS streams for ExoPlayer:
+    // 1. zuna (Megaplay / Nexabloom - clean 1080p TS)
+    // 2. loli (Echovideo - clean 1080p/720p TS)
+    // 3. sora (Krussdomi - clean TS)
+    // Obfuscated / fallback providers: yuki, 3rdprovider
     let hostsToTry = [];
     if (type === 'dub') {
       const preferredHost = (requestedHost && requestedHost !== 'zuna') ? requestedHost : 'yuki';
-      hostsToTry = [preferredHost, 'yuki', '3rdprovider', 'sora', 'loli'].filter(
+      hostsToTry = [preferredHost, 'yuki', 'sora', 'loli', '3rdprovider'].filter(
         (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna'
       );
     } else {
-      hostsToTry = [requestedHost, 'zuna', '3rdprovider', 'sora', 'yuki', 'loli'].filter(
+      hostsToTry = [requestedHost, 'zuna', 'yuki', 'sora', 'loli', '3rdprovider'].filter(
         (h, idx, self) => self.indexOf(h) === idx
       );
     }
@@ -1217,7 +1223,7 @@ class LunarXService {
 
             // All streams are securely routed through our backend proxy with exact Referer, Origin, and type parameters
             const queryParams = `&ref=${encodeURIComponent(reqReferer)}${reqOrigin ? `&orig=${encodeURIComponent(reqOrigin)}` : ''}&type=${type}`;
-            const finalStreamUrl = `/api/lunarx/proxy/m3u8?url=${encodeURIComponent(candidateStreamUrl)}${queryParams}`;
+            const finalStreamUrl = `/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(candidateStreamUrl)}${queryParams}`;
 
             return {
               success: true,
@@ -1232,7 +1238,7 @@ class LunarXService {
               intro: res.data.intro || null,
               outro: res.data.outro || null,
               subtitles: subtitles.length > 0 ? subtitles : fallbackSubtitles,
-              availableHosts: ['zuna', 'yuki', '3rdprovider', 'sora']
+              availableHosts: ['zuna', 'yuki', 'sora', 'loli', '3rdprovider']
             };
           }
         }
@@ -1255,6 +1261,50 @@ class LunarXService {
         ...fallbackResult,
         isFallbackSub: true
       };
+    }
+
+    // Safety net 2: If no sources found for this specific ID (common for upcoming seasonal / franchise stubs),
+    // check relations or franchise prequels/search to stream the available franchise entry
+    try {
+      console.log(`[LunarX] No direct sources for Anime #${id}, checking franchise relations/prequels...`);
+      const media = await this.getAniListMedia(id);
+      if (media && Array.isArray(media.seasons) && media.seasons.length > 0) {
+        const candidateSeason = media.seasons.find(s => s.anilistId !== id && (s.episodes > 0 || s.episodeCount > 0));
+        if (candidateSeason) {
+          console.log(`[LunarX] Falling back to franchise season #${candidateSeason.anilistId} (${candidateSeason.title}) for Anime #${id}...`);
+          const franchiseResult = await this.getStream(candidateSeason.anilistId, 1, requestedHost, type);
+          if (franchiseResult && franchiseResult.streamUrl) {
+            return {
+              ...franchiseResult,
+              isFranchiseFallback: true,
+              originalAnilistId: id,
+              fallbackTitle: candidateSeason.title,
+            };
+          }
+        }
+      }
+
+      if (media && media.title) {
+        const cleanTitle = media.title.split(':')[0].replace(/Season \d+|Part \d+/i, '').trim();
+        if (cleanTitle.length >= 3) {
+          const searchResults = await this.search(cleanTitle, 5);
+          const match = (searchResults || []).find(r => r.anilistId !== id && (r.episodes > 0 || r.episodeCount > 0));
+          if (match) {
+            console.log(`[LunarX] Falling back to searched franchise title #${match.anilistId} (${match.title}) for Anime #${id}...`);
+            const searchFallbackResult = await this.getStream(match.anilistId, 1, requestedHost, type);
+            if (searchFallbackResult && searchFallbackResult.streamUrl) {
+              return {
+                ...searchFallbackResult,
+                isFranchiseFallback: true,
+                originalAnilistId: id,
+                fallbackTitle: match.title,
+              };
+            }
+          }
+        }
+      }
+    } catch (fallbackErr) {
+      console.warn(`[LunarX] Franchise fallback error for #${id}:`, fallbackErr.message);
     }
 
     throw new Error(`Failed to retrieve playable stream for Anime #${id} Episode #${ep}: ${lastError ? lastError.message : 'No active sources'}`);

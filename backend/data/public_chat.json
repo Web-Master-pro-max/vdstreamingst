@@ -1,0 +1,737 @@
+[
+  {
+    "id": "init-1",
+    "user": "InfinxBot",
+    "role": "BOT",
+    "text": "Welcome to the Infinx Anime community live chat! Chat with other fans watching right now.",
+    "time": "10:23 pm",
+    "timestamp": 1792256026536
+  },
+  {
+    "id": "init-2",
+    "user": "Kenji",
+    "role": "VIP",
+    "text": "Anyone watching Naruto Shippuden or Solo Leveling today? The fight scenes are insane!",
+    "time": "10:53 pm",
+    "timestamp": 1792257826537
+  },
+  {
+    "id": "msg-1792259785265-6ulbq",
+    "user": "Alice_Tester",
+    "role": "VIP",
+    "text": "Realtime test message from Alice!",
+    "time": "11:26 pm",
+    "timestamp": 1792259785282
+  },
+  {
+    "id": "msg-1792259880847-mgfdg",
+    "user": "AnimeFan_404",
+    "role": "MEMBER",
+    "text": "Hellofrom real live chat!",
+    "time": "11:28 pm",
+    "timestamp": 1792259880847
+  },
+  {
+    "id": "msg-1792260047812-6zzjv",
+    "user": "AnimeFan_826",
+    "role": "MEMBER",
+    "text": "hii",
+    "time": "11:30 pm",
+    "timestamp": 1792260047812
+  },
+  {
+    "id": "msg-1792260049659-1lxc7",
+    "user": "AnimeFan_826",
+    "role": "MEMBER",
+    "text": "fdu",
+    "time": "11:30 pm",
+    "timestamp": 1792260049660
+  },
+  {
+    "id": "msg-1792260226277-tjbd2",
+    "user": "Test",
+    "role": "VIP",
+    "text": "Testing the beloved design!",
+    "time": "11:33 pm",
+    "timestamp": 1792260226277
+  },
+  {
+    "id": "msg-1792260354972-jabpd",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "🔥 🔥 🔥",
+    "time": "11:35 pm",
+    "timestamp": 1792260354972
+  },
+  {
+    "id": "msg-1792260415250-3q7vq",
+    "user": "Alice_Tester",
+    "role": "VIP",
+    "text": "Realtime test message from Alice!",
+    "time": "11:36 pm",
+    "timestamp": 1792260415264
+  },
+  {
+    "id": "msg-1792260525475-xbi2j",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "hii",
+    "time": "11:38 pm",
+    "timestamp": 1792260525475
+  },
+  {
+    "id": "msg-1792303499954-bjsol",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-anya",
+      "icon": "😼",
+      "name": "Anya Smirk",
+      "quote": "Waku Waku!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:34 am",
+    "timestamp": 1792303499954
+  },
+  {
+    "id": "msg-1792303503856-lic8m",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-deku",
+      "icon": "💥",
+      "name": "Deku Smash",
+      "quote": "Detroit Smash 100%!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:35 am",
+    "timestamp": 1792303503856
+  },
+  {
+    "id": "msg-1792303598409-wope9",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-zoro",
+      "icon": "🧭",
+      "name": "Zoro Lost",
+      "quote": "Where did the path go?!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:36 am",
+    "timestamp": 1792303598409
+  },
+  {
+    "id": "msg-1792303816140-497tg",
+    "user": "Test",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-anya",
+      "icon": "😼",
+      "name": "Anya Smirk",
+      "quote": "Waku Waku!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:40 am",
+    "timestamp": 1792303816140
+  },
+  {
+    "id": "msg-1792303831159-449kw",
+    "user": "Test",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:40 am",
+    "timestamp": 1792303831159
+  },
+  {
+    "id": "msg-1792303838423-xarnn",
+    "user": "Test",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-luffy",
+      "icon": "🍖",
+      "name": "Luffy Meat",
+      "quote": "Meat!!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:40 am",
+    "timestamp": 1792303838423
+  },
+  {
+    "id": "msg-1792303842221-g42u7",
+    "user": "Test",
+    "role": "VIP",
+    "text": "",
+    "sticker": {
+      "id": "stk-zoro",
+      "icon": "🧭",
+      "name": "Zoro Lost",
+      "quote": "Where did the path go?!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:40 am",
+    "timestamp": 1792303842221
+  },
+  {
+    "id": "msg-1792303883297-22f3d",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "#naruto",
+    "sticker": null,
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "11:41 am",
+    "timestamp": 1792303883297
+  },
+  {
+    "id": "msg-1792306182013-gcyip",
+    "user": "Admin",
+    "role": "VIP",
+    "text": "HIIIIIIII",
+    "sticker": null,
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE",
+    "time": "12:19 pm",
+    "timestamp": 1792306182027
+  },
+  {
+    "id": "msg-1792306232017-8bimd",
+    "user": "Admin",
+    "role": "ADMIN",
+    "text": "",
+    "sticker": {
+      "id": "stk-deku",
+      "icon": "💥",
+      "name": "Deku Smash",
+      "quote": "Detroit Smash 100%!"
+    },
+    "mention": null,
+    "level": 1,
+    "rank": "GENIN",
+    "time": "12:20 pm",
+    "timestamp": 1792306232017
+  },
+  {
+    "id": "msg-1792306396870-6hq8r",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "Dattebayo! The Hokage has arrived! #naruto",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=SolarSage",
+    "avatarFrame": "aura-gold",
+    "sticker": null,
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE_VIP",
+    "time": "12:23 pm",
+    "timestamp": 1792306396891
+  },
+  {
+    "id": "msg-1792306544618-k75qx",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=SolarSage",
+    "avatarFrame": "aura-gold",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE_VIP",
+    "time": "12:25 pm",
+    "timestamp": 1792306544619
+  },
+  {
+    "id": "msg-1792306550636-vau5f",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "🔥 🔥",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=SolarSage",
+    "avatarFrame": "aura-gold",
+    "sticker": null,
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE_VIP",
+    "time": "12:25 pm",
+    "timestamp": 1792306550636
+  },
+  {
+    "id": "msg-1792309173094-2gw7e",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=SolarSage",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-anya",
+      "icon": "😼",
+      "name": "Anya Smirk",
+      "quote": "Waku Waku!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE_VIP",
+    "time": "01:09 pm",
+    "timestamp": 1792309173114
+  },
+  {
+    "id": "msg-1792309377477-ibbd6",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=NeonNinja",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-anya",
+      "icon": "😼",
+      "name": "Anya Smirk",
+      "quote": "Waku Waku!"
+    },
+    "mention": null,
+    "level": 50,
+    "rank": "HOKAGE_VIP",
+    "time": "01:12 pm",
+    "timestamp": 1792309377477
+  },
+  {
+    "id": "msg-1792310307101-aunnb",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=NeonNinja",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-anya",
+      "icon": "😼",
+      "name": "Anya Smirk",
+      "quote": "Waku Waku!"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "01:28 pm",
+    "timestamp": 1792310307101
+  },
+  {
+    "id": "msg-1792313605023-cprp1",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=NeonNinja",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "02:23 pm",
+    "timestamp": 1792313605023
+  },
+  {
+    "id": "msg-1792313608553-fknf2",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=NeonNinja",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-anya",
+      "icon": "😼",
+      "name": "Anya Smirk",
+      "quote": "Waku Waku!"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "02:23 pm",
+    "timestamp": 1792313608553
+  },
+  {
+    "id": "msg-1792320973431-amaxx",
+    "user": "user1",
+    "role": "USER",
+    "text": "hiuiii",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=AnimeFan",
+    "avatarFrame": "default",
+    "sticker": null,
+    "mention": null,
+    "level": 15,
+    "rank": "JOUNIN",
+    "time": "04:26 pm",
+    "timestamp": 1792320973501
+  },
+  {
+    "id": "msg-1792321039434-a6c5i",
+    "user": "user1",
+    "role": "USER",
+    "text": "",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=AnimeFan",
+    "avatarFrame": "default",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 15,
+    "rank": "JOUNIN",
+    "time": "04:27 pm",
+    "timestamp": 1792321039434
+  },
+  {
+    "id": "msg-1792321107219-5wcou",
+    "user": "user1",
+    "role": "USER",
+    "text": "",
+    "avatar": "assets/avatars/av-zenitsu-agatsuma.png",
+    "avatarFrame": "default",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 1,
+    "rank": "GENIN",
+    "time": "04:28 pm",
+    "timestamp": 1792321107220
+  },
+  {
+    "id": "msg-1792321150855-v6qq3",
+    "user": "user1",
+    "role": "USER",
+    "text": "",
+    "avatar": "assets/avatars/av-zenitsu-agatsuma.png",
+    "avatarFrame": "sakura",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 5,
+    "rank": "CHUNIN",
+    "time": "04:29 pm",
+    "timestamp": 1792321150855
+  },
+  {
+    "id": "msg-1792322949313-loeun",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-gojo",
+      "icon": "🟣",
+      "name": "Hollow Purple",
+      "quote": "Throughout heaven and earth..."
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "04:59 pm",
+    "timestamp": 1792322949327
+  },
+  {
+    "id": "msg-1792322953370-r5kl5",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-naruto",
+      "icon": "🍜",
+      "name": "Naruto Ramen",
+      "quote": "Believe it! Dattebayo!"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "04:59 pm",
+    "timestamp": 1792322953370
+  },
+  {
+    "id": "msg-1792322959762-mt5xw",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "❤️",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "04:59 pm",
+    "timestamp": 1792322959762
+  },
+  {
+    "id": "msg-1792323618894-abhs7",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://media.giphy.com/media/OdSZCPaQZWlWw/giphy.gif",
+      "title": "Zoro Asura Stance"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "05:10 pm",
+    "timestamp": 1792323618915
+  },
+  {
+    "id": "msg-1792323639930-irmb9",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://media.giphy.com/media/H55eg5ieSLPpqA8FdR/giphy.gif",
+      "title": "Itachi Rain Forehead Tap"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "05:10 pm",
+    "timestamp": 1792323639930
+  },
+  {
+    "id": "msg-1792323682999-jcjvm",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://media.giphy.com/media/du1LfdlnhdTwn8OQHu/giphy.gif",
+      "title": "Chika Fujiwara Dance"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "05:11 pm",
+    "timestamp": 1792323683000
+  },
+  {
+    "id": "msg-1792323708493-ps0wv",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://media.giphy.com/media/DGsDLr9nyz2LkVgKFs/giphy.gif",
+      "title": "Gojo Hollow Purple"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "05:11 pm",
+    "timestamp": 1792323708493
+  },
+  {
+    "id": "msg-1792323893733-w03o1",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://media.giphy.com/media/12mRllHWXpt4M8/giphy.gif",
+      "title": "Luffy Gear 5 Laugh"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "05:14 pm",
+    "timestamp": 1792323893733
+  },
+  {
+    "id": "msg-1792324020275-czx0z",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://i.giphy.com/QvBoMEcQ7DQXK.gif",
+      "title": "Killua Godspeed"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "05:17 pm",
+    "timestamp": 1792324020275
+  },
+  {
+    "id": "msg-1792327126717-lkzjr",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://i.giphy.com/DGsDLr9nyz2LkVgKFs.gif",
+      "title": "Gojo Hollow Purple"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:08 pm",
+    "timestamp": 1792327126756
+  },
+  {
+    "id": "msg-1792327924662-j6ddd",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": {
+      "id": "stk-deku",
+      "icon": "💥",
+      "name": "Deku Smash",
+      "quote": "Detroit Smash 100%!"
+    },
+    "gif": null,
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:22 pm",
+    "timestamp": 1792327924663
+  },
+  {
+    "id": "msg-1792327931921-ny93o",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://i.giphy.com/10i8xVp7WmJrri.gif",
+      "title": "Levi Ackerman Slash"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:22 pm",
+    "timestamp": 1792327931922
+  },
+  {
+    "id": "msg-1792327936092-r8ree",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://i.giphy.com/bDWdJRY2IZCX6.gif",
+      "title": "Itachi Uchiha Rain"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:22 pm",
+    "timestamp": 1792327936092
+  },
+  {
+    "id": "msg-1792327955945-zuy7i",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "@SupremeHokage hiii",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": null,
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:22 pm",
+    "timestamp": 1792327955945
+  },
+  {
+    "id": "msg-1792327969172-bb4ai",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "@user1 hii",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": null,
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:22 pm",
+    "timestamp": 1792327969172
+  },
+  {
+    "id": "msg-1792327990607-76qkf",
+    "user": "SupremeHokage",
+    "role": "ADMIN",
+    "text": "",
+    "avatar": "assets/avatars/av-jin-u-seong.png",
+    "avatarFrame": "gold",
+    "sticker": null,
+    "gif": {
+      "url": "https://i.giphy.com/12mRllHWXpt4M8.gif",
+      "title": "Luffy Gear 5 Laugh"
+    },
+    "mention": null,
+    "level": 100,
+    "rank": "HOKAGE_VIP",
+    "time": "06:23 pm",
+    "timestamp": 1792327990607
+  }
+]

@@ -116,11 +116,250 @@ function saveUserAnimeHistory(userId, item) {
 
     data[userId].unshift(item);
     if (data[userId].length > 30) data[userId] = data[userId].slice(0, 30);
-    fs.writeFileSync(ANIME_HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+    // Atomic safe write to avoid file corruption during simultaneous user updates
+    const tempFile = path.join(ANIME_HISTORY_DIR, `anime_history_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tempFile, ANIME_HISTORY_FILE);
   } catch (e) {
     console.error('Error saving anime history to file:', e);
   }
 }
+
+const COMPLETED_ANIME_FILE = path.join(ANIME_HISTORY_DIR, 'completed_anime.json');
+
+function getUserCompletedAnime(userId) {
+  try {
+    if (!fs.existsSync(COMPLETED_ANIME_FILE)) return [];
+    const data = JSON.parse(fs.readFileSync(COMPLETED_ANIME_FILE, 'utf8') || '{}');
+    return data[userId] || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveUserCompletedAnime(userId, list) {
+  try {
+    if (!fs.existsSync(ANIME_HISTORY_DIR)) {
+      fs.mkdirSync(ANIME_HISTORY_DIR, { recursive: true });
+    }
+    let data = {};
+    if (fs.existsSync(COMPLETED_ANIME_FILE)) {
+      try {
+        data = JSON.parse(fs.readFileSync(COMPLETED_ANIME_FILE, 'utf8') || '{}');
+      } catch (e) { data = {}; }
+    }
+    data[userId] = list;
+    const tempFile = path.join(ANIME_HISTORY_DIR, `completed_anime_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tempFile, COMPLETED_ANIME_FILE);
+  } catch (e) {
+    console.error('Error saving completed anime to file:', e);
+  }
+}
+
+async function getAggregatedCompletedAnime(userId) {
+  const manualList = getUserCompletedAnime(userId);
+  const map = new Map();
+
+  manualList.forEach(item => {
+    if (item && (item.id || item.showId || item.lunarId)) {
+      const key = String(item.id || item.showId || item.lunarId);
+      map.set(key, item);
+    }
+  });
+
+  try {
+    const dbHistory = await prisma.watchHistory.findMany({
+      where: { userId },
+      include: {
+        episode: {
+          include: {
+            show: {
+              include: {
+                categories: { include: { category: true } },
+                episodes: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const showProgressMap = new Map();
+    dbHistory.forEach(h => {
+      if (!h.episode || !h.episode.show) return;
+      const s = h.episode.show;
+      if (!showProgressMap.has(s.id)) {
+        showProgressMap.set(s.id, {
+          show: s,
+          watchedEpisodes: new Set(),
+          maxProgress: 0,
+          totalDuration: 0
+        });
+      }
+      const entry = showProgressMap.get(s.id);
+      if (h.duration > 0 && (h.progress / h.duration >= 0.85)) {
+        entry.watchedEpisodes.add(h.episode.id);
+      }
+      if (h.progress > entry.maxProgress) entry.maxProgress = h.progress;
+      if (h.duration > entry.totalDuration) entry.totalDuration = h.duration;
+    });
+
+    for (const [showId, entry] of showProgressMap.entries()) {
+      const s = entry.show;
+      const totalEpisodes = (s.episodes && s.episodes.length) || 1;
+      const isMovie = s.type === 'movie' || totalEpisodes === 1;
+      const isCompleted = isMovie
+        ? (entry.totalDuration > 0 && entry.maxProgress / entry.totalDuration >= 0.85)
+        : (entry.watchedEpisodes.size >= totalEpisodes && totalEpisodes > 0);
+
+      const key = String(showId);
+      if (isCompleted && !map.has(key)) {
+        map.set(key, {
+          id: s.id,
+          showId: s.id,
+          title: s.title,
+          poster: s.poster,
+          banner: s.banner || s.poster,
+          rating: s.rating || 8.0,
+          type: s.type || 'series',
+          genres: (s.categories && s.categories.map(c => c.category?.name).filter(Boolean).join(', ')) || 'Anime',
+          episodesCount: totalEpisodes,
+          completedAt: new Date().toISOString()
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Error auto-detecting DB completed anime:', err.message);
+  }
+
+  try {
+    const lunarHistory = getUserAnimeHistory(userId);
+    lunarHistory.forEach(item => {
+      const isCompleted = item.progress && item.duration && (item.progress / item.duration >= 0.85);
+      const key = String(item.lunarId || item.id);
+      if (isCompleted && !map.has(key)) {
+        map.set(key, {
+          id: item.lunarId || item.id,
+          lunarId: item.lunarId,
+          title: item.showTitle,
+          poster: item.poster,
+          banner: item.banner || item.poster,
+          rating: 8.5,
+          type: 'series',
+          genres: 'Anime',
+          episodesCount: item.episodeNumber || 1,
+          completedAt: item.watchedAt || new Date().toISOString()
+        });
+      }
+    });
+  } catch (err) {
+    console.warn('Error auto-detecting lunar completed anime:', err.message);
+  }
+
+  return Array.from(map.values());
+}
+
+// GET /api/user/completed-anime - Get all anime completed by the authenticated user
+router.get('/completed-anime', authenticate, async (req, res) => {
+  try {
+    const list = await getAggregatedCompletedAnime(req.user.id);
+    res.json(list);
+  } catch (err) {
+    console.error('Error fetching completed anime:', err);
+    res.status(500).json({ error: 'Failed to fetch completed anime' });
+  }
+});
+
+// POST /api/user/completed-anime - Mark an anime as completed
+router.post('/completed-anime', authenticate, async (req, res) => {
+  try {
+    const { showId, lunarId, title, poster, banner, rating, type, genres, episodesCount } = req.body;
+    let animeEntry = null;
+
+    if (showId) {
+      const show = await prisma.show.findUnique({
+        where: { id: parseInt(showId) },
+        include: {
+          categories: { include: { category: true } },
+          episodes: true
+        }
+      });
+      if (!show) return res.status(404).json({ error: 'Show not found' });
+      animeEntry = {
+        id: show.id,
+        showId: show.id,
+        title: show.title,
+        poster: show.poster,
+        banner: show.banner || show.poster,
+        rating: show.rating || 8.0,
+        type: show.type || 'series',
+        genres: (show.categories && show.categories.map(c => c.category?.name).filter(Boolean).join(', ')) || 'Anime',
+        episodesCount: show.episodes?.length || 1,
+        completedAt: new Date().toISOString()
+      };
+    } else if (title) {
+      animeEntry = {
+        id: lunarId || `custom-${Date.now()}`,
+        lunarId: lunarId || null,
+        title: String(title).trim(),
+        poster: poster || '',
+        banner: banner || poster || '',
+        rating: typeof rating === 'number' ? rating : parseFloat(rating) || 8.0,
+        type: type || 'series',
+        genres: genres || 'Anime',
+        episodesCount: parseInt(episodesCount, 10) || 1,
+        completedAt: new Date().toISOString()
+      };
+    } else {
+      return res.status(400).json({ error: 'showId or anime details (title, poster) required.' });
+    }
+
+    const currentList = getUserCompletedAnime(req.user.id);
+    const existingIdx = currentList.findIndex(a => String(a.id || a.showId || a.lunarId) === String(animeEntry.id) || a.title.toLowerCase() === animeEntry.title.toLowerCase());
+    if (existingIdx >= 0) {
+      currentList[existingIdx] = animeEntry;
+    } else {
+      currentList.unshift(animeEntry);
+    }
+    saveUserCompletedAnime(req.user.id, currentList);
+    res.json({ success: true, anime: animeEntry, completedAnime: currentList });
+  } catch (err) {
+    console.error('Error marking completed anime:', err);
+    res.status(500).json({ error: 'Failed to record completed anime' });
+  }
+});
+
+// DELETE /api/user/completed-anime/:id - Remove an anime from completed list
+router.delete('/completed-anime/:id', authenticate, async (req, res) => {
+  try {
+    const targetId = String(req.params.id);
+    const currentList = getUserCompletedAnime(req.user.id);
+    const updated = currentList.filter(a => String(a.id || a.showId || a.lunarId) !== targetId);
+    saveUserCompletedAnime(req.user.id, updated);
+
+    // If this anime was in user.topAnime showcase, remove it as well
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (user && user.topAnime) {
+      let top = user.topAnime;
+      if (typeof top === 'string') { try { top = JSON.parse(top); } catch (e) { top = []; } }
+      if (Array.isArray(top)) {
+        const filteredTop = top.filter(item => String(item.id || item.showId || item.lunarId) !== targetId);
+        if (filteredTop.length !== top.length) {
+          await prisma.user.update({
+            where: { id: req.user.id },
+            data: { topAnime: filteredTop.length > 0 ? filteredTop : null }
+          });
+        }
+      }
+    }
+
+    res.json({ success: true, message: 'Anime removed from completed list' });
+  } catch (err) {
+    console.error('Error deleting completed anime:', err);
+    res.status(500).json({ error: 'Failed to remove completed anime' });
+  }
+});
 
 // Get Watch History (for Continue Watching progress bar)
 router.get('/history', authenticate, async (req, res) => {
@@ -255,6 +494,594 @@ router.post('/history', authenticate, async (req, res) => {
     res.json({ success: true, history });
   } catch (error) {
     console.error('Error updating watch history:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Clear or Delete watch history
+router.delete('/history', authenticate, async (req, res) => {
+  try {
+    const { episodeId, lunarId } = req.query || {};
+
+    if (episodeId) {
+      await prisma.watchHistory.deleteMany({
+        where: {
+          userId: req.user.id,
+          episodeId: parseInt(episodeId)
+        }
+      });
+      return res.json({ success: true, message: 'Episode removed from history' });
+    }
+
+    if (lunarId) {
+      if (fs.existsSync(ANIME_HISTORY_FILE)) {
+        try {
+          const data = JSON.parse(fs.readFileSync(ANIME_HISTORY_FILE, 'utf8') || '{}');
+          if (Array.isArray(data[req.user.id])) {
+            data[req.user.id] = data[req.user.id].filter(item => String(item.lunarId || item.anilistId) !== String(lunarId));
+            fs.writeFileSync(ANIME_HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+          }
+        } catch (e) {}
+      }
+      return res.json({ success: true, message: 'Anime removed from history' });
+    }
+
+    // Clear all history
+    await prisma.watchHistory.deleteMany({
+      where: { userId: req.user.id }
+    });
+
+    if (fs.existsSync(ANIME_HISTORY_FILE)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(ANIME_HISTORY_FILE, 'utf8') || '{}');
+        delete data[req.user.id];
+        fs.writeFileSync(ANIME_HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+      } catch (e) {}
+    }
+
+    res.json({ success: true, message: 'All watch history cleared' });
+  } catch (error) {
+    console.error('Error clearing watch history:', error);
+    res.status(500).json({ error: 'Failed to clear watch history' });
+  }
+});
+
+// =========================================================================
+// ADVANCED PROFILE CUSTOMIZATION & PROGRESSION ENDPOINTS
+// =========================================================================
+
+function calculateOtakuRank(level, currentVipRank, role) {
+  if (level >= 50) return 'HOKAGE_VIP';
+  if (level >= 25) return 'HASHIRA';
+  if (level >= 15) return 'JOUNIN';
+  if (level >= 5) return 'CHUNIN';
+  return 'GENIN';
+}
+
+const AVATAR_LEVEL_REQUIREMENTS = {
+  // Level 50: Hokage / God Tier
+  'av-luffy-monkey': 50,
+  'av-naruto-uzumaki': 50,
+  'av-gokuu-son': 50,
+  'av-eren-yeager': 50,
+  'av-ichigo-kurosaki': 50,
+  'av-jin-u-seong': 50,
+  'av-saitama': 50,
+  'av-sukuna': 50,
+  'av-itachi-uchiha': 50,
+  'av-light-yagami': 50,
+  'av-l-lawliet': 50,
+  'av-lelouch-lamperouge': 50,
+  'av-vegeta': 50,
+  // Level 25: Jounin Elite Tier
+  'av-tanjirou-kamado': 25,
+  'av-yuuji-itadori': 25,
+  'av-denji': 25,
+  'av-shigeo-kageyama': 25,
+  'av-ken-kaneki': 25,
+  'av-thorfinn-karlsefni': 25,
+  'av-violet-evergarden': 25,
+  'av-edward-elric': 25,
+  'av-gon-freecss': 25,
+  'av-izuku-midoriya': 25,
+  'av-kurisu-makise': 25,
+  'av-rintarou-okabe': 25,
+  'av-frieren': 25,
+  'av-guts': 25,
+  'av-levi': 25,
+  'av-kakashi-hatake': 25,
+  'av-satoru-gojou': 25,
+  // Level 15: Chunin Tier
+  'av-zoro-roronoa': 15,
+  'av-sasuke-uchiha': 15,
+  'av-gaara': 15,
+  'av-roy-mustang': 15,
+  'av-katsuki-bakugou': 15,
+  'av-shouto-todoroki': 15,
+  'av-killua-zoldyck': 15,
+  'av-hisoka-morow': 15,
+  'av-mikasa-ackerman': 15,
+  'av-yor-forger': 15,
+  'av-power': 15,
+  'av-makima': 15,
+  'av-kaguya-shinomiya': 15,
+  // Level 5: Genin Tier
+  'av-panda': 5,
+  'av-megumi-fushiguro': 5,
+  'av-nobara-kugisaki': 5,
+  'av-aoi-todo': 5,
+  'av-genos': 5,
+  'av-shikamaru-nara': 5,
+  'av-kiba-inuzuka': 5,
+  'av-loid-forger': 5,
+  'av-nezuko-kamado': 5,
+  'av-mai-sakurajima': 5
+};
+
+const BANNER_LEVEL_REQUIREMENTS = {
+  // Level 50: Monarch
+  'ban-solo-leveling': 50,
+  'ban-dragonball': 50,
+  'ban-death-note': 50,
+  'ban-steins-gate': 50,
+  'ban-evangelion': 50,
+  // Level 25: Jounin
+  'ban-bleach': 25,
+  'ban-cyberpunk': 25,
+  'ban-fmab': 25,
+  'ban-frieren': 25,
+  // Level 15: Chunin
+  'ban-aot': 15,
+  'ban-hxh': 15,
+  'ban-chainsaw-man': 15,
+  'ban-vinland': 15,
+  // Level 5: Genin
+  'ban-demon-slayer': 5,
+  'ban-jjk': 5,
+  'ban-mob-psycho': 5
+};
+
+const AURA_LEVEL_REQUIREMENTS = {
+  'sakura': 5,
+  'electric': 10,
+  'fire': 15,
+  'purple': 25,
+  'gold': 50
+};
+
+// Rate limit memory store: userId -> { lastAwardAt, xpThisHour, hourStart }
+const userXpRateLimitMap = new Map();
+
+// GET /api/user/profile - Fetch current user's complete profile & otaku stats
+router.get('/profile', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        watchlist: {
+          include: { show: true }
+        }
+      }
+    });
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Calculate watch stats
+    const animeHistory = getUserAnimeHistory(req.user.id) || [];
+    const dbHistory = await prisma.watchHistory.findMany({
+      where: { userId: req.user.id }
+    });
+
+    let totalWatchSec = 0;
+    animeHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+    dbHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+
+    const totalHours = Math.round((totalWatchSec / 3600) * 10) / 10;
+    const totalEpisodes = animeHistory.length + dbHistory.length;
+
+    const xpNext = (user.level || 1) * 200;
+    const currentXp = user.xp || 0;
+    const rank = user.vipRank || calculateOtakuRank(user.level || 1, user.vipRank, user.role);
+
+    let userTopAnime = user.topAnime;
+    if (typeof userTopAnime === 'string') {
+      try { userTopAnime = JSON.parse(userTopAnime); } catch (e) { userTopAnime = null; }
+    }
+    if (!Array.isArray(userTopAnime)) {
+      userTopAnime = [];
+    }
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      username: user.username || user.email.split('@')[0],
+      role: user.role,
+      vipRank: rank,
+      level: user.level || 1,
+      xp: currentXp,
+      xpNextLevel: xpNext,
+      xpPercent: Math.min(100, Math.round((currentXp / xpNext) * 100)),
+      bio: user.bio || '',
+      avatarUrl: user.avatarUrl || null,
+      avatarFrame: user.avatarFrame || 'default',
+      bannerUrl: user.bannerUrl || null,
+      accentColor: user.accentColor || '#ff0055',
+      topAnime: userTopAnime,
+      isPrivate: Boolean(user.isPrivate),
+      createdAt: user.createdAt,
+      stats: {
+        totalHoursWatched: totalHours,
+        totalEpisodesWatched: totalEpisodes,
+        watchlistCount: user.watchlist.length,
+        recentHistory: animeHistory.slice(0, 10)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// PUT /api/user/profile - Update user profile customization
+router.put('/profile', authenticate, async (req, res) => {
+  try {
+    const {
+      userId,
+      targetUserId,
+      username,
+      bio,
+      avatarUrl,
+      avatarFrame,
+      bannerUrl,
+      accentColor,
+      topAnime,
+      isPrivate,
+      level
+    } = req.body;
+
+    // Strict Account Ownership Check: Only the owner (or ADMIN) can update profile
+    const requestedTarget = targetUserId || userId;
+    if (requestedTarget && String(requestedTarget) !== String(req.user.id) && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        error: 'Access Denied: Only the account owner has ownership and permission to modify this account.'
+      });
+    }
+
+    const currentUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!currentUser) return res.status(404).json({ error: 'User not found' });
+
+    const isAdmin = currentUser.role === 'ADMIN';
+
+    const data = {};
+    if (username !== undefined) data.username = String(username).trim().slice(0, 30);
+    if (bio !== undefined) data.bio = String(bio).trim().slice(0, 500);
+    if (accentColor !== undefined) data.accentColor = String(accentColor).trim();
+    if (isPrivate !== undefined) data.isPrivate = Boolean(isPrivate);
+
+    // ANTI-CHEAT & AUTHENTICITY: Validate topAnime showcase
+    // Only anime that the user has completed may be added to their showcase
+    if (topAnime !== undefined) {
+      if (topAnime === null || (Array.isArray(topAnime) && topAnime.length === 0)) {
+        data.topAnime = null;
+      } else if (Array.isArray(topAnime)) {
+        const completedList = await getAggregatedCompletedAnime(req.user.id);
+        const completedKeySet = new Set(
+          completedList.map(a => String(a.id || a.showId || a.lunarId || ''))
+        );
+        const completedTitleSet = new Set(
+          completedList.map(a => String(a.title || '').trim().toLowerCase())
+        );
+
+        const validatedTopAnime = [];
+        for (const item of topAnime.slice(0, 3)) {
+          if (!item) continue;
+          const itemId = String(item.id || item.showId || item.lunarId || '');
+          const itemTitle = String(item.title || '').trim().toLowerCase();
+
+          const isCompleted = completedKeySet.has(itemId) || completedTitleSet.has(itemTitle);
+          if (!isCompleted && !isAdmin) {
+            return res.status(400).json({
+              error: `Cannot showcase "${item.title || 'Anime'}": Only anime you have completed can be added to your Hall of Fame Showcase.`
+            });
+          }
+
+          validatedTopAnime.push({
+            id: item.id || itemId,
+            title: String(item.title || 'Untitled Anime').trim(),
+            poster: String(item.poster || '').trim(),
+            banner: String(item.banner || item.poster || '').trim(),
+            rating: typeof item.rating === 'number' ? item.rating : parseFloat(item.rating) || 8.0,
+            type: String(item.type || 'series'),
+            genres: String(item.genres || item.genre || 'Anime'),
+            episodesCount: item.episodesCount ? (parseInt(item.episodesCount, 10) || item.episodesCount) : null,
+            completedAt: item.completedAt || new Date().toISOString()
+          });
+        }
+
+        data.topAnime = validatedTopAnime;
+      }
+    }
+
+    // ANTI-CHEAT: Only administrators have privileges to manually set/override user level
+    if (level !== undefined) {
+      if (!isAdmin) {
+        return res.status(403).json({
+          error: 'Access denied: Only administrators have privileges to manually adjust levels.'
+        });
+      }
+      const parsedLvl = Math.max(1, Math.min(100, parseInt(level) || 1));
+      data.level = parsedLvl;
+      data.vipRank = calculateOtakuRank(parsedLvl, currentUser.vipRank, currentUser.role);
+    }
+
+    const effectiveLevel = (isAdmin && data.level !== undefined) ? data.level : (currentUser.level || 1);
+
+    // ANTI-CHEAT: Validate avatar lock level requirement
+    if (avatarUrl !== undefined) {
+      const cleanAvatar = avatarUrl ? String(avatarUrl).trim() : null;
+      if (cleanAvatar && !isAdmin) {
+        for (const [key, reqLvl] of Object.entries(AVATAR_LEVEL_REQUIREMENTS)) {
+          if (cleanAvatar.includes(key) && effectiveLevel < reqLvl) {
+            return res.status(403).json({
+              error: `Access Denied: This avatar requires Level ${reqLvl}. You are currently Level ${effectiveLevel}.`
+            });
+          }
+        }
+      }
+      data.avatarUrl = cleanAvatar;
+    }
+
+    // ANTI-CHEAT: Validate banner lock level requirement
+    if (bannerUrl !== undefined) {
+      const cleanBanner = bannerUrl ? String(bannerUrl).trim() : null;
+      if (cleanBanner && !isAdmin) {
+        for (const [key, reqLvl] of Object.entries(BANNER_LEVEL_REQUIREMENTS)) {
+          if (cleanBanner.includes(key) && effectiveLevel < reqLvl) {
+            return res.status(403).json({
+              error: `Access Denied: This hero banner requires Level ${reqLvl}. You are currently Level ${effectiveLevel}.`
+            });
+          }
+        }
+      }
+      data.bannerUrl = cleanBanner;
+    }
+
+    // ANTI-CHEAT: Validate aura frame lock level requirement
+    if (avatarFrame !== undefined) {
+      const cleanFrame = String(avatarFrame).trim();
+      if (cleanFrame && !isAdmin && AURA_LEVEL_REQUIREMENTS[cleanFrame]) {
+        const reqLvl = AURA_LEVEL_REQUIREMENTS[cleanFrame];
+        if (effectiveLevel < reqLvl) {
+          return res.status(403).json({
+            error: `Access Denied: This aura frame requires Level ${reqLvl}. You are currently Level ${effectiveLevel}.`
+          });
+        }
+      }
+      data.avatarFrame = cleanFrame;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data
+    });
+
+    res.json({
+      success: true,
+      user: {
+        id: updated.id,
+        email: updated.email,
+        username: updated.username || updated.email.split('@')[0],
+        role: updated.role,
+        vipRank: updated.vipRank,
+        level: updated.level,
+        xp: updated.xp,
+        bio: updated.bio,
+        avatarUrl: updated.avatarUrl,
+        avatarFrame: updated.avatarFrame,
+        bannerUrl: updated.bannerUrl,
+        accentColor: updated.accentColor,
+        topAnime: updated.topAnime,
+        isPrivate: Boolean(updated.isPrivate)
+      }
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/user/xp - Award XP for watching or participating
+router.post('/xp', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const isAdmin = user.role === 'ADMIN';
+
+    // Anti-cheat rate limiting for regular users
+    if (!isAdmin) {
+      const now = Date.now();
+      const rateInfo = userXpRateLimitMap.get(user.id) || { lastAwardAt: 0, xpThisHour: 0, hourStart: now };
+
+      // Cooldown: at least 15 seconds between XP gain events
+      if (now - rateInfo.lastAwardAt < 15000) {
+        return res.status(429).json({
+          error: 'Rate limited: You are gaining XP too fast. Please stream naturally to earn rewards.'
+        });
+      }
+
+      // Hourly cap: maximum 600 XP per hour
+      if (now - rateInfo.hourStart > 3600000) {
+        rateInfo.xpThisHour = 0;
+        rateInfo.hourStart = now;
+      }
+      if (rateInfo.xpThisHour >= 600) {
+        return res.status(429).json({
+          error: 'Hourly XP cap reached. Continue watching to level up again next hour!'
+        });
+      }
+
+      const requestedAmount = parseInt(req.body.amount || 10);
+      const amount = Math.max(1, Math.min(25, requestedAmount));
+
+      rateInfo.lastAwardAt = now;
+      rateInfo.xpThisHour += amount;
+      userXpRateLimitMap.set(user.id, rateInfo);
+
+      let newXp = (user.xp || 0) + amount;
+      let newLevel = user.level || 1;
+      let leveledUp = false;
+
+      let threshold = newLevel * 200;
+      while (newXp >= threshold) {
+        newXp -= threshold;
+        newLevel += 1;
+        leveledUp = true;
+        threshold = newLevel * 200;
+      }
+
+      const newRank = calculateOtakuRank(newLevel, user.vipRank, user.role);
+
+      const updated = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+          xp: newXp,
+          level: newLevel,
+          vipRank: newRank
+        }
+      });
+
+      return res.json({
+        success: true,
+        xpGained: amount,
+        xp: updated.xp,
+        level: updated.level,
+        vipRank: updated.vipRank,
+        leveledUp
+      });
+    }
+
+    // Admin path: can award any valid test amount
+    const amount = Math.max(1, Math.min(500, parseInt(req.body.amount || 10)));
+    let newXp = (user.xp || 0) + amount;
+    let newLevel = user.level || 1;
+    let leveledUp = false;
+
+    let threshold = newLevel * 200;
+    while (newXp >= threshold) {
+      newXp -= threshold;
+      newLevel += 1;
+      leveledUp = true;
+      threshold = newLevel * 200;
+    }
+
+    const newRank = calculateOtakuRank(newLevel, user.vipRank, user.role);
+
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        xp: newXp,
+        level: newLevel,
+        vipRank: newRank
+      }
+    });
+
+    res.json({
+      success: true,
+      xpGained: amount,
+      xp: updated.xp,
+      level: updated.level,
+      vipRank: updated.vipRank,
+      leveledUp
+    });
+  } catch (error) {
+    console.error('Error awarding XP:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// GET /api/user/profile/:id - Public profile view
+router.get('/profile/:id', async (req, res) => {
+  try {
+    const target = req.params.id;
+    let user;
+
+    if (!isNaN(parseInt(target))) {
+      user = await prisma.user.findUnique({ where: { id: parseInt(target) } });
+    }
+    if (!user) {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { username: target },
+            { email: target },
+            { email: { startsWith: target + '@' } }
+          ]
+        }
+      });
+    }
+
+    if (!user) return res.status(404).json({ error: 'Otaku profile not found' });
+
+    const animeHistory = getUserAnimeHistory(user.id) || [];
+    let totalWatchSec = 0;
+    animeHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+    const totalHours = Math.round((totalWatchSec / 3600) * 10) / 10;
+
+    let watchlistCount = 0;
+    let publicWatchlist = [];
+    try {
+      watchlistCount = await prisma.watchlist.count({ where: { userId: user.id } });
+      if (!user.isPrivate) {
+        const wl = await prisma.watchlist.findMany({
+          where: { userId: user.id },
+          include: { show: true },
+          orderBy: { createdAt: 'desc' },
+          take: 12
+        });
+        publicWatchlist = wl.map(item => item.show).filter(Boolean);
+      }
+    } catch (e) {}
+
+    const xpNext = (user.level || 1) * 200;
+    const currentXp = user.xp || 0;
+
+    let userTopAnime = user.topAnime;
+    if (typeof userTopAnime === 'string') {
+      try { userTopAnime = JSON.parse(userTopAnime); } catch (e) { userTopAnime = []; }
+    }
+    if (!Array.isArray(userTopAnime)) {
+      userTopAnime = [];
+    }
+
+    res.json({
+      id: user.id,
+      email: user.isPrivate ? null : user.email,
+      username: user.username || user.email.split('@')[0],
+      role: user.role,
+      vipRank: user.vipRank || 'GENIN',
+      level: user.level || 1,
+      xp: currentXp,
+      xpNextLevel: xpNext,
+      xpPercent: Math.min(100, Math.round((currentXp / xpNext) * 100)),
+      bio: user.bio || '',
+      avatarUrl: user.avatarUrl,
+      avatarFrame: user.avatarFrame || 'default',
+      bannerUrl: user.bannerUrl,
+      accentColor: user.accentColor || '#ff0055',
+      topAnime: userTopAnime,
+      isPrivate: Boolean(user.isPrivate),
+      createdAt: user.createdAt,
+      watchlist: publicWatchlist,
+      stats: {
+        totalHoursWatched: totalHours,
+        totalEpisodesWatched: animeHistory.length,
+        watchlistCount: watchlistCount,
+        recentHistory: user.isPrivate ? [] : animeHistory.slice(0, 6)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching public profile:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });

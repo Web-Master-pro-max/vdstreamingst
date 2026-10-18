@@ -1,6 +1,66 @@
 {
   "1": [
     {
+      "id": "lunar-1735-2",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "1735",
+      "episodeId": "lunar-1735-2",
+      "episodeNumber": 2,
+      "episodeTitle": "Episode 2: Akatsuki Begins Their Move",
+      "showTitle": "Naruto: Shippuden",
+      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "banner": "",
+      "progress": 414,
+      "duration": 1386,
+      "watchedAt": "2026-10-18T14:16:30.342Z"
+    },
+    {
+      "id": "lunar-195604-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "195604",
+      "episodeId": "lunar-195604-1",
+      "episodeNumber": 1,
+      "episodeTitle": "The Battle Begins",
+      "showTitle": "Black Clover Season 2",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/331753/posters/60f9d40c43dbc.jpg",
+      "banner": "",
+      "progress": 548,
+      "duration": 1430,
+      "watchedAt": "2026-10-18T14:03:34.784Z"
+    },
+    {
+      "id": "lunar-130298-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "130298",
+      "episodeId": "lunar-130298-1",
+      "episodeNumber": 1,
+      "episodeTitle": "The Hated Classmate",
+      "showTitle": "The Eminence in Shadow",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/407520/posters/63aa960baeb43.jpg",
+      "banner": "",
+      "progress": 0,
+      "duration": 1419,
+      "watchedAt": "2026-10-18T11:27:32.675Z"
+    },
+    {
+      "id": "lunar-169581-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "169581",
+      "episodeId": "lunar-169581-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Reincarnated as a Sidekick Character in an Eroge, but I`ll Use My Game Knowledge to Do What I Want",
+      "showTitle": "Magical Explorer",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/440056/posters/6aa5c0c6e42cb.jpg",
+      "banner": "",
+      "progress": 0,
+      "duration": 1419,
+      "watchedAt": "2026-10-18T08:12:08.180Z"
+    },
+    {
       "id": "lunar-21-6",
       "userId": 1,
       "isLunar": true,
@@ -11,24 +71,39 @@
       "showTitle": "ONE PIECE",
       "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
       "banner": "",
-      "progress": 216,
-      "duration": 1476,
-      "watchedAt": "2026-10-14T08:27:20.777Z"
+      "progress": 217,
+      "duration": 1500,
+      "watchedAt": "2026-10-17T17:14:01.473Z"
     },
     {
-      "id": "lunar-1735-1",
+      "id": "lunar-204389-1",
       "userId": 1,
       "isLunar": true,
-      "lunarId": "1735",
-      "episodeId": "lunar-1735-1",
+      "lunarId": "204389",
+      "episodeId": "lunar-204389-1",
       "episodeNumber": 1,
-      "episodeTitle": "Homecoming",
-      "showTitle": "Naruto: Shippuden",
-      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "episodeTitle": "Mobile Capital Blutgang Has Appeared!",
+      "showTitle": "A Wild Last Boss Appeared! Season 2",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/453694/posters/67a9e3f8478a2.jpg",
       "banner": "",
-      "progress": 681,
-      "duration": 1414,
-      "watchedAt": "2026-10-14T07:41:40.434Z"
+      "progress": 0,
+      "duration": 1420,
+      "watchedAt": "2026-10-17T17:10:03.556Z"
+    },
+    {
+      "id": "lunar-139587-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "139587",
+      "episodeId": "lunar-139587-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Catgirl Meets Sword",
+      "showTitle": "Reincarnated as a Sword",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
+      "banner": "",
+      "progress": 50,
+      "duration": 1471,
+      "watchedAt": "2026-10-17T16:13:23.095Z"
     },
     {
       "id": "lunar-207329-1",
@@ -59,21 +134,6 @@
       "progress": 0,
       "duration": 1419,
       "watchedAt": "2026-10-14T07:15:43.886Z"
-    },
-    {
-      "id": "lunar-139587-1",
-      "userId": 1,
-      "isLunar": true,
-      "lunarId": "139587",
-      "episodeId": "lunar-139587-1",
-      "episodeNumber": 1,
-      "episodeTitle": "Catgirl Meets Sword",
-      "showTitle": "Reincarnated as a Sword",
-      "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
-      "banner": "",
-      "progress": 50,
-      "duration": 1471,
-      "watchedAt": "2026-10-14T07:14:38.169Z"
     },
     {
       "id": "lunar-113415-1",
@@ -118,9 +178,9 @@
       "showTitle": "ONE PIECE",
       "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
       "banner": "",
-      "progress": 806,
+      "progress": 922,
       "duration": 1437,
-      "watchedAt": "2026-10-14T08:29:53.109Z"
+      "watchedAt": "2026-10-14T08:31:48.219Z"
     },
     {
       "id": "lunar-172463-1",
@@ -136,6 +196,23 @@
       "progress": 102,
       "duration": 1435,
       "watchedAt": "2026-10-14T07:07:59.545Z"
+    }
+  ],
+  "7": [
+    {
+      "id": "lunar-1735-1",
+      "userId": 7,
+      "isLunar": true,
+      "lunarId": "1735",
+      "episodeId": "lunar-1735-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Homecoming",
+      "showTitle": "Naruto: Shippuden",
+      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "banner": "",
+      "progress": 820,
+      "duration": 1386,
+      "watchedAt": "2026-10-18T06:24:17.238Z"
     }
   ]
 }

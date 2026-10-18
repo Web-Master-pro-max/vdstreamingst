@@ -21,10 +21,12 @@ import { apiService, formatMediaUrl, isVideoMedia, getAuthSession } from '../ser
 
 const CACHE_KEY_CAROUSEL = '@infinx_cached_carousel';
 const CACHE_KEY_CATEGORIES = '@infinx_cached_categories';
+const CACHE_KEY_LUNAR_TRENDING = '@infinx_cached_lunar_trending';
 
 export const HomeScreen = ({ navigation }) => {
   const [carouselShows, setCarouselShows] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [lunarTrending, setLunarTrending] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTag, setActiveTag] = useState('All');
@@ -48,9 +50,10 @@ export const HomeScreen = ({ navigation }) => {
     // 1. Instant Cache: Load stored data first so the app feels instant
     if (!isRefresh) {
       try {
-        const [cachedHero, cachedCats] = await Promise.all([
+        const [cachedHero, cachedCats, cachedLunar] = await Promise.all([
           AsyncStorage.getItem(CACHE_KEY_CAROUSEL),
           AsyncStorage.getItem(CACHE_KEY_CATEGORIES),
+          AsyncStorage.getItem(CACHE_KEY_LUNAR_TRENDING),
         ]);
         if (cachedHero && cachedCats) {
           const parsedHero = JSON.parse(cachedHero);
@@ -62,16 +65,20 @@ export const HomeScreen = ({ navigation }) => {
             prefetchShowImages(parsedHero);
           }
         }
+        if (cachedLunar) {
+          setLunarTrending(JSON.parse(cachedLunar));
+        }
       } catch (cacheErr) {
         console.warn('Cache read warning:', cacheErr);
       }
     }
 
-    // 2. Fetch fresh live data from EC2 backend
+    // 2. Fetch fresh live data from EC2 / Local backend
     try {
-      const [heroData, catData] = await Promise.all([
+      const [heroData, catData, lunarData] = await Promise.all([
         apiService.getCarouselShows(),
         apiService.getCategoriesWithShows(),
+        apiService.getLunarTrending(),
       ]);
 
       if (Array.isArray(heroData) && heroData.length > 0) {
@@ -84,6 +91,13 @@ export const HomeScreen = ({ navigation }) => {
         setCategories(catData);
         AsyncStorage.setItem(CACHE_KEY_CATEGORIES, JSON.stringify(catData)).catch(() => {});
         catData.forEach((c) => prefetchShowImages(c.shows));
+      }
+
+      if (lunarData && (lunarData.popularThisSeason || lunarData.trendingNow)) {
+        setLunarTrending(lunarData);
+        AsyncStorage.setItem(CACHE_KEY_LUNAR_TRENDING, JSON.stringify(lunarData)).catch(() => {});
+        prefetchShowImages(lunarData.popularThisSeason || []);
+        prefetchShowImages(lunarData.trendingNow || []);
       }
     } catch (e) {
       console.warn('Error fetching homepage data:', e);
@@ -103,7 +117,18 @@ export const HomeScreen = ({ navigation }) => {
   };
 
   const handleShowPress = (show) => {
-    navigation.navigate('ShowDetail', { showId: show.id, show });
+    const isLunar = Boolean(show.isLunar || (show.id && String(show.id).startsWith('lunar-')));
+    const navParams = {
+      showId: show.id,
+      show,
+      isLunar,
+      anilistId: show.anilistId,
+    };
+    if (typeof navigation.push === 'function') {
+      navigation.push('ShowDetail', navParams);
+    } else {
+      navigation.navigate('ShowDetail', navParams);
+    }
   };
 
   const handlePlayPress = async (show) => {
@@ -119,17 +144,101 @@ export const HomeScreen = ({ navigation }) => {
       );
       return;
     }
-    const ep = show.episodes?.[0];
-    if (ep && ep.id) {
-      navigation.navigate('Player', { episodeId: ep.id, episode: ep, show });
-    } else {
-      navigation.navigate('ShowDetail', { showId: show.id, show });
-    }
+    const isLunar = Boolean(show.isLunar || (show.id && String(show.id).startsWith('lunar-')));
+    const ep = show.episodes?.[0] || {
+      id: isLunar ? `lunar-${show.anilistId}-1` : 'ep_1',
+      episodeNumber: 1,
+      title: 'Episode 1',
+      isLunar,
+      anilistId: show.anilistId,
+    };
+    navigation.navigate('Player', {
+      episodeId: ep.id,
+      episode: ep,
+      show,
+    });
   };
+
+  // Map lunar anime entries into standard show cards
+  const mapLunarList = useCallback((list) => {
+    if (!Array.isArray(list)) return [];
+    return list.map((a) => ({
+      id: `lunar-${a.anilistId}`,
+      anilistId: a.anilistId,
+      isLunar: true,
+      title: a.title,
+      poster: a.poster,
+      posterUrl: a.poster,
+      banner: a.banner || a.poster,
+      bannerUrl: a.banner || a.poster,
+      rating: a.rating || 8.5,
+      year: a.year || 2024,
+      categories: (a.genres || ['Anime']).map((g) => ({ category: { name: g } })),
+      episodes: [
+        {
+          id: `lunar-${a.anilistId}-1`,
+          episodeNumber: 1,
+          number: 1,
+          title: 'Episode 1',
+          thumbnail: a.poster,
+          isLunar: true,
+          anilistId: a.anilistId,
+        },
+      ],
+    }));
+  }, []);
+
+  // Merge regular categories with Lunar Anime sections, prioritizing Anime at the very top
+  const combinedCategories = useMemo(() => {
+    const animeSections = [];
+    if (lunarTrending) {
+      const trend = mapLunarList(lunarTrending.trendingNow);
+      if (trend.length > 0) {
+        animeSections.push({
+          id: 'cat_lunar_trending',
+          name: 'Trending Anime (Seasonal)',
+          slug: 'anime',
+          isLunarCategory: true,
+          shows: trend,
+        });
+      }
+      const pop = mapLunarList(lunarTrending.popularThisSeason);
+      if (pop.length > 0) {
+        animeSections.push({
+          id: 'cat_lunar_popular',
+          name: 'Popular Anime This Season',
+          slug: 'anime',
+          isLunarCategory: true,
+          shows: pop,
+        });
+      }
+      const upcoming = mapLunarList(lunarTrending.upcomingNextSeason);
+      if (upcoming.length > 0) {
+        animeSections.push({
+          id: 'cat_lunar_upcoming',
+          name: 'Upcoming Anime Next Season',
+          slug: 'anime',
+          isLunarCategory: true,
+          shows: upcoming,
+        });
+      }
+    }
+
+    // Sort other categories so Anime Series comes immediately after seasonal anime
+    const otherCategories = [...(categories || [])].sort((a, b) => {
+      const aIsAnime = (a.name || '').toLowerCase().includes('anime');
+      const bIsAnime = (b.name || '').toLowerCase().includes('anime');
+      if (aIsAnime && !bIsAnime) return -1;
+      if (!aIsAnime && bIsAnime) return 1;
+      return 0;
+    });
+
+    return [...animeSections, ...otherCategories];
+  }, [categories, lunarTrending, mapLunarList]);
 
   // Dynamically extract available categories & genres so all pills are guaranteed relevant
   const availableTags = useMemo(() => {
-    const list = ['All'];
+    const list = ['All', 'Anime'];
     if (Array.isArray(categories)) {
       categories.forEach((cat) => {
         if (cat.name && !list.includes(cat.name)) {
@@ -156,10 +265,14 @@ export const HomeScreen = ({ navigation }) => {
 
   // Filter categories by active pill tag
   const displayedCategories = useMemo(() => {
-    if (activeTag === 'All') return categories;
+    if (activeTag === 'All') return combinedCategories;
 
     const tagLower = activeTag.toLowerCase();
-    return categories
+    if (tagLower === 'anime') {
+      return combinedCategories.filter((c) => c.isLunarCategory || c.slug === 'anime' || c.name.toLowerCase().includes('anime'));
+    }
+
+    return combinedCategories
       .map((cat) => {
         const catMatches = cat.name.toLowerCase().includes(tagLower);
         const matchedShows = (cat.shows || []).filter((s) => {
@@ -180,7 +293,7 @@ export const HomeScreen = ({ navigation }) => {
         };
       })
       .filter((cat) => cat.shows && cat.shows.length > 0);
-  }, [categories, activeTag]);
+  }, [combinedCategories, activeTag]);
 
   // Show modern Shimmer Skeleton if loading and no cached data is present
   if (loading && carouselShows.length === 0) {

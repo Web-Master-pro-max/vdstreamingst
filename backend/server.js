@@ -34,6 +34,8 @@ const webhooksRouter = require('./routes/webhooks');
 const commentsRouter = require('./routes/comments');
 const lunarxRouter = require('./routes/lunarx');
 const transcodeQueueManager = require('./services/TranscodeQueueManager');
+const jwt = require('jsonwebtoken');
+const { authenticate, requireAdmin } = require('./middleware/auth');
 
 // Auto-sync any unfinished transcode tasks from DB into sequential queue
 transcodeQueueManager.syncPendingFromDB();
@@ -44,6 +46,14 @@ const PORT = process.env.PORT || 8000;
 
 // Enable CORS for frontend flexibility
 app.use(cors());
+
+// HTTP Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 // Parse requests
 app.use(express.json());
@@ -63,6 +73,42 @@ app.use('/api/user', userRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/comments', commentsRouter);
+
+const realtimeService = require('./services/RealtimeService');
+
+// Public Community Live Chat API
+app.get('/api/public-chat/messages', (req, res) => {
+  res.json(realtimeService.getPublicMessages());
+});
+
+app.post('/api/public-chat/messages', (req, res) => {
+  const { user, text, role, avatar, avatarFrame, sticker, gif, mention, level, rank } = req.body;
+  const msg = realtimeService.addPublicMessage(user, text, role, { avatar, avatarFrame, sticker, gif, mention, level, rank });
+  if (!msg) {
+    return res.status(400).json({ error: 'Message cannot be empty.' });
+  }
+  res.json(msg);
+});
+
+app.get('/api/public-chat/poll', (req, res) => {
+  res.json(realtimeService.getPublicPoll());
+});
+
+app.post('/api/public-chat/poll/vote', (req, res) => {
+  const { optionId } = req.body;
+  const poll = realtimeService.votePoll(optionId);
+  res.json(poll);
+});
+
+// Admin Delete Public Chat Message Endpoint
+app.delete('/api/public-chat/messages/:id', authenticate, requireAdmin, (req, res) => {
+  const messageId = req.params.id;
+  const deleted = realtimeService.deletePublicMessage(messageId);
+  if (!deleted) {
+    return res.status(404).json({ error: 'Message not found or already deleted.' });
+  }
+  res.json({ success: true, messageId });
+});
 
 
 
@@ -100,7 +146,7 @@ const { getUploadsDir } = require('./s3');
 const uploadsPath = getUploadsDir();
 const settingsPath = path.join(uploadsPath, 'settings.json');
 
-// Settings Endpoint
+// Settings Endpoint (Public only receives safe display properties; Admins receive full config)
 app.get('/api/settings', (req, res) => {
   try {
     let settings = { bannerSlideTime: 6000 };
@@ -109,19 +155,39 @@ app.get('/api/settings', (req, res) => {
         settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
       } catch (e) { }
     }
-    res.json({
+
+    const payload = {
       bannerSlideTime: settings.bannerSlideTime || 6000,
-      storageType: settings.storageType || process.env.STORAGE_TYPE || 'local',
-      localStoragePath: settings.localStoragePath || process.env.LOCAL_STORAGE_PATH || uploadsPath,
-      s3Bucket: process.env.AWS_S3_BUCKET || 'serverbuket-12',
-      s3Region: process.env.AWS_REGION || 'ap-south-1'
-    });
+    };
+
+    // Only expose internal storage paths and S3 bucket details if requested by an Admin
+    let isAdmin = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'infinx_anime_jwt_secret_key_9981');
+        if (decoded && decoded.role === 'ADMIN') {
+          isAdmin = true;
+        }
+      } catch (e) { }
+    }
+
+    if (isAdmin) {
+      payload.storageType = settings.storageType || process.env.STORAGE_TYPE || 'local';
+      payload.localStoragePath = settings.localStoragePath || process.env.LOCAL_STORAGE_PATH || uploadsPath;
+      payload.s3Bucket = process.env.AWS_S3_BUCKET || 'serverbuket-12';
+      payload.s3Region = process.env.AWS_REGION || 'ap-south-1';
+    }
+
+    res.json(payload);
   } catch (err) {
     res.status(500).json({ error: 'Failed to read settings' });
   }
 });
 
-app.post('/api/settings', (req, res) => {
+// Settings Modification Endpoint (Protected - Admin only)
+app.post('/api/settings', authenticate, requireAdmin, (req, res) => {
   try {
     const { bannerSlideTime, storageType, localStoragePath } = req.body;
     let settings = { bannerSlideTime: 6000 };
@@ -162,15 +228,38 @@ if (!fs.existsSync(uploadsPath)) {
 }
 
 // Serve uploads folder for videos, posters, banners, and HLS streams
+// Restrict raw uploaded video files, staging chunk directories, and settings.json from direct public download
+app.use('/uploads', (req, res, next) => {
+  const reqPath = (req.path || '').toLowerCase();
+  if (
+    reqPath.startsWith('/raw-') ||
+    reqPath.includes('/chunks_') ||
+    reqPath.includes('/transcode_') ||
+    reqPath === '/settings.json' ||
+    reqPath.endsWith('/settings.json') ||
+    /\.(mkv|avi|mov)$/i.test(reqPath)
+  ) {
+    return res.status(403).json({ error: 'Access denied.' });
+  }
+  next();
+});
+
 app.use('/uploads', express.static(uploadsPath));
 app.use('/posters', express.static(path.join(uploadsPath, 'posters')));
 app.use('/banners', express.static(path.join(uploadsPath, 'banners')));
+app.use('/assets', express.static(path.join(frontendPath, 'assets')));
 
 // Fallback resolver for image files requested at root (e.g. /1791215324723-abc.jpg)
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const ext = path.extname(req.path).toLowerCase();
   if (!['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'].includes(ext)) return next();
+
+  // If exact file exists inside frontend directory, serve it
+  const directFrontendPath = path.join(frontendPath, req.path.replace(/^\//, ''));
+  if (fs.existsSync(directFrontendPath) && !fs.statSync(directFrontendPath).isDirectory()) {
+    return res.sendFile(directFrontendPath);
+  }
 
   const fileName = path.basename(req.path);
   const possiblePaths = [
@@ -182,6 +271,8 @@ app.use((req, res, next) => {
     path.join(__dirname, '../uploads', fileName),
     path.join(frontendPath, 'Postes', fileName),
     path.join(frontendPath, 'Horror-poster', fileName),
+    path.join(frontendPath, 'assets', 'avatars', fileName),
+    path.join(frontendPath, 'assets', 'banners', fileName),
   ];
 
   const foundPath = possiblePaths.find(p => fs.existsSync(p));
@@ -202,6 +293,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Clean Video Player Route at '/watch' (e.g. /watch?id=1735&ep=1&t=681)
+app.get('/watch', (req, res) => {
+  res.sendFile(path.join(videoPlayerPath, 'index.html'));
+});
+
 // Serve Video Player static files at '/video-player' path
 app.use('/video-player', express.static(videoPlayerPath));
 
@@ -218,6 +314,9 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, () => {
   console.log(`🚀 Infinx Streaming API Server running on port ${PORT}`);
 });
+
+// Attach real-time Socket.io engine for Public Live Chat and Watch Party
+realtimeService.attach(server);
 
 // Configure unlimited/extended timeouts for heavy HLS raw video uploads (prevents ERR_CONNECTION_RESET on 1GB+ uploads)
 server.timeout = 0; // Unlimited

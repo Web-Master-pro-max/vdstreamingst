@@ -2,9 +2,31 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const STORAGE_KEY_API_URL = '@infinx_api_url';
-export const DEFAULT_URL = 'http://13.202.95.5:8000';
+export const DEFAULT_URL = Platform.OS === 'android' ? 'http://192.168.31.174:8000' : 'http://localhost:8000';
+
+export const CANDIDATE_SERVERS = [
+  'http://192.168.31.174:8000',
+  'http://10.0.2.2:8000',
+  'http://localhost:8000',
+  'http://13.202.95.5:8000',
+  'https://skirt-guided-dressing-fantastic.trycloudflare.com',
+];
 
 export const PRESET_SERVERS = [
+  {
+    id: 'server_wifi',
+    name: 'Local Wi-Fi Network',
+    url: 'http://192.168.31.174:8000',
+    description: 'High-speed local development & streaming node',
+    tag: 'LAN Server',
+  },
+  {
+    id: 'server_emulator',
+    name: 'Android Emulator',
+    url: 'http://10.0.2.2:8000',
+    description: 'Android Studio emulator loopback relay',
+    tag: 'Emulator Node',
+  },
   {
     id: 'server_cloud',
     name: 'Cloud Stream Network',
@@ -19,23 +41,66 @@ export const PRESET_SERVERS = [
     description: 'Low-latency direct edge streaming relay node',
     tag: 'Edge Node',
   },
+  {
+    id: 'server_localhost',
+    name: 'Localhost Node',
+    url: 'http://localhost:8000',
+    description: 'Direct local workstation development server',
+    tag: 'Dev Node',
+  },
 ];
 
 let cachedApiUrl = null;
 
-export const getApiBaseUrl = async () => {
-  if (cachedApiUrl) return cachedApiUrl;
+export const probeServerUrl = async (url, timeoutMs = 1500) => {
+  if (!url) return false;
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(`${url.replace(/\/$/, '')}/api/settings`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    return res.ok || res.status === 200 || res.status === 304;
+  } catch (e) {
+    return false;
+  }
+};
+
+export const discoverWorkingServer = async () => {
+  if (cachedApiUrl && (await probeServerUrl(cachedApiUrl, 1000))) {
+    return cachedApiUrl;
+  }
+
   try {
     const saved = await AsyncStorage.getItem(STORAGE_KEY_API_URL);
-    if (saved) {
+    if (saved && (await probeServerUrl(saved, 1000))) {
       cachedApiUrl = saved;
       return saved;
     }
-  } catch (e) {
-    console.error('Failed to read API URL from storage:', e);
+  } catch (e) {}
+
+  const prioritized = Platform.OS === 'android'
+    ? ['http://192.168.31.174:8000', 'http://10.0.2.2:8000', 'http://13.202.95.5:8000', 'https://skirt-guided-dressing-fantastic.trycloudflare.com', 'http://localhost:8000']
+    : ['http://localhost:8000', 'http://192.168.31.174:8000', 'http://13.202.95.5:8000', 'https://skirt-guided-dressing-fantastic.trycloudflare.com', 'http://10.0.2.2:8000'];
+
+  for (const candidate of prioritized) {
+    const ok = await probeServerUrl(candidate, 1200);
+    if (ok) {
+      cachedApiUrl = candidate;
+      AsyncStorage.setItem(STORAGE_KEY_API_URL, candidate).catch(() => {});
+      return candidate;
+    }
   }
-  cachedApiUrl = DEFAULT_URL;
-  return DEFAULT_URL;
+
+  cachedApiUrl = prioritized[0];
+  return cachedApiUrl;
+};
+
+export const getApiBaseUrl = async () => {
+  if (cachedApiUrl) return cachedApiUrl;
+  return await discoverWorkingServer();
 };
 
 export const setApiBaseUrl = async (newUrl) => {
@@ -51,16 +116,14 @@ export const setApiBaseUrl = async (newUrl) => {
 export const formatMediaUrl = (url) => {
   if (!url || typeof url !== 'string') return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800';
   const trimmed = url.trim();
-  let fullUrl = trimmed;
-  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('data:') && !trimmed.startsWith('file://')) {
-    const baseUrl = cachedApiUrl || DEFAULT_URL;
-    fullUrl = trimmed.startsWith('/') ? `${baseUrl}${trimmed}` : `${baseUrl}/${trimmed}`;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('file://')) {
+    // Already absolute URL - do NOT run encodeURI as it breaks encoded query parameters like %3A, %2F
+    return trimmed;
   }
-  try {
-    return encodeURI(fullUrl);
-  } catch (e) {
-    return fullUrl;
-  }
+  const baseUrl = (cachedApiUrl || DEFAULT_URL).replace(/\/$/, '');
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  // Only replace unencoded spaces so paths with spaces resolve properly without corrupting percent-encoding
+  return `${baseUrl}${cleanPath}`.replace(/ /g, '%20');
 };
 
 export const isVideoMedia = (url) => {
@@ -442,23 +505,31 @@ export const saveEpisodeProgress = async (showId, episode, positionMillis, durat
 };
 
 const fetchWithTimeout = async (endpoint, options = {}, timeoutMs = 8000) => {
-  const baseUrl = await getApiBaseUrl();
-  const url = `${baseUrl}${endpoint}`;
-  
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
+  let baseUrl = await getApiBaseUrl();
+  let url = `${baseUrl}${endpoint}`;
+
+  const doFetch = async (targetUrl) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(targetUrl, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers || {}),
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      return response;
+    } catch (err) {
+      clearTimeout(id);
+      throw err;
+    }
+  };
 
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      },
-      signal: controller.signal,
-    });
-    clearTimeout(id);
-
+    const response = await doFetch(url);
     if (!response.ok) {
       const errorText = await response.text();
       let errorMsg = `API Error ${response.status}`;
@@ -475,7 +546,24 @@ const fetchWithTimeout = async (endpoint, options = {}, timeoutMs = 8000) => {
     }
     return await response.json();
   } catch (err) {
-    clearTimeout(id);
+    if (
+      err.message &&
+      (err.message.includes('Network request failed') ||
+        err.name === 'AbortError' ||
+        err.message.includes('timeout') ||
+        err.status === 502 ||
+        err.status === 504)
+    ) {
+      try {
+        const newServer = await discoverWorkingServer();
+        if (newServer && newServer !== baseUrl) {
+          baseUrl = newServer;
+          url = `${baseUrl}${endpoint}`;
+          const retryRes = await doFetch(url);
+          if (retryRes.ok) return await retryRes.json();
+        }
+      } catch (retryErr) {}
+    }
     throw err;
   }
 };
@@ -538,6 +626,96 @@ export const DEMO_CATEGORIES = [
   }
 ];
 
+export const DEMO_LUNAR_TRENDING = {
+  popularThisSeason: [
+    {
+      anilistId: 21,
+      title: "ONE PIECE",
+      romajiTitle: "ONE PIECE",
+      englishTitle: "ONE PIECE",
+      poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21-ELSYx3yMPcKM.jpg",
+      banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-wf37VakJ2JHj.jpg",
+      rating: 8.8,
+      year: 1999,
+      format: "TV",
+      episodes: 1180,
+      isLunar: true,
+      genres: ["Action", "Adventure", "Comedy", "Fantasy"]
+    },
+    {
+      anilistId: 145064,
+      title: "Jujutsu Kaisen Season 2",
+      romajiTitle: "Jujutsu Kaisen 2nd Season",
+      englishTitle: "Jujutsu Kaisen Season 2",
+      poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx145064-7D4bE4bXGf8O.jpg",
+      banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/145064-6s5Y1nJbL7pE.jpg",
+      rating: 8.9,
+      year: 2023,
+      format: "TV",
+      episodes: 23,
+      isLunar: true,
+      genres: ["Action", "Fantasy", "Supernatural"]
+    },
+    {
+      anilistId: 151807,
+      title: "Solo Leveling",
+      romajiTitle: "Ore dake Level Up na Ken",
+      englishTitle: "Solo Leveling",
+      poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-m1g5vU5gC0z1.jpg",
+      banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/151807-y7nZtL4gXm1b.jpg",
+      rating: 8.6,
+      year: 2024,
+      format: "TV",
+      episodes: 12,
+      isLunar: true,
+      genres: ["Action", "Adventure", "Fantasy"]
+    },
+    {
+      anilistId: 166240,
+      title: "Demon Slayer: Hashira Training Arc",
+      romajiTitle: "Kimetsu no Yaiba: Hashira Geiko-hen",
+      englishTitle: "Demon Slayer: Kimetsu no Yaiba Hashira Training Arc",
+      poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166240-E0uFhG9h4X2v.jpg",
+      banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/166240-A7fD9xP3gT1v.jpg",
+      rating: 8.7,
+      year: 2024,
+      format: "TV",
+      episodes: 8,
+      isLunar: true,
+      genres: ["Action", "Fantasy", "Supernatural"]
+    }
+  ],
+  trendingNow: [
+    {
+      anilistId: 21,
+      title: "ONE PIECE",
+      poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21-ELSYx3yMPcKM.jpg",
+      banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-wf37VakJ2JHj.jpg",
+      rating: 8.8,
+      year: 1999,
+      format: "TV",
+      episodes: 1180,
+      isLunar: true,
+      genres: ["Action", "Adventure", "Fantasy"]
+    },
+    {
+      anilistId: 172463,
+      title: "Kaiju No. 8",
+      romajiTitle: "Kaijuu 8-gou",
+      englishTitle: "Kaiju No. 8",
+      poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx172463-mJz2K4rP9tN1.jpg",
+      banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/172463-y8P2mW5xV6bN.jpg",
+      rating: 8.4,
+      year: 2024,
+      format: "TV",
+      episodes: 12,
+      isLunar: true,
+      genres: ["Action", "Sci-Fi"]
+    }
+  ],
+  upcomingNextSeason: []
+};
+
 export const apiService = {
   getCarouselShows: async () => {
     try {
@@ -572,6 +750,11 @@ export const apiService = {
   },
 
   getShowById: async (id) => {
+    if (!id) return DEMO_CAROUSEL[0];
+    const strId = String(id);
+    if (strId.startsWith('lunar-')) {
+      return await apiService.getLunarAnimeAll(strId.replace('lunar-', ''));
+    }
     try {
       const data = await fetchWithTimeout(`/api/shows/${id}`);
       if (data && data.id) return data;
@@ -582,6 +765,25 @@ export const apiService = {
   },
 
   getEpisodeById: async (id) => {
+    if (!id) return null;
+    const strId = String(id);
+    if (strId.startsWith('lunar-')) {
+      const parts = strId.split('-');
+      const anilistId = parts[1];
+      const epNum = parseInt(parts[2], 10) || 1;
+      try {
+        const streamData = await apiService.getLunarAnimeStream(anilistId, epNum);
+        return {
+          id: strId,
+          episodeNumber: epNum,
+          title: `Episode ${epNum}`,
+          isLunar: true,
+          anilistId: anilistId,
+          videoUrl: streamData?.streamUrl || streamData?.stream?.url || '',
+          streamData: streamData,
+        };
+      } catch (e) {}
+    }
     try {
       const data = await fetchWithTimeout(`/api/shows/episodes/${id}`);
       if (data && data.id) return data;
@@ -591,8 +793,8 @@ export const apiService = {
     return {
       id: id,
       episodeNumber: 1,
-      title: "Episode 1: Awakening",
-      videoUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      title: "Episode 1",
+      videoUrl: "",
       show: DEMO_CAROUSEL[0]
     };
   },
@@ -629,5 +831,102 @@ export const apiService = {
     } catch (e) {
       return [];
     }
+  },
+
+  // =========================================================
+  // LUNAR ANIME API METHODS (Matching Main Website)
+  // =========================================================
+
+  getLunarTrending: async () => {
+    try {
+      const data = await fetchWithTimeout('/api/lunarx/trending', {}, 10000);
+      if (data && (data.popularThisSeason || data.trendingNow || data.upcomingNextSeason)) {
+        return data;
+      }
+    } catch (e) {
+      console.warn('getLunarTrending fetch failed, using fallback:', e.message);
+    }
+    return DEMO_LUNAR_TRENDING;
+  },
+
+  browseLunarAnime: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.search) queryParams.append('search', params.search);
+      if (params.genre && params.genre !== 'All' && params.genre !== 'all') queryParams.append('genre', params.genre);
+      if (params.format && params.format !== 'all') queryParams.append('format', params.format);
+      if (params.season && params.season !== 'all') queryParams.append('season', params.season);
+      if (params.year && params.year !== 'all') queryParams.append('year', params.year);
+      if (params.status && params.status !== 'all') queryParams.append('status', params.status);
+      if (params.sort) queryParams.append('sort', params.sort);
+      if (params.page) queryParams.append('page', params.page);
+      if (params.limit) queryParams.append('limit', params.limit);
+
+      const qs = queryParams.toString();
+      const data = await fetchWithTimeout(`/api/lunarx/browse${qs ? `?${qs}` : ''}`, {}, 10000);
+      if (data && (data.media || Array.isArray(data))) return data;
+    } catch (e) {
+      console.warn('browseLunarAnime error:', e.message);
+    }
+    return { media: [], pageInfo: { total: 0, currentPage: 1, lastPage: 1 } };
+  },
+
+  searchLunarAnime: async (query, limit = 20) => {
+    if (!query || !query.trim()) return [];
+    try {
+      const data = await fetchWithTimeout(`/api/lunarx/search?q=${encodeURIComponent(query.trim())}&limit=${limit}`, {}, 8000);
+      if (Array.isArray(data)) return data;
+    } catch (e) {
+      console.warn('searchLunarAnime error:', e.message);
+    }
+    return [];
+  },
+
+  getLunarAnimeInfo: async (anilistId) => {
+    if (!anilistId) throw new Error('Missing anilistId');
+    const cleanId = String(anilistId).replace(/^lunar-/, '');
+    return await fetchWithTimeout(`/api/lunarx/info/${cleanId}`, {}, 10000);
+  },
+
+  getLunarAnimeEpisodes: async (anilistId) => {
+    if (!anilistId) return [];
+    const cleanId = String(anilistId).replace(/^lunar-/, '');
+    try {
+      const data = await fetchWithTimeout(`/api/lunarx/episodes/${cleanId}`, {}, 10000);
+      if (Array.isArray(data)) return data;
+    } catch (e) {
+      console.warn('getLunarAnimeEpisodes error:', e.message);
+    }
+    return [];
+  },
+
+  getLunarAnimeAll: async (anilistId) => {
+    if (!anilistId) throw new Error('Missing anilistId');
+    const cleanId = String(anilistId).replace(/^lunar-/, '');
+    const data = await fetchWithTimeout(`/api/lunarx/all/${cleanId}`, {}, 12000);
+    return data;
+  },
+
+  getLunarAnimeSeasons: async (anilistId) => {
+    if (!anilistId) return [];
+    const cleanId = String(anilistId).replace(/^lunar-/, '');
+    try {
+      const data = await fetchWithTimeout(`/api/lunarx/seasons/${cleanId}`, {}, 8000);
+      if (Array.isArray(data)) return data;
+    } catch (e) {
+      console.warn('getLunarAnimeSeasons error:', e.message);
+    }
+    return [];
+  },
+
+  getLunarAnimeStream: async (anilistId, epNum = 1, host = 'zuna', type = 'sub') => {
+    if (!anilistId) throw new Error('Missing anilistId');
+    const cleanId = String(anilistId).replace(/^lunar-/, '');
+    const data = await fetchWithTimeout(
+      `/api/lunarx/stream/${cleanId}/${epNum}?host=${encodeURIComponent(host)}&type=${encodeURIComponent(type)}`,
+      {},
+      30000
+    );
+    return data;
   },
 };

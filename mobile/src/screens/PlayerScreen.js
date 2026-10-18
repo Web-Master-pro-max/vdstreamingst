@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -44,8 +44,6 @@ import {
   PRESET_SERVERS,
 } from '../services/api';
 import { DeviceControls } from '../services/deviceControls';
-
-const SAMPLE_STREAM = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
 // Map ISO language codes to user-friendly names
 const getFriendlyLanguageName = (code) => {
@@ -141,10 +139,21 @@ const detectPreciseIntroOutroWindows = ({
   let outroSource = 'none';
 
   // 1. Explicit Metadata
-  const explicitIntroStart = episode?.introStart ?? episode?.skipIntroStart;
-  const explicitIntroEnd = episode?.introEnd ?? episode?.skipIntroEnd;
-  const explicitOutroStart = episode?.outroStart ?? episode?.skipOutroStart;
-  const explicitOutroEnd = episode?.outroEnd ?? episode?.skipOutroEnd;
+  const rawIntroStart = episode?.introStart ?? episode?.skipIntroStart ?? episode?.intro?.start;
+  const rawIntroEnd = episode?.introEnd ?? episode?.skipIntroEnd ?? episode?.intro?.end;
+  const rawOutroStart = episode?.outroStart ?? episode?.skipOutroStart ?? episode?.outro?.start;
+  const rawOutroEnd = episode?.outroEnd ?? episode?.skipOutroEnd ?? episode?.outro?.end;
+
+  const toMs = (v) => {
+    if (v === undefined || v === null) return undefined;
+    const n = Number(v);
+    return n < 10000 ? Math.round(n * 1000) : Math.round(n);
+  };
+
+  const explicitIntroStart = toMs(rawIntroStart);
+  const explicitIntroEnd = toMs(rawIntroEnd);
+  const explicitOutroStart = toMs(rawOutroStart);
+  const explicitOutroEnd = toMs(rawOutroEnd);
 
   if (explicitIntroStart !== undefined && explicitIntroEnd !== undefined && Number(explicitIntroEnd) > Number(explicitIntroStart)) {
     intro = {
@@ -440,7 +449,7 @@ const processHlsManifest = async (url, targetAudioPrefOrIndex = 0, targetQuality
       }
 
       if (pendingStreamInf && !l.startsWith('#') && l.length > 0) {
-        const fullStreamUri = l.startsWith('http') ? l : baseUrl + l;
+        const fullStreamUri = l.startsWith('http') ? l : (l.startsWith('/') ? formatMediaUrl(l) : baseUrl + l);
         const resMatch = pendingStreamInf.match(/RESOLUTION=(\d+)x(\d+)/i);
         let w = resMatch ? parseInt(resMatch[1], 10) : 0;
         let h = resMatch ? parseInt(resMatch[2], 10) : 0;
@@ -521,9 +530,11 @@ const processHlsManifest = async (url, targetAudioPrefOrIndex = 0, targetQuality
         { id: '360p', label: '360p', badge: 'SD', badgeClass: 'badge-sd', height: 360 },
       ];
     } else {
+      const hasHd = variants.some(v => v.height >= 720 || v.width >= 1280);
+      const safeVariants = hasHd ? variants.filter(v => v.width !== 854 && v.label !== '480p') : variants;
       const seenLabels = new Set();
       const uniqueQualities = [];
-      [...variants].sort((a, b) => b.height - a.height).forEach((q) => {
+      [...safeVariants].sort((a, b) => b.height - a.height).forEach((q) => {
         if (!seenLabels.has(q.label)) {
           seenLabels.add(q.label);
           uniqueQualities.push({
@@ -617,7 +628,7 @@ const processHlsManifest = async (url, targetAudioPrefOrIndex = 0, targetQuality
       }
 
       modified = modified.replace(/URI="([^"]+)"/, (m, p1) => {
-        const full = p1.startsWith('http') ? p1 : baseUrl + p1;
+        const full = p1.startsWith('http') ? p1 : (p1.startsWith('/') ? formatMediaUrl(p1) : baseUrl + p1);
         return `URI="${full}"`;
       });
 
@@ -634,9 +645,9 @@ const processHlsManifest = async (url, targetAudioPrefOrIndex = 0, targetQuality
         cleanLines.push(cleanInf);
         cleanLines.push(chosenVariant.uri);
       } else {
-        // Auto mode: select optimal highest rendition (1080p) to guarantee zero macroblock misalignment and pristine playback
+        // Auto mode: select optimal highest rendition (1080p/720p) to guarantee zero macroblock misalignment and pristine playback
         const sorted = [...variants].sort((a, b) => b.height - a.height);
-        const bestVariant = sorted[0];
+        const bestVariant = sorted.find(v => (v.width % 16 === 0 && (v.width / 2) % 2 === 0 && v.width !== 854) || v.height >= 720) || sorted[0];
         if (bestVariant) {
           const cleanInf = bestVariant.streamInf.replace(/,SUBTITLES="[^"]+"/, '');
           cleanLines.push(cleanInf);
@@ -649,7 +660,7 @@ const processHlsManifest = async (url, targetAudioPrefOrIndex = 0, targetQuality
         const l = line.trim();
         if (!l || l.startsWith('#EXTM3U') || l.startsWith('#EXT-X-MEDIA:TYPE=')) return;
         if (!l.startsWith('#')) {
-          const full = l.startsWith('http') ? l : baseUrl + l;
+          const full = l.startsWith('http') ? l : (l.startsWith('/') ? formatMediaUrl(l) : baseUrl + l);
           cleanLines.push(full);
         } else {
           cleanLines.push(l);
@@ -709,6 +720,13 @@ export const PlayerScreen = ({ route, navigation }) => {
   const [playbackError, setPlaybackError] = useState(false);
   const [playbackErrorMsg, setPlaybackErrorMsg] = useState('');
   const [isAuthRequired, setIsAuthRequired] = useState(false);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Device Hardware Brightness & System Volume State
   const [brightness, setBrightness] = useState(1.0); // 0.01 to 1.0 (device screen brightness)
@@ -761,7 +779,8 @@ export const PlayerScreen = ({ route, navigation }) => {
     const curPos = positionMillisRef.current || positionMillis;
     const playing = isPlaying;
     try {
-      const rawMaster = masterUrlRef.current || episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
+      const rawMaster = masterUrlRef.current || episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || '';
+      if (!rawMaster) return;
       const formatted = formatMediaUrl(rawMaster);
       const res = await processHlsManifest(formatted, selectedAudioTrackIndex, qualityItem.id);
       if (res.workingUrl) masterUrlRef.current = res.workingUrl;
@@ -782,6 +801,8 @@ export const PlayerScreen = ({ route, navigation }) => {
   // Requirement 2: Audio Language Track Memory Across Series
   const [availableAudioTracks, setAvailableAudioTracks] = useState([]);
   const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState(0);
+  const [lunarAudioType, setLunarAudioType] = useState('sub'); // 'sub' or 'dub'
+  const [lunarHost, setLunarHost] = useState('zuna'); // 'zuna' or 'yuki'
   const preferredAudioRef = useRef(null);
 
   useEffect(() => {
@@ -815,7 +836,180 @@ export const PlayerScreen = ({ route, navigation }) => {
     saveSubtitleSettings(updated);
   };
 
-  // Requirement 6: Active Server Switcher State
+  // Multi-Server Architecture Matching Main Website
+  const [activeServerId, setActiveServerId] = useState('server-1');
+  const [serverToast, setServerToast] = useState({ visible: false, message: '' });
+  const serverToastTimeoutRef = useRef(null);
+  const triedServerIdsRef = useRef(new Set(['server-1']));
+  const isSwitchingServerRef = useRef(false);
+
+  const showServerToast = useCallback((msg) => {
+    if (serverToastTimeoutRef.current) clearTimeout(serverToastTimeoutRef.current);
+    setServerToast({ visible: true, message: msg });
+    serverToastTimeoutRef.current = setTimeout(() => {
+      setServerToast({ visible: false, message: '' });
+    }, 2800);
+  }, []);
+
+  const currentAvailableServers = useMemo(() => {
+    const isLunar = Boolean(
+      episode?.isLunar ||
+      show?.isLunar ||
+      (episode?.id && String(episode.id).startsWith('lunar-')) ||
+      (typeof episodeId === 'string' && episodeId.startsWith('lunar-'))
+    );
+    if (isLunar) {
+      return [
+        { id: 'server-1', name: 'Server 1 (1080p Ultra)', shortName: 'Server 1', badge: '1080p HD', host: 'zuna', type: 'sub' },
+        { id: 'server-2', name: 'Server 2 (English Dub)', shortName: 'Server 2', badge: 'English Dub', host: 'yuki', type: 'dub' },
+        { id: 'server-3', name: 'Server 3 (Fast Stream / 1080p)', shortName: 'Server 3', badge: 'Fast Stream', host: 'yuki', type: 'sub' },
+        { id: 'server-4', name: 'Server 4 (Backup Cloud)', shortName: 'Server 4', badge: 'Backup Stream', host: 'sora', type: 'sub' },
+      ];
+    }
+    const isS3 = (u) => u && (u.includes('amazonaws.com') || (u.startsWith('http') && !u.includes('/uploads/')));
+    const isLocal = (u) => u && (u.startsWith('/uploads') || u.includes('/uploads/'));
+    const s3Url = episode?.s3Url || (isS3(episode?.videoUrl) ? episode?.videoUrl : null);
+    const localUrl = episode?.localUrl || (isLocal(episode?.videoUrl) ? episode?.videoUrl : null);
+
+    const list = [];
+    if (s3Url) {
+      list.push({ id: 's3', name: 'Server 1 (AWS S3 Cloud)', shortName: 'Server 1', badge: 'AWS S3', url: s3Url, type: 'cloud' });
+    }
+    if (localUrl) {
+      list.push({ id: 'local', name: 'Server 2 (Local Fast)', shortName: 'Server 2', badge: 'Local Disk', url: localUrl, type: 'local' });
+    }
+    if (list.length === 0 && episode?.videoUrl) {
+      list.push({ id: 's3', name: 'Server 1 (Primary Cloud)', shortName: 'Server 1', badge: 'Online', url: episode?.videoUrl, type: 'cloud' });
+    }
+    return list;
+  }, [episode, show, episodeId]);
+
+  const switchStreamingServer = async (targetServer) => {
+    if (!targetServer || targetServer.id === activeServerId) return;
+    setActiveServerId(targetServer.id);
+    triedServerIdsRef.current.add(targetServer.id);
+    resetControlsTimeout();
+
+    const curPos = positionMillisRef.current || positionMillis || 0;
+    const playing = isPlaying;
+    showServerToast(`Switching to ${targetServer.shortName || targetServer.name}...`);
+
+    const isLunar = Boolean(
+      episode?.isLunar ||
+      show?.isLunar ||
+      (episode?.id && String(episode.id).startsWith('lunar-')) ||
+      (typeof episodeId === 'string' && episodeId.startsWith('lunar-'))
+    );
+
+    if (isLunar) {
+      const anilistId =
+        episode?.anilistId ||
+        show?.anilistId ||
+        (episode?.id && String(episode.id).startsWith('lunar-') ? String(episode.id).split('-')[1] : null) ||
+        (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? episodeId.split('-')[1] : null);
+
+      const epNum =
+        episode?.episodeNumber ||
+        episode?.number ||
+        (episode?.id && String(episode.id).startsWith('lunar-') ? parseInt(String(episode.id).split('-')[2], 10) || 1 : 1) ||
+        (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? parseInt(episodeId.split('-')[2], 10) || 1 : 1);
+
+      const targetHost = targetServer.host || 'zuna';
+      const targetType = targetServer.type || (targetServer.id === 'server-2' ? 'dub' : 'sub');
+
+      setLunarHost(targetHost);
+      setLunarAudioType(targetType);
+
+      try {
+        setLoading(true);
+        const sData = await apiService.getLunarAnimeStream(anilistId, epNum, targetHost, targetType);
+        let streamUrl = sData?.streamUrl || sData?.stream?.proxyUrl || sData?.stream?.url;
+
+        if (!streamUrl && targetType === 'dub') {
+          showServerToast('English Dub not available on this server. Playing Japanese Sub.');
+          const fbData = await apiService.getLunarAnimeStream(anilistId, epNum, 'zuna', 'sub');
+          streamUrl = fbData?.streamUrl || fbData?.stream?.proxyUrl || fbData?.stream?.url;
+          setLunarAudioType('sub');
+        }
+
+        if (streamUrl) {
+          const formatted = formatMediaUrl(streamUrl);
+          masterUrlRef.current = formatted;
+          const pref = preferredAudioRef.current;
+          const res = await processHlsManifest(formatted, pref, selectedQuality);
+          setActiveStreamUrl(res.sanitizedUrl);
+          showServerToast(`Connected: ${targetServer.name}`);
+
+          if (videoRef.current && curPos > 0) {
+            setTimeout(async () => {
+              try {
+                await videoRef.current.setPositionAsync(curPos);
+                if (playing) await videoRef.current.playAsync();
+              } catch (e) {}
+            }, 350);
+          }
+        }
+      } catch (err) {
+        console.warn('Error switching Lunar server:', err);
+        showServerToast('Selected server is unavailable. Reconnecting...');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Regular show server switch
+      try {
+        const rawUrl = targetServer.url || episode?.masterPlaylistUrl || episode?.videoUrl;
+        if (!rawUrl) return;
+        const formatted = formatMediaUrl(rawUrl);
+        masterUrlRef.current = formatted;
+        const pref = preferredAudioRef.current;
+        const res = await processHlsManifest(formatted, pref, selectedQuality);
+        setActiveStreamUrl(res.sanitizedUrl);
+        showServerToast(`Connected: ${targetServer.name}`);
+
+        if (videoRef.current && curPos > 0) {
+          setTimeout(async () => {
+            try {
+              await videoRef.current.setPositionAsync(curPos);
+              if (playing) await videoRef.current.playAsync();
+            } catch (e) {}
+          }, 350);
+        }
+      } catch (err) {
+        console.warn('Error switching regular server:', err);
+      }
+    }
+  };
+
+  // Bulletproof auto-fallback across available stream servers to prevent playback stalls
+  const handlePlaybackFailure = useCallback((errDetail) => {
+    console.warn('[PlayerScreen] Playback failure detected:', errDetail);
+    if (isSwitchingServerRef.current) return;
+
+    const untriedServer = currentAvailableServers.find(
+      (s) => s.id !== activeServerId && !triedServerIdsRef.current.has(s.id)
+    );
+
+    if (untriedServer) {
+      isSwitchingServerRef.current = true;
+      triedServerIdsRef.current.add(untriedServer.id);
+      showServerToast(`Switching to ${untriedServer.shortName || untriedServer.name}...`);
+      switchStreamingServer(untriedServer).finally(() => {
+        setTimeout(() => {
+          isSwitchingServerRef.current = false;
+        }, 2200);
+      });
+    } else {
+      setPlaybackError(true);
+      setPlaybackErrorMsg(
+        typeof errDetail === 'string'
+          ? errDetail
+          : 'Unable to connect to stream server. Tap Retry to reconnect.'
+      );
+    }
+  }, [activeServerId, currentAvailableServers, showServerToast, switchStreamingServer]);
+
+  // CDN Gateway Switcher State
   const [currentServerUrl, setCurrentServerUrl] = useState('');
   const [serverSwitching, setServerSwitching] = useState(false);
 
@@ -830,7 +1024,8 @@ export const PlayerScreen = ({ route, navigation }) => {
       const formatted = await setApiBaseUrl(newUrl);
       setCurrentServerUrl(formatted);
       if (episode) {
-        const rawUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
+        const rawUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || '';
+        if (!rawUrl) return;
         const formattedMedia = formatMediaUrl(rawUrl);
         const pref = preferredAudioRef.current;
         masterUrlRef.current = formattedMedia;
@@ -906,23 +1101,24 @@ export const PlayerScreen = ({ route, navigation }) => {
   const skipForward = async (amountMs = 10000) => {
     resetControlsTimeout();
     if (!videoRef.current) return;
+    const delta = typeof amountMs === 'number' && !isNaN(amountMs) ? amountMs : 10000;
     try {
-      let curPos = positionMillisRef.current;
-      let curDur = durationMillisRef.current;
+      let curPos = typeof positionMillisRef.current === 'number' && !isNaN(positionMillisRef.current) ? positionMillisRef.current : (positionMillis || 0);
+      let curDur = typeof durationMillisRef.current === 'number' && !isNaN(durationMillisRef.current) ? durationMillisRef.current : (durationMillis || 0);
 
       try {
         const status = await videoRef.current.getStatusAsync();
         if (status && status.isLoaded) {
-          if (typeof status.positionMillis === 'number' && status.positionMillis > 0) {
-            curPos = Math.max(curPos, status.positionMillis);
+          if (typeof status.positionMillis === 'number' && !isNaN(status.positionMillis)) {
+            curPos = status.positionMillis;
           }
-          if (typeof status.durationMillis === 'number' && status.durationMillis > 0) {
+          if (typeof status.durationMillis === 'number' && !isNaN(status.durationMillis) && status.durationMillis > 0) {
             curDur = status.durationMillis;
           }
         }
       } catch (e) {}
 
-      const targetPos = curDur > 0 ? Math.min(curPos + amountMs, curDur) : curPos + amountMs;
+      const targetPos = curDur > 0 ? Math.min(curPos + delta, curDur) : curPos + delta;
       positionMillisRef.current = targetPos;
       setPositionMillis(targetPos);
       await videoRef.current.setPositionAsync(targetPos);
@@ -934,23 +1130,24 @@ export const PlayerScreen = ({ route, navigation }) => {
   const skipBackward = async (amountMs = 10000) => {
     resetControlsTimeout();
     if (!videoRef.current) return;
+    const delta = typeof amountMs === 'number' && !isNaN(amountMs) ? amountMs : 10000;
     try {
-      let curPos = positionMillisRef.current;
-      let curDur = durationMillisRef.current;
+      let curPos = typeof positionMillisRef.current === 'number' && !isNaN(positionMillisRef.current) ? positionMillisRef.current : (positionMillis || 0);
+      let curDur = typeof durationMillisRef.current === 'number' && !isNaN(durationMillisRef.current) ? durationMillisRef.current : (durationMillis || 0);
 
       try {
         const status = await videoRef.current.getStatusAsync();
         if (status && status.isLoaded) {
-          if (typeof status.positionMillis === 'number') {
+          if (typeof status.positionMillis === 'number' && !isNaN(status.positionMillis)) {
             curPos = status.positionMillis;
           }
-          if (typeof status.durationMillis === 'number' && status.durationMillis > 0) {
+          if (typeof status.durationMillis === 'number' && !isNaN(status.durationMillis) && status.durationMillis > 0) {
             curDur = status.durationMillis;
           }
         }
       } catch (e) {}
 
-      const targetPos = Math.max(curPos - amountMs, 0);
+      const targetPos = Math.max(curPos - delta, 0);
       positionMillisRef.current = targetPos;
       setPositionMillis(targetPos);
       await videoRef.current.setPositionAsync(targetPos);
@@ -1319,7 +1516,8 @@ export const PlayerScreen = ({ route, navigation }) => {
     };
   }, [navigation]);
 
-  const isWidescreen = windowWidth > windowHeight;
+  const isWidescreen = windowWidth > windowHeight || isLandscape;
+  const landscapeDrawerWidth = Math.min(480, Math.max(380, Math.max(windowWidth, windowHeight) * 0.44));
 
   // Safe Exit & Restore Portrait
   const handleBackPress = async () => {
@@ -1425,57 +1623,195 @@ export const PlayerScreen = ({ route, navigation }) => {
   };
 
   // Sync active stream URL when episode updates (strictly auth gated)
-  useEffect(() => {
-    let isMounted = true;
-    const initStream = async () => {
-      const sess = await getAuthSession();
-      if (!sess?.token) {
-        if (isMounted) {
-          setIsPlaying(false);
-          setIsAuthRequired(true);
-          setActiveStreamUrl(null);
+  const initStream = useCallback(async () => {
+    const sess = await getAuthSession();
+    if (!sess?.token) {
+      if (isMountedRef.current) {
+        setIsPlaying(false);
+        setIsAuthRequired(true);
+        setActiveStreamUrl(null);
+      }
+      return;
+    }
+    if (isMountedRef.current) setIsAuthRequired(false);
+
+    if (episode) {
+      setPlaybackError(false);
+      setPlaybackErrorMsg('');
+      setLoading(true);
+      hasAppliedInitialSeek.current = false;
+      setSelectedSubtitleIndex(-1);
+      setSubCues([]);
+      setActiveCaptionText('');
+
+      const isLunar = Boolean(
+        episode.isLunar ||
+        show?.isLunar ||
+        (episode.id && String(episode.id).startsWith('lunar-')) ||
+        (typeof episodeId === 'string' && episodeId.startsWith('lunar-'))
+      );
+
+      if (isLunar) {
+        const anilistId =
+          episode.anilistId ||
+          show?.anilistId ||
+          (episode.id && String(episode.id).startsWith('lunar-') ? String(episode.id).split('-')[1] : null) ||
+          (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? episodeId.split('-')[1] : null);
+
+        const epNum =
+          episode.episodeNumber ||
+          episode.number ||
+          (episode.id && String(episode.id).startsWith('lunar-') ? parseInt(String(episode.id).split('-')[2], 10) || 1 : 1) ||
+          (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? parseInt(episodeId.split('-')[2], 10) || 1 : 1);
+
+        try {
+          let sData = await apiService.getLunarAnimeStream(
+            anilistId,
+            epNum,
+            lunarHost,
+            lunarAudioType
+          ).catch(() => null);
+
+          let streamUrl = sData?.streamUrl || sData?.stream?.proxyUrl || sData?.stream?.url;
+
+          // If primary host failed or timed out, try other available servers automatically
+          if (!streamUrl) {
+            const fallbackHosts = ['zuna', 'yuki', 'sora', 'loli'].filter((h) => h !== lunarHost);
+            for (const fbHost of fallbackHosts) {
+              try {
+                const fbRes = await apiService.getLunarAnimeStream(anilistId, epNum, fbHost, lunarAudioType);
+                if (fbRes?.streamUrl || fbRes?.stream?.url) {
+                  sData = fbRes;
+                  streamUrl = fbRes.streamUrl || fbRes?.stream?.proxyUrl || fbRes?.stream?.url;
+                  if (isMountedRef.current) setLunarHost(fbHost);
+                  break;
+                }
+              } catch (e) {}
+            }
+          }
+
+          // Seamless fallback to Japanese sub if English dub is unavailable
+          if (!streamUrl && lunarAudioType === 'dub') {
+            const fbData = await apiService.getLunarAnimeStream(anilistId, epNum, 'zuna', 'sub').catch(() => null);
+            streamUrl = fbData?.streamUrl || fbData?.stream?.proxyUrl || fbData?.stream?.url;
+            if (isMountedRef.current) setLunarAudioType('sub');
+          }
+
+          if (streamUrl) {
+            const formatted = formatMediaUrl(streamUrl);
+            masterUrlRef.current = formatted;
+            if (isMountedRef.current) {
+              const pref = preferredAudioRef.current;
+              const res = await processHlsManifest(formatted, pref, selectedQuality);
+              if (res.qualityLevels && res.qualityLevels.length > 0) {
+                setAvailableQualityLevels(res.qualityLevels);
+              }
+              setActiveStreamUrl(res.sanitizedUrl);
+              setLoading(false);
+
+              // Lunar Audio Tracks
+              setAvailableAudioTracks([
+                { id: 'sub', name: 'Japanese (Sub)', language: 'jpn', displayName: 'Japanese (Sub)' },
+                { id: 'dub', name: 'English (Dub)', language: 'eng', displayName: 'English (Dub)' },
+              ]);
+              setSelectedAudioTrackIndex(lunarAudioType === 'dub' ? 1 : 0);
+
+              // Subtitles
+              const rawSubs = sData?.subtitles || sData?.stream?.subtitles || [];
+              if (Array.isArray(rawSubs) && rawSubs.length > 0) {
+                const mappedSubs = rawSubs.map((s, idx) => ({
+                  id: idx,
+                  label: s.label || s.language || `Subtitle ${idx + 1}`,
+                  language: s.lang || s.language || 'en',
+                  uri: formatMediaUrl(s.file || s.url),
+                }));
+                setAvailableSubtitleTracks(mappedSubs);
+                const engIdx = mappedSubs.findIndex(
+                  (s) => s.label.toLowerCase().includes('english') || s.language === 'en'
+                );
+                if (engIdx >= 0 && lunarAudioType === 'sub') {
+                  setSelectedSubtitleIndex(engIdx);
+                  const subUri = mappedSubs[engIdx]?.uri;
+                  if (subUri) {
+                    fetch(subUri)
+                      .then((r) => (r.ok ? r.text() : ''))
+                      .then((vtt) => {
+                        if (vtt && isMountedRef.current) setSubCues(parseVtt(vtt));
+                      })
+                      .catch(() => {});
+                  }
+                }
+              }
+
+              // Intro & Outro detection
+              const intro = sData?.intro || sData?.stream?.intro;
+              const outro = sData?.outro || sData?.stream?.outro;
+              if (intro || outro) {
+                setEpisode((prev) => ({
+                  ...prev,
+                  intro: intro ? { start: intro.start, end: intro.end } : prev?.intro,
+                  outro: outro ? { start: outro.start, end: outro.end } : prev?.outro,
+                }));
+              }
+            }
+            return;
+          }
+        } catch (lunarErr) {
+          console.warn('Lunar stream fetch error:', lunarErr);
+        }
+
+        // If Lunar stream failed to load
+        if (isMountedRef.current) {
+          setLoading(false);
+          setPlaybackError(true);
+          setPlaybackErrorMsg('Could not establish connection to Lunar stream. Tap Retry to reconnect.');
         }
         return;
       }
-      if (isMounted) setIsAuthRequired(false);
 
-      if (episode) {
-        const rawUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
-        const formatted = formatMediaUrl(rawUrl);
-        setPlaybackError(false);
-        hasAppliedInitialSeek.current = false;
-        setSelectedSubtitleIndex(-1);
-        setSubCues([]);
-        setActiveCaptionText('');
-
-        try {
-          const targetShowId = show?.id || episode?.showId;
-          const pref = preferredAudioRef.current || await getPreferredAudioTrack(targetShowId);
-          masterUrlRef.current = formatted;
-          const result = await processHlsManifest(formatted, pref, selectedQuality);
-          if (result.workingUrl) masterUrlRef.current = result.workingUrl;
-          if (isMounted) {
-            setActiveStreamUrl(result.sanitizedUrl);
-            setAvailableAudioTracks(result.audioTracks);
-            const resolvedIdx = result.selectedAudioIndex || 0;
-            setSelectedAudioTrackIndex(resolvedIdx);
-            if (result.audioTracks[resolvedIdx]) {
-              preferredAudioRef.current = result.audioTracks[resolvedIdx];
-            }
-            setAvailableSubtitleTracks(result.subtitleTracks);
-            if (result.qualityLevels && result.qualityLevels.length > 0) {
-              setAvailableQualityLevels(result.qualityLevels);
-            }
-          }
-        } catch (err) {
-          console.warn('Playlist prep error:', err);
-          if (isMounted) setActiveStreamUrl(formatted);
+      // Standard HLS Show Stream
+      const rawUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || '';
+      if (!rawUrl) {
+        if (isMountedRef.current) {
+          setLoading(false);
+          setPlaybackError(true);
+          setPlaybackErrorMsg('No stream source found for this episode.');
         }
+        return;
       }
-    };
+      const formatted = formatMediaUrl(rawUrl);
+
+      try {
+        const targetShowId = show?.id || episode?.showId;
+        const pref = preferredAudioRef.current || (await getPreferredAudioTrack(targetShowId));
+        masterUrlRef.current = formatted;
+        const result = await processHlsManifest(formatted, pref, selectedQuality);
+        if (result.workingUrl) masterUrlRef.current = result.workingUrl;
+        if (isMountedRef.current) {
+          setActiveStreamUrl(result.sanitizedUrl);
+          setAvailableAudioTracks(result.audioTracks);
+          const resolvedIdx = result.selectedAudioIndex || 0;
+          setSelectedAudioTrackIndex(resolvedIdx);
+          if (result.audioTracks[resolvedIdx]) {
+            preferredAudioRef.current = result.audioTracks[resolvedIdx];
+          }
+          setAvailableSubtitleTracks(result.subtitleTracks);
+          if (result.qualityLevels && result.qualityLevels.length > 0) {
+            setAvailableQualityLevels(result.qualityLevels);
+          }
+        }
+      } catch (err) {
+        console.warn('Playlist prep error:', err);
+        if (isMountedRef.current) setActiveStreamUrl(formatted);
+      } finally {
+        if (isMountedRef.current) setLoading(false);
+      }
+    }
+  }, [episode?.id, episode?.videoUrl, lunarAudioType, lunarHost, selectedQuality, show?.id]);
+
+  useEffect(() => {
     initStream();
-    return () => { isMounted = false; };
-  }, [episode?.id, episode?.videoUrl]);
+  }, [initStream]);
 
   // Handle Subtitle Selection & Cue Fetching
   const selectSubtitleTrack = async (index) => {
@@ -1510,18 +1846,90 @@ export const PlayerScreen = ({ route, navigation }) => {
       setPlaybackError(false);
       try {
         let currentEp = initialEpisode;
-        if (episodeId && (!currentEp || !currentEp.videoUrl)) {
-          const fetchedEp = await apiService.getEpisodeById(episodeId);
-          if (fetchedEp) currentEp = fetchedEp;
-        }
-        if (isMounted && currentEp) setEpisode(currentEp);
-
         let parentShow = initialShow;
-        const targetShowId = currentEp?.showId || initialShow?.id;
-        if (targetShowId && (!parentShow || !parentShow.episodes)) {
-          const fetchedShow = await apiService.getShowById(targetShowId);
-          if (fetchedShow) parentShow = fetchedShow;
+
+        const isLunar = Boolean(
+          initialEpisode?.isLunar ||
+          initialShow?.isLunar ||
+          (typeof episodeId === 'string' && episodeId.startsWith('lunar-')) ||
+          (initialEpisode?.id && String(initialEpisode.id).startsWith('lunar-'))
+        );
+
+        const anilistId =
+          initialEpisode?.anilistId ||
+          initialShow?.anilistId ||
+          (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? episodeId.split('-')[1] : null) ||
+          (initialEpisode?.id && String(initialEpisode.id).startsWith('lunar-') ? String(initialEpisode.id).split('-')[1] : null);
+
+        const epNum =
+          initialEpisode?.episodeNumber ||
+          initialEpisode?.number ||
+          (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? parseInt(episodeId.split('-')[2], 10) || 1 : 1) ||
+          (initialEpisode?.id && String(initialEpisode.id).startsWith('lunar-') ? parseInt(String(initialEpisode.id).split('-')[2], 10) || 1 : 1);
+
+        if (isLunar && anilistId) {
+          // Fetch complete metadata and all episodes from Lunar API
+          const animeData = await apiService.getLunarAnimeAll(anilistId).catch(() => null);
+          if (animeData) {
+            const eps = Array.isArray(animeData.episodes) ? animeData.episodes : [];
+            const thisEp = eps.find((e) => (e.number || e.episodeNumber) === epNum) || eps[0] || {
+              number: epNum,
+              episodeNumber: epNum,
+              title: `Episode ${epNum}`,
+            };
+
+            const resolvedEpNum = thisEp.number || thisEp.episodeNumber || epNum;
+            currentEp = {
+              id: `lunar-${anilistId}-${resolvedEpNum}`,
+              episodeNumber: resolvedEpNum,
+              number: resolvedEpNum,
+              title: thisEp.title || `Episode ${resolvedEpNum}`,
+              description: thisEp.description,
+              thumbnail: thisEp.thumbnail || animeData.poster,
+              isLunar: true,
+              anilistId: anilistId,
+            };
+
+            parentShow = {
+              id: `lunar-${anilistId}`,
+              anilistId: anilistId,
+              isLunar: true,
+              title: animeData.title || initialShow?.title || 'Anime Series',
+              description: animeData.description,
+              poster: animeData.poster,
+              banner: animeData.banner,
+              rating: animeData.rating,
+              year: animeData.year,
+              episodes: eps.map((e) => {
+                const num = e.number || e.episodeNumber || 1;
+                return {
+                  id: `lunar-${anilistId}-${num}`,
+                  episodeNumber: num,
+                  number: num,
+                  title: e.title || `Episode ${num}`,
+                  description: e.description,
+                  thumbnail: e.thumbnail || animeData.poster,
+                  duration: `${e.runtime || 24}m`,
+                  isLunar: true,
+                  anilistId: anilistId,
+                };
+              }),
+            };
+          }
+        } else {
+          if (episodeId && (!currentEp || !currentEp.videoUrl)) {
+            const fetchedEp = await apiService.getEpisodeById(episodeId);
+            if (fetchedEp) currentEp = fetchedEp;
+          }
+
+          const targetShowId = currentEp?.showId || initialShow?.id;
+          if (targetShowId && (!parentShow || !parentShow.episodes)) {
+            const fetchedShow = await apiService.getShowById(targetShowId);
+            if (fetchedShow) parentShow = fetchedShow;
+          }
         }
+
+        if (isMounted && currentEp) setEpisode(currentEp);
         if (isMounted && parentShow) {
           setShow(parentShow);
           if (parentShow.episodes && parentShow.episodes.length > 0) {
@@ -1536,7 +1944,9 @@ export const PlayerScreen = ({ route, navigation }) => {
     };
 
     loadData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [episodeId]);
 
   // Controls Auto-Hide Timer & Toggle
@@ -1652,8 +2062,7 @@ export const PlayerScreen = ({ route, navigation }) => {
       }
     } else if (status.error) {
       console.warn('Playback error:', status.error);
-      setPlaybackErrorMsg(`Status Error: ${status.error}`);
-      setPlaybackError(true);
+      handlePlaybackFailure(`Status Error: ${status.error}`);
     }
   };
 
@@ -1775,6 +2184,8 @@ export const PlayerScreen = ({ route, navigation }) => {
     const currentIdx = episodesList.findIndex(e => e.id === episode?.id || e.episodeNumber === episode?.episodeNumber);
     if (currentIdx >= 0 && currentIdx < episodesList.length - 1) {
       saveCurrentProgress();
+      setPositionMillis(0);
+      positionMillisRef.current = 0;
       hasAutoSkippedIntroRef.current = false;
       outroDismissedRef.current = false;
       setShowOutroCard(false);
@@ -1792,6 +2203,8 @@ export const PlayerScreen = ({ route, navigation }) => {
     const currentIdx = episodesList.findIndex(e => e.id === episode?.id || e.episodeNumber === episode?.episodeNumber);
     if (currentIdx > 0) {
       saveCurrentProgress();
+      setPositionMillis(0);
+      positionMillisRef.current = 0;
       hasAutoSkippedIntroRef.current = false;
       outroDismissedRef.current = false;
       setShowOutroCard(false);
@@ -1877,6 +2290,20 @@ export const PlayerScreen = ({ route, navigation }) => {
     setSelectedAudioTrackIndex(index);
     resetControlsTimeout();
 
+    const isLunar = Boolean(
+      episode?.isLunar ||
+      show?.isLunar ||
+      (episode?.id && String(episode.id).startsWith('lunar-'))
+    );
+
+    if (isLunar) {
+      const newType = index === 1 ? 'dub' : 'sub';
+      setLunarAudioType(newType);
+      const newHost = newType === 'dub' ? 'yuki' : 'zuna';
+      setLunarHost(newHost);
+      return;
+    }
+
     const selectedTrack = availableAudioTracks[index];
     if (selectedTrack) {
       preferredAudioRef.current = selectedTrack;
@@ -1884,7 +2311,8 @@ export const PlayerScreen = ({ route, navigation }) => {
       setPreferredAudioTrack(targetShowId, selectedTrack).catch(() => {});
     }
 
-    const rawMaster = masterUrlRef.current || episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
+    const rawMaster = masterUrlRef.current || episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || '';
+    if (!rawMaster) return;
     const formatted = formatMediaUrl(rawMaster);
     const currentPos = positionMillis;
     const playing = isPlaying;
@@ -1933,8 +2361,8 @@ export const PlayerScreen = ({ route, navigation }) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Determine Stream URL (only activeStreamUrl when prepared)
-  const streamUrl = activeStreamUrl ? formatMediaUrl(activeStreamUrl) : null;
+  // Determine Stream URL (activeStreamUrl is already formatted)
+  const streamUrl = activeStreamUrl || null;
   const showTitle = show?.title || episode?.show?.title || "Infinx Anime";
   const epTitle = episode?.title || `Episode ${episode?.episodeNumber || 1}`;
 
@@ -1984,6 +2412,38 @@ export const PlayerScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
+      ) : playbackError ? (
+        <View style={styles.errorOverlay}>
+          <View style={styles.errorIconBox}>
+            <Ionicons name="alert-circle" size={48} color={COLORS.primary} />
+          </View>
+          <Text style={styles.errorTitle}>Stream Connection Error</Text>
+          <Text style={styles.errorDesc}>
+            {playbackErrorMsg || 'Status Error: Could not connect to stream.'}
+          </Text>
+          <View style={styles.errorBtnRow}>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              onPress={() => loadStreamUrl()}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="refresh" size={18} color="#fff" />
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.retryBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}
+              onPress={() => {
+                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+                navigation.goBack();
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="arrow-back" size={18} color="#fff" />
+              <Text style={styles.retryText}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       ) : loading || !streamUrl ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
@@ -1992,11 +2452,13 @@ export const PlayerScreen = ({ route, navigation }) => {
       ) : (
         <View style={styles.playerWrapper} {...panResponder.panHandlers}>
             <Video
+              key={`video-player-${episode?.id || episode?.episodeNumber || episodeId}-${activeStreamUrl || streamUrl}`}
               ref={videoRef}
               style={styles.video}
               source={{
                 uri: streamUrl,
-                overrideExtension: streamUrl?.includes('.m3u8') ? 'm3u8' : undefined,
+                overrideFileExtensionAndroid: (streamUrl?.includes('m3u8') || streamUrl?.includes('/proxy/')) ? 'm3u8' : undefined,
+                overridingExtension: (streamUrl?.includes('m3u8') || streamUrl?.includes('/proxy/')) ? 'm3u8' : undefined,
                 headers: streamUrl?.startsWith('http') ? {
                   'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Mobile Safari/537.36',
                 } : undefined,
@@ -2011,12 +2473,19 @@ export const PlayerScreen = ({ route, navigation }) => {
               onError={(err) => {
                 console.warn('Video load error:', err);
                 const msg = typeof err === 'object' ? JSON.stringify(err) : String(err);
-                setPlaybackErrorMsg(`Load Error: ${msg}`);
-                setPlaybackError(true);
+                handlePlaybackFailure(`Load Error: ${msg}`);
               }}
             />
 
             {/* Real device hardware screen brightness is directly controlled via DeviceControls */}
+
+            {/* Server Switch Notification Toast */}
+            {serverToast.visible && (
+              <View style={styles.serverToastContainer} pointerEvents="none">
+                <Ionicons name="cloud-done" size={16} color="#00e699" />
+                <Text style={styles.serverToastText}>{serverToast.message}</Text>
+              </View>
+            )}
 
             {/* Gesture HUD (Brightness / Volume) */}
             {gestureHud.visible && (
@@ -2124,31 +2593,36 @@ export const PlayerScreen = ({ route, navigation }) => {
               <View style={styles.errorOverlay}>
                 <Ionicons name="alert-circle-outline" size={54} color={COLORS.primary} />
                 <Text style={styles.errorTitle}>Stream Connection Error</Text>
-                <Text style={styles.errorDesc}>{playbackErrorMsg || 'Could not load video source from server.'}</Text>
-                <Text style={{ color: '#888', fontSize: 10, marginTop: 4, textAlign: 'center', paddingHorizontal: 20 }}>
-                  {streamUrl}
+                <Text style={styles.errorDesc}>
+                  {playbackErrorMsg || 'Could not connect to video stream. Please check your network and retry.'}
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
                   <TouchableOpacity
                     style={styles.retryBtn}
                     onPress={() => {
+                      triedServerIdsRef.current.clear();
+                      triedServerIdsRef.current.add(activeServerId);
                       setPlaybackError(false);
-                      setActiveStreamUrl(SAMPLE_STREAM);
+                      setPlaybackErrorMsg('');
+                      setLoading(true);
+                      initStream();
                     }}
+                    activeOpacity={0.8}
                   >
-                    <Ionicons name="play-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.retryText}>Play Demo Stream</Text>
+                    <Ionicons name="refresh" size={18} color="#fff" />
+                    <Text style={styles.retryText}>Retry</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[styles.retryBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}
                     onPress={() => {
-                      const originalUrl = episode?.masterPlaylistUrl || episode?.videoUrl || episode?.streamUrl || SAMPLE_STREAM;
-                      loadStreamUrl(originalUrl);
+                      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+                      navigation.goBack();
                     }}
+                    activeOpacity={0.8}
                   >
-                    <Ionicons name="refresh" size={20} color="#fff" />
-                    <Text style={styles.retryText}>Retry</Text>
+                    <Ionicons name="arrow-back" size={18} color="#fff" />
+                    <Text style={styles.retryText}>Go Back</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2199,7 +2673,7 @@ export const PlayerScreen = ({ route, navigation }) => {
                     <Ionicons name="play-skip-back" size={24} color="#fff" />
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.controlBtn} onPress={skipBackward}>
+                  <TouchableOpacity style={styles.controlBtn} onPress={() => skipBackward(10000)} activeOpacity={0.7}>
                     <MaterialIcons name="replay-10" size={32} color="#fff" />
                   </TouchableOpacity>
 
@@ -2211,7 +2685,7 @@ export const PlayerScreen = ({ route, navigation }) => {
                     />
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.controlBtn} onPress={skipForward}>
+                  <TouchableOpacity style={styles.controlBtn} onPress={() => skipForward(10000)} activeOpacity={0.7}>
                     <MaterialIcons name="forward-10" size={32} color="#fff" />
                   </TouchableOpacity>
 
@@ -2353,6 +2827,17 @@ export const PlayerScreen = ({ route, navigation }) => {
                         size={20}
                         color="#fff"
                       />
+                    </TouchableOpacity>
+
+                    {/* Quick Server Indicator Button (Matching Main Website) */}
+                    <TouchableOpacity
+                      style={[styles.actionIconButton, { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8 }]}
+                      onPress={() => setSettingsVisible(true)}
+                    >
+                      <Ionicons name="server-outline" size={12} color="#00f0ff" />
+                      <Text style={{ color: '#00f0ff', fontSize: 11, fontWeight: '800' }}>
+                        {currentAvailableServers.find(s => s.id === activeServerId)?.shortName || 'Server 1'}
+                      </Text>
                     </TouchableOpacity>
 
                     {/* Quick Quality Indicator Button */}
@@ -2548,96 +3033,165 @@ export const PlayerScreen = ({ route, navigation }) => {
           transparent={true}
           onRequestClose={() => setSettingsVisible(false)}
         >
-          <TouchableWithoutFeedback onPress={() => setSettingsVisible(false)}>
-            <View style={[styles.modalBackdrop, isWidescreen && styles.modalBackdropLandscape]}>
-              <View 
-                style={[styles.settingsModalContent, isWidescreen && styles.settingsModalContentLandscape]}
-                onStartShouldSetResponder={() => true}
-                onTouchEnd={(e) => e?.stopPropagation?.()}
-              >
-                <View style={styles.modalHeader}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <View style={styles.modalHeaderIconBadge}>
-                      <Ionicons name="settings-sharp" size={16} color={COLORS.primary} />
-                    </View>
-                    <Text style={styles.modalTitle}>Playback & Stream Settings</Text>
+          <View style={[styles.modalBackdrop, isWidescreen && styles.modalBackdropLandscape]}>
+            <TouchableWithoutFeedback onPress={() => setSettingsVisible(false)}>
+              <View style={StyleSheet.absoluteFillObject} />
+            </TouchableWithoutFeedback>
+            <View 
+              style={[
+                styles.settingsModalContent, 
+                isWidescreen && styles.settingsModalContentLandscape,
+                isWidescreen && {
+                  width: landscapeDrawerWidth,
+                }
+              ]}
+            >
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, marginRight: 8 }}>
+                  <View style={styles.modalHeaderIconBadge}>
+                    <Ionicons name="settings-sharp" size={16} color={COLORS.primary} />
                   </View>
-                  <TouchableOpacity 
-                    style={styles.modalCloseBtn}
-                    onPress={() => setSettingsVisible(false)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="close" size={20} color="#fff" />
-                  </TouchableOpacity>
+                  <Text style={styles.modalTitle} numberOfLines={1}>Playback & Stream Settings</Text>
                 </View>
-
-                <ScrollView 
-                  style={{ maxHeight: isWidescreen ? '84%' : 460 }}
-                  showsVerticalScrollIndicator={true}
-                  nestedScrollEnabled={true}
-                  keyboardShouldPersistTaps="handled"
-                  contentContainerStyle={{ paddingBottom: 28 }}
-                  bounces={true}
+                <TouchableOpacity 
+                  style={styles.modalCloseBtn}
+                  onPress={() => setSettingsVisible(false)}
+                  activeOpacity={0.7}
                 >
-                        {/* 1. Video Quality Section (Exact Match to Main Site) */}
-                        <View style={styles.settingsSectionCard}>
-                          <View style={styles.settingsSectionHeader}>
-                            <Ionicons name="sparkles" size={16} color={COLORS.primary} />
-                            <Text style={styles.settingsSectionTitle}>Video Quality</Text>
-                            <View style={styles.sectionHeaderBadge}>
-                              <Text style={styles.sectionHeaderBadgeText}>
-                                {availableQualityLevels.find(q => q.id === selectedQuality)?.label || 'Auto'}
+                  <Ionicons name="close" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView 
+                style={styles.settingsScroll}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ paddingBottom: 36 }}
+                bounces={true}
+              >
+                {/* 1. Streaming Server Section (Exact Match to Main Site) */}
+                <View style={styles.settingsSectionCard}>
+                  <View style={styles.settingsSectionHeader}>
+                    <View style={styles.settingsSectionTitleRow}>
+                      <Ionicons name="server" size={16} color={COLORS.primary} />
+                      <Text style={styles.settingsSectionTitle} numberOfLines={1}>Streaming Server</Text>
+                    </View>
+                    <View style={styles.sectionHeaderBadge}>
+                      <Text style={styles.sectionHeaderBadgeText}>
+                        {currentAvailableServers.find(s => s.id === activeServerId)?.shortName || 'Server 1'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.settingsSectionSub}>Multi-server high-bitrate playback matching main website</Text>
+                  <View style={styles.serverCardsList}>
+                    {currentAvailableServers.map((srv) => {
+                      const isSelected = activeServerId === srv.id;
+                      return (
+                        <TouchableOpacity
+                          key={srv.id}
+                          style={[
+                            styles.serverCard,
+                            isSelected && styles.serverCardActive
+                          ]}
+                          onPress={() => switchStreamingServer(srv)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.serverCardLeft}>
+                            <View style={[styles.serverCardIconWrap, isSelected && styles.serverCardIconWrapActive]}>
+                              <Ionicons
+                                name={srv.id === 'server-2' ? 'mic' : srv.id === 'server-3' ? 'headset' : 'cloud-done'}
+                                size={15}
+                                color={isSelected ? COLORS.primary : COLORS.textMuted}
+                              />
+                            </View>
+                            <View style={styles.serverCardMeta}>
+                              <Text style={[styles.serverCardName, isSelected && styles.serverCardNameActive]} numberOfLines={1}>
+                                {srv.name}
+                              </Text>
+                              <Text style={styles.serverCardSub} numberOfLines={1}>
+                                {srv.shortName} • {srv.type === 'dub' ? 'English Dubbed' : srv.type === 'local' ? 'Local Disk' : 'Subtitled (Original)'}
                               </Text>
                             </View>
                           </View>
-                          <Text style={styles.settingsSectionSub}>Adaptive multi-bitrate resolution matching main website</Text>
-                          <View style={styles.qualityGrid}>
-                            {availableQualityLevels.map((lvl) => {
-                              const isSelected = selectedQuality === lvl.id;
-                              return (
-                                <TouchableOpacity
-                                  key={lvl.id}
-                                  style={[
-                                    styles.qualityCard,
-                                    isSelected && styles.qualityCardActive
-                                  ]}
-                                  onPress={() => selectQualityLevel(lvl)}
-                                  activeOpacity={0.7}
-                                >
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                    <Ionicons
-                                      name={lvl.isAuto ? "flash" : "tv-outline"}
-                                      size={13}
-                                      color={isSelected ? COLORS.primary : COLORS.textMuted}
-                                    />
-                                    <Text style={[styles.qualityLabel, isSelected && styles.qualityLabelActive]}>
-                                      {lvl.label}
-                                    </Text>
-                                  </View>
-                                  {lvl.badge && (
-                                    <View style={[
-                                      styles.qualityBadgeBase,
-                                      lvl.badgeClass === 'badge-auto' ? styles.qualityBadgeAuto :
-                                      lvl.badgeClass === 'badge-fhd' ? styles.qualityBadgeFhd :
-                                      lvl.badgeClass === 'badge-hd' ? styles.qualityBadgeHd :
-                                      styles.qualityBadgeSd
-                                    ]}>
-                                      <Text style={[
-                                        styles.qualityBadgeTextBase,
-                                        lvl.badgeClass === 'badge-auto' ? styles.qualityBadgeTextAuto :
-                                        lvl.badgeClass === 'badge-fhd' ? styles.qualityBadgeTextFhd :
-                                        lvl.badgeClass === 'badge-hd' ? styles.qualityBadgeTextHd :
-                                        styles.qualityBadgeTextSd
-                                      ]}>
-                                        {lvl.badge}
-                                      </Text>
-                                    </View>
-                                  )}
-                                </TouchableOpacity>
-                              );
-                            })}
+                          <View style={styles.serverCardRight}>
+                            <View style={[styles.serverCardBadge, isSelected && styles.serverCardBadgeActive]}>
+                              <Text style={[styles.serverCardBadgeText, isSelected && styles.serverCardBadgeTextActive]}>
+                                {srv.badge}
+                              </Text>
+                            </View>
+                            {isSelected && (
+                              <Ionicons name="checkmark-circle" size={17} color={COLORS.primary} style={{ marginLeft: 6 }} />
+                            )}
                           </View>
-                        </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* 2. Video Quality Section (Exact Match to Main Site) */}
+                <View style={styles.settingsSectionCard}>
+                  <View style={styles.settingsSectionHeader}>
+                    <View style={styles.settingsSectionTitleRow}>
+                      <Ionicons name="sparkles" size={16} color={COLORS.primary} />
+                      <Text style={styles.settingsSectionTitle} numberOfLines={1}>Video Quality</Text>
+                    </View>
+                    <View style={styles.sectionHeaderBadge}>
+                      <Text style={styles.sectionHeaderBadgeText}>
+                        {availableQualityLevels.find(q => q.id === selectedQuality)?.label || 'Auto'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.settingsSectionSub}>Adaptive multi-bitrate resolution matching main website</Text>
+                  <View style={styles.qualityGrid}>
+                    {availableQualityLevels.map((lvl) => {
+                      const isSelected = selectedQuality === lvl.id;
+                      const cleanBadge = lvl.isAuto ? 'AUTO' : lvl.badge;
+                      return (
+                        <TouchableOpacity
+                          key={lvl.id}
+                          style={[
+                            styles.qualityCard,
+                            isSelected && styles.qualityCardActive
+                          ]}
+                          onPress={() => selectQualityLevel(lvl)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, marginRight: 6 }}>
+                            <Ionicons
+                              name={lvl.isAuto ? "flash" : "tv-outline"}
+                              size={13}
+                              color={isSelected ? COLORS.primary : COLORS.textMuted}
+                            />
+                            <Text style={[styles.qualityLabel, isSelected && styles.qualityLabelActive]} numberOfLines={1}>
+                              {lvl.label}
+                            </Text>
+                          </View>
+                          {cleanBadge && (
+                            <View style={[
+                              styles.qualityBadgeBase,
+                              lvl.badgeClass === 'badge-auto' || lvl.isAuto ? styles.qualityBadgeAuto :
+                              lvl.badgeClass === 'badge-fhd' ? styles.qualityBadgeFhd :
+                              lvl.badgeClass === 'badge-hd' ? styles.qualityBadgeHd :
+                              styles.qualityBadgeSd
+                            ]}>
+                              <Text style={[
+                                styles.qualityBadgeTextBase,
+                                lvl.badgeClass === 'badge-auto' || lvl.isAuto ? styles.qualityBadgeTextAuto :
+                                lvl.badgeClass === 'badge-fhd' ? styles.qualityBadgeTextFhd :
+                                lvl.badgeClass === 'badge-hd' ? styles.qualityBadgeTextHd :
+                                styles.qualityBadgeTextSd
+                              ]}>
+                                {cleanBadge}
+                              </Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
 
                         {/* 2. Playback Speed */}
                         <View style={styles.settingsSectionCard}>
@@ -3043,31 +3597,33 @@ export const PlayerScreen = ({ route, navigation }) => {
                             )}
                           </View>
                         </View>
-                      </ScrollView>
-                    </View>
-                </View>
-              </TouchableWithoutFeedback>
-            </Modal>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
-            {/* ====== EPISODES DRAWER MODAL (Decoupled from playerWrapper PanResponder) ====== */}
-            <Modal
-              visible={episodesVisible}
-              animationType="slide"
-              transparent={true}
-              onRequestClose={() => setEpisodesVisible(false)}
+        {/* ====== EPISODES DRAWER MODAL (Decoupled from playerWrapper PanResponder) ====== */}
+        <Modal
+          visible={episodesVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setEpisodesVisible(false)}
+        >
+          <View style={[styles.modalBackdrop, isWidescreen && styles.modalBackdropLandscape]}>
+            <TouchableWithoutFeedback onPress={() => setEpisodesVisible(false)}>
+              <View style={StyleSheet.absoluteFillObject} />
+            </TouchableWithoutFeedback>
+            <View 
+              style={[
+                styles.episodesModalContent, 
+                isWidescreen && styles.episodesModalContentLandscape,
+                isWidescreen && {
+                  width: landscapeDrawerWidth,
+                }
+              ]}
             >
-              <TouchableWithoutFeedback onPress={() => setEpisodesVisible(false)}>
-                <View style={[styles.modalBackdrop, isWidescreen && styles.modalBackdropLandscape]}>
-                  <View 
-                    style={[
-                      styles.episodesModalContent, 
-                      isWidescreen && styles.episodesModalContentLandscape
-                    ]}
-                    onStartShouldSetResponder={() => true}
-                    onTouchEnd={(e) => e?.stopPropagation?.()}
-                  >
                     <View style={styles.modalHeader}>
-                      <Text style={styles.modalTitle}>Select Episode ({episodesList.length})</Text>
+                      <Text style={styles.modalTitle} numberOfLines={1}>Select Episode ({episodesList.length})</Text>
                       <TouchableOpacity onPress={() => setEpisodesVisible(false)}>
                         <Ionicons name="close" size={24} color="#fff" />
                       </TouchableOpacity>
@@ -3112,7 +3668,6 @@ export const PlayerScreen = ({ route, navigation }) => {
                     </ScrollView>
                   </View>
                 </View>
-              </TouchableWithoutFeedback>
             </Modal>
       </View>
   );
@@ -3400,8 +3955,8 @@ const styles = StyleSheet.create({
   modalBackdropLandscape: {
     justifyContent: 'center',
     alignItems: 'flex-end',
-    paddingRight: 12,
-    paddingVertical: 10,
+    paddingRight: 16,
+    paddingVertical: 12,
   },
   settingsModalContent: {
     backgroundColor: '#12121c',
@@ -3409,18 +3964,28 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
     gap: 14,
+    height: '75%',
+    maxHeight: '85%',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
   settingsModalContentLandscape: {
-    width: Math.min(380, Dimensions.get('window').width * 0.55),
+    height: '92%',
     maxHeight: '94%',
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     backgroundColor: 'rgba(15, 15, 25, 0.96)',
-    padding: 16,
-    gap: 10,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 16,
+    gap: 8,
+    alignSelf: 'flex-end',
+    shadowColor: '#000',
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+    elevation: 20,
   },
   episodesModalContent: {
     backgroundColor: '#12121c',
@@ -3433,15 +3998,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   episodesModalContentLandscape: {
-    width: Math.min(380, Dimensions.get('window').width * 0.55),
+    height: '92%',
     maxHeight: '94%',
-    height: '94%',
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     backgroundColor: 'rgba(15, 15, 25, 0.96)',
-    padding: 16,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 16,
+    gap: 8,
     alignSelf: 'flex-end',
+    shadowColor: '#000',
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+    elevation: 20,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -4000,17 +4572,30 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.07)',
     marginBottom: 12,
   },
+  settingsScroll: {
+    flex: 1,
+    marginTop: 6,
+  },
   settingsSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  settingsSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+    marginRight: 10,
   },
   settingsSectionTitle: {
     color: '#fff',
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.3,
+    flexShrink: 1,
   },
   settingsSectionSub: {
     color: COLORS.textMuted,
@@ -4018,7 +4603,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionHeaderBadge: {
-    marginLeft: 'auto',
+    flexShrink: 0,
     backgroundColor: 'rgba(255, 0, 85, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -4051,25 +4636,115 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
+  /* Server Section Styles Matching Main Site (Full-Width List) */
+  serverCardsList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  serverCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    width: '100%',
+  },
+  serverCardActive: {
+    backgroundColor: 'rgba(255, 0, 85, 0.12)',
+    borderColor: COLORS.primary,
+  },
+  serverCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    minWidth: 0,
+    marginRight: 8,
+  },
+  serverCardIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  serverCardIconWrapActive: {
+    backgroundColor: 'rgba(255, 0, 85, 0.2)',
+  },
+  serverCardMeta: {
+    flex: 1,
+    minWidth: 0,
+  },
+  serverCardName: {
+    color: '#ddd',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  serverCardNameActive: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+  serverCardSub: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    fontWeight: '500',
+    marginTop: 1,
+  },
+  serverCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  serverCardBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
+    backgroundColor: 'rgba(0, 240, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 240, 255, 0.3)',
+  },
+  serverCardBadgeActive: {
+    backgroundColor: 'rgba(255, 0, 85, 0.22)',
+    borderColor: 'rgba(255, 0, 85, 0.5)',
+  },
+  serverCardBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#00f0ff',
+    textTransform: 'uppercase',
+    includeFontPadding: false,
+  },
+  serverCardBadgeTextActive: {
+    color: '#ff3377',
+  },
+
   /* Quality Section Styles Matching Main Site */
   qualityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginTop: 4,
   },
   qualityCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
     borderRadius: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.09)',
-    minWidth: '47%',
-    flex: 1,
+    width: '48.5%',
+    minWidth: 135,
+    flexGrow: 1,
+    boxSizing: 'border-box',
   },
   qualityCardActive: {
     backgroundColor: 'rgba(255, 0, 85, 0.12)',
@@ -4085,10 +4760,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   qualityBadgeBase: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
+    flexShrink: 0,
+    alignSelf: 'center',
   },
   qualityBadgeAuto: {
     backgroundColor: 'rgba(0, 230, 153, 0.18)',
@@ -4107,10 +4784,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   qualityBadgeTextBase: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: '800',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+    includeFontPadding: false,
+    textAlign: 'center',
   },
   qualityBadgeTextAuto: {
     color: '#00e699',
@@ -4123,5 +4802,32 @@ const styles = StyleSheet.create({
   },
   qualityBadgeTextSd: {
     color: 'rgba(255, 255, 255, 0.7)',
+  },
+
+  /* Server Switch Toast */
+  serverToastContainer: {
+    position: 'absolute',
+    top: 60,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(15, 15, 25, 0.94)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 240, 255, 0.35)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  serverToastText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

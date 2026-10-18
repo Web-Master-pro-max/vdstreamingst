@@ -5,8 +5,13 @@ import { COLORS } from '../theme/colors';
 import { formatMediaUrl } from '../services/api';
 
 export const ShowCard = ({ show, onPress, width = 140, height = 200 }) => {
-  const rating = show.rating ? parseFloat(show.rating).toFixed(1) : '4.8';
-  const categoryName = show.categories?.[0]?.category?.name || show.badge || 'Anime';
+  const rawRating = parseFloat(show.rating);
+  const rating = !isNaN(rawRating) && rawRating > 0
+    ? (rawRating > 10 ? (rawRating / 10).toFixed(1) : rawRating.toFixed(1))
+    : '4.8';
+  const categoryName = show.format
+    ? show.format.replace('_', ' ')
+    : show.categories?.[0]?.category?.name || (show.isLunar ? 'Anime' : show.badge || 'Anime');
   const rawPoster = show.poster || show.posterUrl || show.banner || show.bannerUrl;
   const posterUrl = formatMediaUrl(rawPoster);
 

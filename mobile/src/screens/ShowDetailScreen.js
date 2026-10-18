@@ -36,11 +36,36 @@ const formatTime = (millis, totalMillis = 0) => {
 };
 
 export const ShowDetailScreen = ({ route, navigation }) => {
-  const { showId, show: initialShow } = route.params || {};
+  const { showId, show: initialShow, anilistId: initialAnilistId } = route.params || {};
+
+  const isLunar = Boolean(
+    initialShow?.isLunar ||
+    initialAnilistId ||
+    (typeof showId === 'string' && showId.startsWith('lunar-')) ||
+    (initialShow?.id && String(initialShow.id).startsWith('lunar-'))
+  );
+
+  const resolvedAnilistId =
+    initialAnilistId ||
+    initialShow?.anilistId ||
+    (typeof showId === 'string' && showId.startsWith('lunar-') ? showId.replace('lunar-', '') : null) ||
+    (initialShow?.id && String(initialShow.id).startsWith('lunar-') ? String(initialShow.id).replace('lunar-', '') : null);
+
   const [show, setShow] = useState(initialShow || null);
-  const [loading, setLoading] = useState(!initialShow);
+  const [loading, setLoading] = useState(!initialShow || !initialShow.episodes || initialShow.episodes.length === 0);
   const [bookmarked, setBookmarked] = useState(false);
   const [progressData, setProgressData] = useState({ episodes: {}, lastWatched: null });
+  const [selectedBatch, setSelectedBatch] = useState(0);
+
+  useEffect(() => {
+    if (initialShow) {
+      setShow(initialShow);
+      setLoading(!initialShow.episodes || initialShow.episodes.length === 0);
+    } else {
+      setShow(null);
+      setLoading(true);
+    }
+  }, [showId, resolvedAnilistId]);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -57,16 +82,16 @@ export const ShowDetailScreen = ({ route, navigation }) => {
 
   // Check initial bookmark / watchlist status
   useEffect(() => {
-    const targetId = showId || initialShow?.id;
+    const targetId = showId || initialShow?.id || (resolvedAnilistId ? `lunar-${resolvedAnilistId}` : null);
     if (targetId) {
       isWatchlisted(targetId).then(setBookmarked).catch(() => {});
     }
-  }, [showId, initialShow?.id]);
+  }, [showId, initialShow?.id, resolvedAnilistId]);
 
   // Load episode progress on mount and every time screen gains focus
   useEffect(() => {
     const loadProgress = async () => {
-      const targetId = showId || show?.id || initialShow?.id;
+      const targetId = showId || show?.id || initialShow?.id || (resolvedAnilistId ? `lunar-${resolvedAnilistId}` : null);
       if (targetId) {
         const data = await getShowEpisodesProgress(targetId);
         setProgressData(data);
@@ -75,19 +100,75 @@ export const ShowDetailScreen = ({ route, navigation }) => {
     loadProgress();
     const unsubscribe = navigation.addListener('focus', loadProgress);
     return unsubscribe;
-  }, [navigation, showId, show?.id, initialShow?.id]);
+  }, [navigation, showId, show?.id, initialShow?.id, resolvedAnilistId]);
 
   useEffect(() => {
     const fetchDetails = async () => {
-      if (!showId) return;
+      const targetId = showId || (resolvedAnilistId ? `lunar-${resolvedAnilistId}` : null) || initialShow?.id;
+      if (!targetId && !resolvedAnilistId) return;
+
       try {
-        const data = await apiService.getShowById(showId);
-        setShow(data);
-        if (data?.id) {
-          const isBookmarked = await isWatchlisted(data.id);
-          setBookmarked(isBookmarked);
-          const prog = await getShowEpisodesProgress(data.id);
-          setProgressData(prog);
+        if (isLunar && resolvedAnilistId) {
+          const lData = await apiService.getLunarAnimeAll(resolvedAnilistId);
+          if (lData) {
+            const formattedShow = {
+              id: `lunar-${resolvedAnilistId}`,
+              anilistId: resolvedAnilistId,
+              isLunar: true,
+              title: lData.title || initialShow?.title || 'Anime Series',
+              description: (lData.description || initialShow?.description || '').replace(/<[^>]*>/g, '').trim(),
+              rating: lData.rating || initialShow?.rating || '8.8',
+              year: lData.year || initialShow?.year || '2024',
+              poster: lData.poster || initialShow?.poster || initialShow?.posterUrl,
+              banner: lData.banner || initialShow?.banner || initialShow?.bannerUrl || lData.poster,
+              artworks: lData.artworks || initialShow?.artworks,
+              seasons: lData.seasons || [],
+              relations: lData.relations || [],
+              categories: (lData.genres || []).map((g) => ({ name: g, category: { name: g } })),
+              episodes:
+                Array.isArray(lData.episodes) && lData.episodes.length > 0
+                  ? lData.episodes.map((e) => {
+                      const epNum = e.number || e.episodeNumber || 1;
+                      return {
+                        id: `lunar-${resolvedAnilistId}-${epNum}`,
+                        episodeNumber: epNum,
+                        number: epNum,
+                        title: e.title || `Episode ${epNum}`,
+                        description: (e.description || '').replace(/<[^>]*>/g, '').trim(),
+                        thumbnail: e.thumbnail || lData.poster || initialShow?.poster,
+                        duration: `${e.runtime || 24}m`,
+                        isLunar: true,
+                        anilistId: resolvedAnilistId,
+                      };
+                    })
+                  : [
+                      {
+                        id: `lunar-${resolvedAnilistId}-1`,
+                        episodeNumber: 1,
+                        number: 1,
+                        title: 'Episode 1',
+                        thumbnail: lData.poster || initialShow?.poster,
+                        duration: '24m',
+                        isLunar: true,
+                        anilistId: resolvedAnilistId,
+                      },
+                    ],
+            };
+            setShow(formattedShow);
+            const isBookmarked = await isWatchlisted(formattedShow.id);
+            setBookmarked(isBookmarked);
+            const prog = await getShowEpisodesProgress(formattedShow.id);
+            setProgressData(prog);
+          }
+        } else {
+          const data = await apiService.getShowById(targetId);
+          setShow(data);
+          if (data?.id) {
+            const isBookmarked = await isWatchlisted(data.id);
+            setBookmarked(isBookmarked);
+            const prog = await getShowEpisodesProgress(data.id);
+            setProgressData(prog);
+          }
         }
       } catch (e) {
         console.error('Error fetching show details:', e);
@@ -96,7 +177,7 @@ export const ShowDetailScreen = ({ route, navigation }) => {
       }
     };
     fetchDetails();
-  }, [showId]);
+  }, [showId, resolvedAnilistId, isLunar]);
 
   if (loading || !show) {
     return (
@@ -108,12 +189,15 @@ export const ShowDetailScreen = ({ route, navigation }) => {
 
   const rating = show.rating ? parseFloat(show.rating).toFixed(1) : '4.9';
   const { bannerUrl, posterUrl, isVideo } = getShowBannerMedia(show);
-  const backdropImageUri = isVideo ? (posterUrl || bannerUrl) : (bannerUrl || posterUrl);
-  const episodes = show.episodes && show.episodes.length > 0 ? show.episodes : [
-    { id: 101, episodeNumber: 1, title: 'Episode 1: Awakening', duration: '24m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
-    { id: 102, episodeNumber: 2, title: 'Episode 2: The Rising Storm', duration: '23m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
-    { id: 103, episodeNumber: 3, title: 'Episode 3: Unbreakable Bond', duration: '25m', videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
-  ];
+  const backdropImageUri = isVideo ? posterUrl || bannerUrl : bannerUrl || posterUrl;
+  const episodes = show.episodes && show.episodes.length > 0 ? show.episodes : [];
+
+  const BATCH_SIZE = 50;
+  const totalBatches = Math.ceil(episodes.length / BATCH_SIZE);
+  const displayedEpisodes =
+    episodes.length > BATCH_SIZE
+      ? episodes.slice(selectedBatch * BATCH_SIZE, (selectedBatch + 1) * BATCH_SIZE)
+      : episodes;
 
   const handlePlayEpisode = async (episode, seekMillis = 0) => {
     const sess = await getAuthSession();
@@ -128,10 +212,24 @@ export const ShowDetailScreen = ({ route, navigation }) => {
       );
       return;
     }
+    const epNum = episode.episodeNumber || episode.number || 1;
+    const epObj = {
+      ...episode,
+      episodeNumber: epNum,
+      number: epNum,
+      isLunar: isLunar || Boolean(episode.isLunar),
+      anilistId: resolvedAnilistId || episode.anilistId || show?.anilistId,
+    };
+    const showObj = {
+      ...show,
+      isLunar: isLunar || Boolean(show?.isLunar),
+      anilistId: resolvedAnilistId || show?.anilistId,
+    };
+
     navigation.navigate('Player', {
       episodeId: episode.id,
-      episode,
-      show,
+      episode: epObj,
+      show: showObj,
       initialPositionMillis: seekMillis || 0,
     });
   };
@@ -157,7 +255,13 @@ export const ShowDetailScreen = ({ route, navigation }) => {
         <View style={styles.backdropContainer}>
           <Image source={{ uri: backdropImageUri }} style={styles.backdropImage} resizeMode="cover" />
           <LinearGradient colors={GRADIENTS.heroOverlay} style={styles.gradientOverlay}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Home');
+              }
+            }}>
               <Ionicons name="chevron-back" size={24} color="#fff" />
             </TouchableOpacity>
 
@@ -297,9 +401,37 @@ export const ShowDetailScreen = ({ route, navigation }) => {
                   </Text>
                 </View>
 
+                {/* Batch Range Navigator for Long-running Anime */}
+                {totalBatches > 1 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.batchScroll}
+                    contentContainerStyle={styles.batchScrollContent}
+                  >
+                    {Array.from({ length: totalBatches }).map((_, idx) => {
+                      const start = idx * BATCH_SIZE + 1;
+                      const end = Math.min((idx + 1) * BATCH_SIZE, episodes.length);
+                      const isActive = selectedBatch === idx;
+                      return (
+                        <TouchableOpacity
+                          key={`batch_${idx}`}
+                          style={[styles.batchPill, isActive && styles.batchPillActive]}
+                          onPress={() => setSelectedBatch(idx)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.batchPillText, isActive && styles.batchPillTextActive]}>
+                            {start} - {end}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                )}
+
                 {/* Episodes List */}
                 <View style={styles.episodesList}>
-                  {episodes.map((ep) => {
+                  {displayedEpisodes.map((ep) => {
                     const epProg = episodesProgress[ep.id] || episodesProgress[`ep_${ep.episodeNumber}`];
                     const isCompleted = epProg?.completed;
                     const isInProgress = epProg && epProg.positionMillis > 1000 && !isCompleted;
@@ -744,5 +876,33 @@ const styles = StyleSheet.create({
   cardProgressFill: {
     height: '100%',
     borderRadius: 2,
+  },
+  batchScroll: {
+    marginVertical: 10,
+  },
+  batchScrollContent: {
+    gap: 8,
+    paddingHorizontal: 2,
+  },
+  batchPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  batchPillActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  batchPillText: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  batchPillTextActive: {
+    color: '#fff',
+    fontWeight: '800',
   },
 });
