@@ -44,6 +44,9 @@ transcodeQueueManager.startRedisWatcher();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Trust reverse proxy headers (X-Forwarded-Proto, X-Forwarded-Host from Vercel / Cloudflare)
+app.enable('trust proxy');
+
 // Enable CORS for frontend flexibility
 app.use(cors());
 

@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -9,20 +10,116 @@
       "destination": "http://13.202.95.5:8000/uploads/:path*"
     },
     {
+      "source": "/ec2-uploads/:path*",
+      "destination": "http://13.202.95.5:8000/uploads/:path*"
+    },
+    {
+      "source": "/posters/:path*",
+      "destination": "http://13.202.95.5:8000/posters/:path*"
+    },
+    {
+      "source": "/banners/:path*",
+      "destination": "http://13.202.95.5:8000/banners/:path*"
+    },
+    {
+      "source": "/socket.io/:path*",
+      "destination": "http://13.202.95.5:8000/socket.io/:path*"
+    },
+    {
+      "source": "/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
       "source": "/Postes/:path*",
-      "destination": "http://13.202.95.5:8000/Postes/:path*"
+      "destination": "/frontend/Postes/:path*"
     },
     {
       "source": "/img/:path*",
-      "destination": "http://13.202.95.5:8000/img/:path*"
+      "destination": "/frontend/img/:path*"
     },
     {
       "source": "/AMovies-Poster/:path*",
-      "destination": "http://13.202.95.5:8000/AMovies-Poster/:path*"
+      "destination": "/frontend/AMovies-Poster/:path*"
     },
     {
       "source": "/Horror-poster/:path*",
-      "destination": "http://13.202.95.5:8000/Horror-poster/:path*"
+      "destination": "/frontend/Horror-poster/:path*"
+    },
+    {
+      "source": "/profile/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/watch/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/party/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/profile/uploads/:path*",
+      "destination": "http://13.202.95.5:8000/uploads/:path*"
+    },
+    {
+      "source": "/video-player/:path*",
+      "destination": "/frontend/video-player/:path*"
+    },
+    {
+      "source": "/admin",
+      "destination": "/frontend/admin.html"
+    },
+    {
+      "source": "/anime",
+      "destination": "/frontend/anime.html"
+    },
+    {
+      "source": "/download",
+      "destination": "/frontend/download.html"
+    },
+    {
+      "source": "/live_admin",
+      "destination": "/frontend/live_admin.html"
+    },
+    {
+      "source": "/profile",
+      "destination": "/frontend/profile.html"
+    },
+    {
+      "source": "/profile/:path*",
+      "destination": "/frontend/profile.html"
+    },
+    {
+      "source": "/view",
+      "destination": "/frontend/view.html"
+    },
+    {
+      "source": "/watch",
+      "destination": "/frontend/video-player/index.html"
+    },
+    {
+      "source": "/watch/:path*",
+      "destination": "/frontend/video-player/index.html"
+    },
+    {
+      "source": "/party",
+      "destination": "/frontend/video-player/index.html"
+    },
+    {
+      "source": "/party/:path*",
+      "destination": "/frontend/video-player/index.html"
+    },
+    {
+      "source": "/home",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
     }
   ]
 }

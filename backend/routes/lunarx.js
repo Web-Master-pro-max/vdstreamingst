@@ -281,9 +281,13 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
       const baseUrl = finalUrl.substring(0, finalUrl.lastIndexOf('/') + 1);
       const lines = body.split('\n');
       const targetQuality = req.query.quality ? req.query.quality.toLowerCase() : null;
-      const hostHeader = req.get('host');
-      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-      const proxyBase = hostHeader ? `${protocol}://${hostHeader}` : '';
+      const forwardedProto = req.headers['x-forwarded-proto'];
+      const referer = req.headers['referer'] || '';
+      const isHttpsClient = forwardedProto === 'https' || referer.startsWith('https://');
+      const forwardedHost = req.headers['x-forwarded-host'];
+      const hostHeader = forwardedHost || req.get('host');
+      const protocol = isHttpsClient ? 'https' : (forwardedProto || req.protocol || 'http');
+      const proxyBase = isHttpsClient ? (forwardedHost ? `https://${forwardedHost}` : '') : (hostHeader ? `${protocol}://${hostHeader}` : '');
 
       // Handle Master Playlists (#EXT-X-STREAM-INF)
       if (body.includes('#EXT-X-STREAM-INF')) {
