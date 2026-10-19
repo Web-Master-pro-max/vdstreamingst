@@ -1202,7 +1202,7 @@ export const PlayerScreen = ({ route, navigation }) => {
   // Requirement: Precise Skip Intro & Outro (Netflix / Crunchyroll Style)
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [showSkipOutro, setShowSkipOutro] = useState(false);
-  const [autoSkipIntro, setAutoSkipIntro] = useState(false);
+  const [autoSkipIntro, setAutoSkipIntro] = useState(true);
   const [autoSkipOutro, setAutoSkipOutro] = useState(true);
   const [skipDurationPref, setSkipDurationPref] = useState('auto');
   const [backgroundCues, setBackgroundCues] = useState([]);
@@ -2032,11 +2032,14 @@ export const PlayerScreen = ({ route, navigation }) => {
           triggerUndoToast(pos);
           videoRef.current?.setPositionAsync(intro.end).catch(() => {});
           setShowSkipIntro(false);
-        } else {
+        } else if (!autoSkipIntroRef.current) {
           setShowSkipIntro(true);
         }
       } else {
         setShowSkipIntro(false);
+        if (intro && (pos < intro.start || pos <= 2000)) {
+          hasAutoSkippedIntroRef.current = false;
+        }
       }
 
       if (dur > 60000 && outro && pos >= outro.start && pos < outro.end) {
@@ -3642,6 +3645,16 @@ export const PlayerScreen = ({ route, navigation }) => {
                             key={ep.id || ep.episodeNumber}
                             style={[styles.drawerEpCard, isActive && styles.drawerEpCardActive]}
                             onPress={() => {
+                              saveCurrentProgress();
+                              setPositionMillis(0);
+                              positionMillisRef.current = 0;
+                              hasAutoSkippedIntroRef.current = false;
+                              outroDismissedRef.current = false;
+                              setShowOutroCard(false);
+                              setOutroCountdown(null);
+                              setShowSkipIntro(false);
+                              setShowSkipOutro(false);
+                              setUndoSkipVisible(false);
                               setEpisode(ep);
                               setEpisodesVisible(false);
                             }}

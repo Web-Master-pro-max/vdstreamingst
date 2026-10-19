@@ -399,9 +399,9 @@ export const STORAGE_KEY_SKIP_DURATION = '@infinx_skip_intro_duration';
 export const getAutoSkipIntroSetting = async () => {
   try {
     const val = await AsyncStorage.getItem(STORAGE_KEY_AUTO_SKIP_INTRO);
-    return val === 'true';
+    return val === null ? true : val === 'true';
   } catch (e) {
-    return false;
+    return true;
   }
 };
 
@@ -417,9 +417,9 @@ export const saveAutoSkipIntroSetting = async (enabled) => {
 export const getAutoSkipOutroSetting = async () => {
   try {
     const val = await AsyncStorage.getItem(STORAGE_KEY_AUTO_SKIP_OUTRO);
-    return val === 'true';
+    return val === null ? true : val === 'true';
   } catch (e) {
-    return false;
+    return true;
   }
 };
 
