@@ -800,7 +800,7 @@ router.get('/profile', authenticate, async (req, res) => {
       xpPercent: Math.min(100, Math.round((currentXp / xpNext) * 100)),
       bio: user.bio || '',
       avatarUrl: user.avatarUrl || null,
-      avatarFrame: user.avatarFrame || 'default',
+      avatarFrame: (user.role !== 'ADMIN' && (user.avatarFrame === 'gold' || user.avatarFrame === 'aura-gold')) ? 'default' : (user.avatarFrame || 'default'),
       bannerUrl: user.bannerUrl || null,
       accentColor: user.accentColor || '#ff0055',
       topAnime: userTopAnime,
@@ -943,15 +943,23 @@ router.put('/profile', authenticate, async (req, res) => {
       data.bannerUrl = cleanBanner;
     }
 
-    // ANTI-CHEAT: Validate aura frame lock level requirement
+    // ANTI-CHEAT: Validate aura frame lock level & admin-only requirement
     if (avatarFrame !== undefined) {
       const cleanFrame = String(avatarFrame).trim();
-      if (cleanFrame && !isAdmin && AURA_LEVEL_REQUIREMENTS[cleanFrame]) {
-        const reqLvl = AURA_LEVEL_REQUIREMENTS[cleanFrame];
-        if (effectiveLevel < reqLvl) {
+      if (cleanFrame) {
+        // ADMIN-ONLY RESTRICTION: Super Saiyan God aura frame is reserved exclusively for Admins
+        if ((cleanFrame === 'gold' || cleanFrame === 'aura-gold') && !isAdmin) {
           return res.status(403).json({
-            error: `Access Denied: This aura frame requires Level ${reqLvl}. You are currently Level ${effectiveLevel}.`
+            error: 'Access Denied: The Super Saiyan God animated aura frame is exclusive to Administrators.'
           });
+        }
+        if (!isAdmin && AURA_LEVEL_REQUIREMENTS[cleanFrame]) {
+          const reqLvl = AURA_LEVEL_REQUIREMENTS[cleanFrame];
+          if (effectiveLevel < reqLvl) {
+            return res.status(403).json({
+              error: `Access Denied: This aura frame requires Level ${reqLvl}. You are currently Level ${effectiveLevel}.`
+            });
+          }
         }
       }
       data.avatarFrame = cleanFrame;
@@ -1163,7 +1171,7 @@ router.get('/profile/:id', async (req, res) => {
       xpPercent: Math.min(100, Math.round((currentXp / xpNext) * 100)),
       bio: user.bio || '',
       avatarUrl: user.avatarUrl,
-      avatarFrame: user.avatarFrame || 'default',
+      avatarFrame: (user.role !== 'ADMIN' && (user.avatarFrame === 'gold' || user.avatarFrame === 'aura-gold')) ? 'default' : (user.avatarFrame || 'default'),
       bannerUrl: user.bannerUrl,
       accentColor: user.accentColor || '#ff0055',
       topAnime: userTopAnime,
