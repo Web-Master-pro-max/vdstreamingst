@@ -1,9 +1,31 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'infinx_anime_jwt_secret_key_9981';
+
+/**
+ * Extract authenticated requester if valid Bearer token is provided (soft auth)
+ */
+async function getOptionalRequester(req) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    const token = authHeader.split(' ')[1];
+    if (!token) return null;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const uid = decoded.userId || decoded.id;
+    if (!uid) return null;
+    const user = await prisma.user.findUnique({ where: { id: parseInt(uid) } });
+    if (!user || user.isBanned) return null;
+    return user;
+  } catch (_) {
+    return null;
+  }
+}
 
 // Get Watchlist
 router.get('/watchlist', authenticate, async (req, res) => {
@@ -1281,6 +1303,14 @@ router.get('/profile/:id', async (req, res) => {
 
     if (!user) return res.status(404).json({ error: 'Otaku profile not found' });
 
+    // Optional authentication check for privacy authorization (Owner or ADMIN)
+    const requester = await getOptionalRequester(req);
+    const isOwner = Boolean(requester && requester.id === user.id);
+    const isAdmin = Boolean(requester && requester.role === 'ADMIN');
+    const canViewPrivateDetails = isOwner || isAdmin;
+    const isPrivate = Boolean(user.isPrivate);
+    const isPrivateHidden = isPrivate && !canViewPrivateDetails;
+
     const watchedMap = getUserWatchedEpisodes(user.id) || {};
     const watchedList = Object.values(watchedMap);
     const animeHistory = getUserAnimeHistory(user.id) || [];
@@ -1303,12 +1333,12 @@ router.get('/profile/:id', async (req, res) => {
     let publicWatchlist = [];
     try {
       watchlistCount = await prisma.watchlist.count({ where: { userId: user.id } });
-      if (!user.isPrivate) {
+      if (!isPrivateHidden) {
         const wl = await prisma.watchlist.findMany({
           where: { userId: user.id },
           include: { show: true },
           orderBy: { createdAt: 'desc' },
-          take: 12
+          take: 24
         });
         publicWatchlist = wl.map(item => item.show).filter(Boolean);
       }
@@ -1327,7 +1357,7 @@ router.get('/profile/:id', async (req, res) => {
 
     res.json({
       id: user.id,
-      email: user.isPrivate ? null : user.email,
+      email: isPrivateHidden ? null : user.email,
       username: user.username || user.email.split('@')[0],
       role: user.role,
       vipRank: user.vipRank || 'GENIN',
@@ -1341,14 +1371,17 @@ router.get('/profile/:id', async (req, res) => {
       bannerUrl: user.bannerUrl,
       accentColor: user.accentColor || '#ff0055',
       topAnime: userTopAnime,
-      isPrivate: Boolean(user.isPrivate),
+      isPrivate: isPrivate,
+      isPrivateHidden: isPrivateHidden,
+      canViewPrivateDetails: canViewPrivateDetails,
+      isAdminViewer: Boolean(isAdmin && !isOwner),
       createdAt: user.createdAt,
-      watchlist: publicWatchlist,
+      watchlist: isPrivateHidden ? [] : publicWatchlist,
       stats: {
         totalHoursWatched: totalHours,
         totalEpisodesWatched: totalEpisodes,
-        watchlistCount: watchlistCount,
-        recentHistory: user.isPrivate ? [] : animeHistory.slice(0, 6)
+        watchlistCount: isPrivateHidden ? null : watchlistCount,
+        recentHistory: isPrivateHidden ? [] : animeHistory.slice(0, 10)
       }
     });
   } catch (error) {
