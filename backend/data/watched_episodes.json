@@ -1,0 +1,47 @@
+{
+  "1": {
+    "lunar-1735-3": {
+      "episodeKey": "lunar-1735-3",
+      "episodeId": "lunar-1735-3",
+      "lunarId": "1735",
+      "episodeNumber": 3,
+      "episodeTitle": "Episode 3: The Secret Technique",
+      "showTitle": "Naruto: Shippuden",
+      "poster": "",
+      "banner": "",
+      "progress": 1000,
+      "duration": 1400,
+      "completed": false,
+      "lastWatchedAt": "2026-10-19T12:33:53.621Z",
+      "xpAwarded": true,
+      "xpAwardedAt": "2026-10-19T12:33:53.621Z"
+    },
+    "lunar-1735-4": {
+      "episodeKey": "lunar-1735-4",
+      "episodeId": "lunar-1735-4",
+      "lunarId": "1735",
+      "episodeNumber": 4,
+      "episodeTitle": "Episode 4: Battle in the Desert",
+      "showTitle": "Naruto: Shippuden",
+      "poster": "",
+      "banner": "",
+      "progress": 1200,
+      "duration": 1400,
+      "completed": true,
+      "lastWatchedAt": "2026-10-19T12:33:53.871Z",
+      "xpAwarded": true,
+      "xpAwardedAt": "2026-10-19T12:33:53.871Z"
+    },
+    "lunar-1735-5": {
+      "episodeKey": "lunar-1735-5",
+      "episodeId": "lunar-1735-5",
+      "lunarId": "1735",
+      "episodeNumber": 5,
+      "inWatchParty": false,
+      "amount": 10,
+      "xpAwarded": true,
+      "xpAwardedAt": "2026-10-19T12:33:55.952Z",
+      "lastWatchedAt": "2026-10-19T12:33:55.952Z"
+    }
+  }
+}

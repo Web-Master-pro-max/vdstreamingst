@@ -312,6 +312,49 @@ export const recordWatchHistory = async (show, episode, positionMillis, duration
       await saveEpisodeProgress(showId, episode, positionMillis, durationMillis);
     }
 
+    // Synchronize with backend API and award XP if user is logged in
+    try {
+      const session = await getAuthSession();
+      if (session && session.token) {
+        const baseUrl = await getApiBaseUrl();
+        const isLunar = Boolean(show.isLunar || show.anilistId || show.lunarId || isNaN(parseInt(showId)));
+        const lunarIdVal = show.anilistId || show.lunarId || showId;
+        const durSec = Math.floor((durationMillis || 0) / 1000);
+        const posSec = Math.floor((positionMillis || 0) / 1000);
+        const isCompleted = progressPercent >= 70;
+
+        if (durSec > 0) {
+          const payload = isLunar ? {
+            isLunar: true,
+            lunarId: String(lunarIdVal),
+            episodeId: `lunar-${lunarIdVal}-${episode?.episodeNumber || 1}`,
+            episodeNumber: episode?.episodeNumber || 1,
+            episodeTitle: episode?.title || `Episode ${episode?.episodeNumber || 1}`,
+            showTitle: show.title || 'Anime Series',
+            poster: show.poster || show.posterUrl || '',
+            banner: show.banner || show.bannerUrl || '',
+            progress: posSec,
+            duration: durSec,
+            completed: isCompleted
+          } : {
+            episodeId: parseInt(episode?.id || showId) || 1,
+            progress: posSec,
+            duration: durSec,
+            completed: isCompleted
+          };
+
+          fetch(`${baseUrl}/api/user/history`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify(payload)
+          }).catch(() => {});
+        }
+      }
+    } catch (_) {}
+
     return updated;
   } catch (e) {
     console.warn('Error recording watch history:', e);

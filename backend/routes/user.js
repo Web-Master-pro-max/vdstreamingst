@@ -84,6 +84,37 @@ const path = require('path');
 
 const ANIME_HISTORY_DIR = path.join(__dirname, '../data');
 const ANIME_HISTORY_FILE = path.join(ANIME_HISTORY_DIR, 'anime_history.json');
+const WATCHED_EPISODES_FILE = path.join(ANIME_HISTORY_DIR, 'watched_episodes.json');
+
+function getUserWatchedEpisodes(userId) {
+  try {
+    if (!fs.existsSync(WATCHED_EPISODES_FILE)) return {};
+    const data = JSON.parse(fs.readFileSync(WATCHED_EPISODES_FILE, 'utf8') || '{}');
+    return data[userId] || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveUserWatchedEpisodes(userId, episodesMap) {
+  try {
+    if (!fs.existsSync(ANIME_HISTORY_DIR)) {
+      fs.mkdirSync(ANIME_HISTORY_DIR, { recursive: true });
+    }
+    let data = {};
+    if (fs.existsSync(WATCHED_EPISODES_FILE)) {
+      try {
+        data = JSON.parse(fs.readFileSync(WATCHED_EPISODES_FILE, 'utf8') || '{}');
+      } catch (e) { data = {}; }
+    }
+    data[userId] = episodesMap;
+    const tempFile = path.join(ANIME_HISTORY_DIR, `watched_episodes_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tempFile, WATCHED_EPISODES_FILE);
+  } catch (e) {
+    console.error('Error saving watched episodes to file:', e);
+  }
+}
 
 function getUserAnimeHistory(userId) {
   try {
@@ -436,37 +467,81 @@ router.get('/history', authenticate, async (req, res) => {
 // Save/Update watch progress
 router.post('/history', authenticate, async (req, res) => {
   try {
-    const { episodeId, progress, duration, isLunar, lunarId } = req.body;
+    const { episodeId, progress, duration, isLunar, lunarId, inWatchParty, completed } = req.body;
 
     if (!episodeId || progress === undefined || !duration) {
       return res.status(400).json({ error: 'Episode ID, progress, and duration are required.' });
     }
 
+    const floatProg = parseFloat(progress) || 0;
+    const floatDur = parseFloat(duration) || 1;
+    const progressRatio = floatDur > 0 ? (floatProg / floatDur) : 0;
+    const isWatchedComplete = Boolean(completed) || progressRatio >= 0.70;
+
     // Handle dynamic Anime show progress
     if (isLunar || lunarId || isNaN(parseInt(episodeId))) {
       const anilistIdVal = lunarId || req.body.anilistId || (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? episodeId.split('-')[1] : null);
       const epNumVal = req.body.episodeNumber || (typeof episodeId === 'string' && episodeId.startsWith('lunar-') ? parseInt(episodeId.split('-')[2]) : 1);
+      const epKey = `lunar-${anilistIdVal}-${epNumVal}`;
 
       const animeHistoryItem = {
-        id: `lunar-${anilistIdVal}-${epNumVal}`,
+        id: epKey,
         userId: req.user.id,
         isLunar: true,
         lunarId: anilistIdVal,
-        episodeId: `lunar-${anilistIdVal}-${epNumVal}`,
+        episodeId: epKey,
         episodeNumber: epNumVal,
         episodeTitle: req.body.episodeTitle || `Episode ${epNumVal}`,
         showTitle: req.body.showTitle || req.body.title || 'Anime Series',
         poster: req.body.poster || '',
         banner: req.body.banner || '',
-        progress: parseFloat(progress),
-        duration: parseFloat(duration),
+        progress: floatProg,
+        duration: floatDur,
         watchedAt: new Date().toISOString()
       };
       saveUserAnimeHistory(req.user.id, animeHistoryItem);
-      return res.json({ success: true, isLunar: true, history: animeHistoryItem });
+
+      // Record detailed episode watch in watched_episodes
+      const watchedMap = getUserWatchedEpisodes(req.user.id);
+      const existingEntry = watchedMap[epKey] || {};
+      watchedMap[epKey] = {
+        ...existingEntry,
+        episodeKey: epKey,
+        episodeId: epKey,
+        lunarId: anilistIdVal,
+        episodeNumber: epNumVal,
+        episodeTitle: req.body.episodeTitle || existingEntry.episodeTitle || `Episode ${epNumVal}`,
+        showTitle: req.body.showTitle || req.body.title || existingEntry.showTitle || 'Anime Series',
+        poster: req.body.poster || existingEntry.poster || '',
+        banner: req.body.banner || existingEntry.banner || '',
+        progress: floatProg,
+        duration: floatDur,
+        completed: existingEntry.completed || progressRatio >= 0.85 || Boolean(completed),
+        lastWatchedAt: new Date().toISOString()
+      };
+      saveUserWatchedEpisodes(req.user.id, watchedMap);
+
+      let xpResult = null;
+      if (isWatchedComplete) {
+        xpResult = await awardUserXpInternal(
+          req.user.id,
+          inWatchParty ? 25 : 10,
+          inWatchParty ? 'watch_party' : 'episode_watched',
+          epKey,
+          {
+            episodeTitle: req.body.episodeTitle || existingEntry.episodeTitle,
+            showTitle: req.body.showTitle || req.body.title || existingEntry.showTitle
+          }
+        );
+      }
+
+      return res.json({ success: true, isLunar: true, history: animeHistoryItem, xpResult });
     }
 
-    const episode = await prisma.episode.findUnique({ where: { id: parseInt(episodeId) } });
+    const episode = await prisma.episode.findUnique({
+      where: { id: parseInt(episodeId) },
+      include: { show: true }
+    });
     if (!episode) {
       return res.status(404).json({ error: 'Episode not found.' });
     }
@@ -479,19 +554,52 @@ router.post('/history', authenticate, async (req, res) => {
         },
       },
       update: {
-        progress: parseFloat(progress),
-        duration: parseFloat(duration),
+        progress: floatProg,
+        duration: floatDur,
         watchedAt: new Date(),
       },
       create: {
         userId: req.user.id,
         episodeId: parseInt(episodeId),
-        progress: parseFloat(progress),
-        duration: parseFloat(duration),
+        progress: floatProg,
+        duration: floatDur,
       },
     });
 
-    res.json({ success: true, history });
+    const epKey = `db-${episodeId}`;
+    const watchedMap = getUserWatchedEpisodes(req.user.id);
+    const existingEntry = watchedMap[epKey] || {};
+    watchedMap[epKey] = {
+      ...existingEntry,
+      episodeKey: epKey,
+      episodeId: parseInt(episodeId),
+      episodeNumber: episode.episodeNumber || 1,
+      episodeTitle: episode.title || existingEntry.episodeTitle || `Episode ${episode.episodeNumber || 1}`,
+      showTitle: episode.show?.title || existingEntry.showTitle || 'Anime Series',
+      poster: episode.show?.poster || existingEntry.poster || '',
+      banner: episode.show?.banner || existingEntry.banner || '',
+      progress: floatProg,
+      duration: floatDur,
+      completed: existingEntry.completed || progressRatio >= 0.85 || Boolean(completed),
+      lastWatchedAt: new Date().toISOString()
+    };
+    saveUserWatchedEpisodes(req.user.id, watchedMap);
+
+    let xpResult = null;
+    if (isWatchedComplete) {
+      xpResult = await awardUserXpInternal(
+        req.user.id,
+        inWatchParty ? 25 : 10,
+        inWatchParty ? 'watch_party' : 'episode_watched',
+        epKey,
+        {
+          episodeTitle: episode.title,
+          showTitle: episode.show?.title
+        }
+      );
+    }
+
+    res.json({ success: true, history, xpResult });
   } catch (error) {
     console.error('Error updating watch history:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -749,6 +857,112 @@ const AURA_LEVEL_REQUIREMENTS = {
 // Rate limit memory store: userId -> { lastAwardAt, xpThisHour, hourStart }
 const userXpRateLimitMap = new Map();
 
+async function awardUserXpInternal(userId, requestedAmount = 10, reason = 'episode_watched', epKey = null, metadata = {}) {
+  const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+  if (!user) return { success: false, error: 'User not found' };
+
+  const isAdmin = user.role === 'ADMIN';
+  const now = Date.now();
+
+  // Episode-level deduplication:
+  const watchedEpisodes = getUserWatchedEpisodes(user.id);
+  if (epKey && watchedEpisodes[epKey] && watchedEpisodes[epKey].xpAwarded) {
+    const awardedAt = new Date(watchedEpisodes[epKey].xpAwardedAt || 0).getTime();
+    // Allow rewatch XP only after 30 minutes cooldown
+    if (now - awardedAt < 1800000) {
+      const xpNext = (user.level || 1) * 200;
+      return {
+        success: true,
+        alreadyAwarded: true,
+        xpGained: 0,
+        xp: user.xp || 0,
+        level: user.level || 1,
+        xpNextLevel: xpNext,
+        xpPercent: Math.min(100, Math.round(((user.xp || 0) / xpNext) * 100)),
+        vipRank: user.vipRank || 'GENIN',
+        leveledUp: false
+      };
+    }
+  }
+
+  // Anti-cheat rate limiting for regular non-admin users
+  if (!isAdmin) {
+    const rateInfo = userXpRateLimitMap.get(user.id) || { lastAwardAt: 0, xpThisHour: 0, hourStart: now };
+    // Cooldown: at least 10 seconds between XP gain events
+    if (now - rateInfo.lastAwardAt < 10000) {
+      return {
+        success: false,
+        rateLimited: true,
+        error: 'Streaming too fast. Please stream naturally to earn rewards.'
+      };
+    }
+    // Hourly cap: maximum 800 XP per hour
+    if (now - rateInfo.hourStart > 3600000) {
+      rateInfo.xpThisHour = 0;
+      rateInfo.hourStart = now;
+    }
+    if (rateInfo.xpThisHour >= 800) {
+      return {
+        success: false,
+        rateLimited: true,
+        error: 'Hourly XP cap reached. Continue watching to level up again next hour!'
+      };
+    }
+    rateInfo.lastAwardAt = now;
+    rateInfo.xpThisHour += requestedAmount;
+    userXpRateLimitMap.set(user.id, rateInfo);
+  }
+
+  const amount = Math.max(1, Math.min(isAdmin ? 500 : 50, parseInt(requestedAmount) || 10));
+  let newXp = (user.xp || 0) + amount;
+  let newLevel = user.level || 1;
+  let leveledUp = false;
+
+  let threshold = newLevel * 200;
+  while (newXp >= threshold) {
+    newXp -= threshold;
+    newLevel += 1;
+    leveledUp = true;
+    threshold = newLevel * 200;
+  }
+
+  const newRank = calculateOtakuRank(newLevel, user.vipRank, user.role);
+
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      xp: newXp,
+      level: newLevel,
+      vipRank: newRank
+    }
+  });
+
+  // Mark episode as awarded in watched_episodes
+  if (epKey) {
+    watchedEpisodes[epKey] = {
+      ...(watchedEpisodes[epKey] || {}),
+      episodeKey: epKey,
+      ...metadata,
+      xpAwarded: true,
+      xpAwardedAt: new Date().toISOString(),
+      lastWatchedAt: new Date().toISOString()
+    };
+    saveUserWatchedEpisodes(user.id, watchedEpisodes);
+  }
+
+  const xpNext = (updated.level || 1) * 200;
+  return {
+    success: true,
+    xpGained: amount,
+    xp: updated.xp,
+    level: updated.level,
+    xpNextLevel: xpNext,
+    xpPercent: Math.min(100, Math.round((updated.xp / xpNext) * 100)),
+    vipRank: updated.vipRank,
+    leveledUp
+  };
+}
+
 // GET /api/user/profile - Fetch current user's complete profile & otaku stats
 router.get('/profile', authenticate, async (req, res) => {
   try {
@@ -764,17 +978,34 @@ router.get('/profile', authenticate, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Calculate watch stats
+    const watchedMap = getUserWatchedEpisodes(req.user.id) || {};
+    const watchedList = Object.values(watchedMap);
     const animeHistory = getUserAnimeHistory(req.user.id) || [];
     const dbHistory = await prisma.watchHistory.findMany({
       where: { userId: req.user.id }
     });
 
+    const uniqueEpKeys = new Set();
+    watchedList.forEach(e => {
+      if (e.episodeKey) uniqueEpKeys.add(e.episodeKey);
+    });
+    animeHistory.forEach(h => {
+      const k = h.episodeId || (h.lunarId ? `lunar-${h.lunarId}-${h.episodeNumber || 1}` : null);
+      if (k) uniqueEpKeys.add(k);
+    });
+    dbHistory.forEach(h => {
+      if (h.episodeId) uniqueEpKeys.add(`db-${h.episodeId}`);
+    });
+
     let totalWatchSec = 0;
-    animeHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
-    dbHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+    watchedList.forEach(e => { totalWatchSec += (e.progress || 0); });
+    if (totalWatchSec === 0) {
+      animeHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+      dbHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+    }
 
     const totalHours = Math.round((totalWatchSec / 3600) * 10) / 10;
-    const totalEpisodes = animeHistory.length + dbHistory.length;
+    const totalEpisodes = Math.max(uniqueEpKeys.size, animeHistory.length + dbHistory.length);
 
     const xpNext = (user.level || 1) * 200;
     const currentXp = user.xp || 0;
@@ -998,107 +1229,29 @@ router.put('/profile', authenticate, async (req, res) => {
 // POST /api/user/xp - Award XP for watching or participating
 router.post('/xp', authenticate, async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const isAdmin = user.role === 'ADMIN';
-
-    // Anti-cheat rate limiting for regular users
-    if (!isAdmin) {
-      const now = Date.now();
-      const rateInfo = userXpRateLimitMap.get(user.id) || { lastAwardAt: 0, xpThisHour: 0, hourStart: now };
-
-      // Cooldown: at least 15 seconds between XP gain events
-      if (now - rateInfo.lastAwardAt < 15000) {
-        return res.status(429).json({
-          error: 'Rate limited: You are gaining XP too fast. Please stream naturally to earn rewards.'
-        });
+    const { episodeId, lunarId, episodeNumber, inWatchParty, amount, reason } = req.body;
+    let epKey = null;
+    if (episodeId) {
+      if (String(episodeId).startsWith('lunar-')) {
+        epKey = String(episodeId);
+      } else if (isNaN(parseInt(episodeId))) {
+        epKey = `lunar-${lunarId || 'anime'}-${episodeNumber || 1}`;
+      } else {
+        epKey = `db-${episodeId}`;
       }
-
-      // Hourly cap: maximum 600 XP per hour
-      if (now - rateInfo.hourStart > 3600000) {
-        rateInfo.xpThisHour = 0;
-        rateInfo.hourStart = now;
-      }
-      if (rateInfo.xpThisHour >= 600) {
-        return res.status(429).json({
-          error: 'Hourly XP cap reached. Continue watching to level up again next hour!'
-        });
-      }
-
-      const requestedAmount = parseInt(req.body.amount || 10);
-      const amount = Math.max(1, Math.min(25, requestedAmount));
-
-      rateInfo.lastAwardAt = now;
-      rateInfo.xpThisHour += amount;
-      userXpRateLimitMap.set(user.id, rateInfo);
-
-      let newXp = (user.xp || 0) + amount;
-      let newLevel = user.level || 1;
-      let leveledUp = false;
-
-      let threshold = newLevel * 200;
-      while (newXp >= threshold) {
-        newXp -= threshold;
-        newLevel += 1;
-        leveledUp = true;
-        threshold = newLevel * 200;
-      }
-
-      const newRank = calculateOtakuRank(newLevel, user.vipRank, user.role);
-
-      const updated = await prisma.user.update({
-        where: { id: req.user.id },
-        data: {
-          xp: newXp,
-          level: newLevel,
-          vipRank: newRank
-        }
-      });
-
-      return res.json({
-        success: true,
-        xpGained: amount,
-        xp: updated.xp,
-        level: updated.level,
-        vipRank: updated.vipRank,
-        leveledUp
-      });
+    } else if (lunarId) {
+      epKey = `lunar-${lunarId}-${episodeNumber || 1}`;
     }
 
-    // Admin path: can award any valid test amount
-    const amount = Math.max(1, Math.min(500, parseInt(req.body.amount || 10)));
-    let newXp = (user.xp || 0) + amount;
-    let newLevel = user.level || 1;
-    let leveledUp = false;
+    const isParty = Boolean(inWatchParty || reason === 'watch_party');
+    const xpAmount = parseInt(amount) || (isParty ? 25 : 10);
+    const xpReason = reason || (isParty ? 'watch_party' : 'episode_watched');
 
-    let threshold = newLevel * 200;
-    while (newXp >= threshold) {
-      newXp -= threshold;
-      newLevel += 1;
-      leveledUp = true;
-      threshold = newLevel * 200;
+    const result = await awardUserXpInternal(req.user.id, xpAmount, xpReason, epKey, req.body);
+    if (!result.success && result.rateLimited) {
+      return res.status(429).json({ error: result.error, xp: result.xp, level: result.level });
     }
-
-    const newRank = calculateOtakuRank(newLevel, user.vipRank, user.role);
-
-    const updated = await prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        xp: newXp,
-        level: newLevel,
-        vipRank: newRank
-      }
-    });
-
-    res.json({
-      success: true,
-      xpGained: amount,
-      xp: updated.xp,
-      level: updated.level,
-      vipRank: updated.vipRank,
-      leveledUp
-    });
+    res.json(result);
   } catch (error) {
     console.error('Error awarding XP:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1128,10 +1281,23 @@ router.get('/profile/:id', async (req, res) => {
 
     if (!user) return res.status(404).json({ error: 'Otaku profile not found' });
 
+    const watchedMap = getUserWatchedEpisodes(user.id) || {};
+    const watchedList = Object.values(watchedMap);
     const animeHistory = getUserAnimeHistory(user.id) || [];
+    const uniqueEpKeys = new Set();
+    watchedList.forEach(e => { if (e.episodeKey) uniqueEpKeys.add(e.episodeKey); });
+    animeHistory.forEach(h => {
+      const k = h.episodeId || (h.lunarId ? `lunar-${h.lunarId}-${h.episodeNumber || 1}` : null);
+      if (k) uniqueEpKeys.add(k);
+    });
+
     let totalWatchSec = 0;
-    animeHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+    watchedList.forEach(e => { totalWatchSec += (e.progress || 0); });
+    if (totalWatchSec === 0) {
+      animeHistory.forEach(h => { totalWatchSec += (h.progress || 0); });
+    }
     const totalHours = Math.round((totalWatchSec / 3600) * 10) / 10;
+    const totalEpisodes = Math.max(uniqueEpKeys.size, animeHistory.length);
 
     let watchlistCount = 0;
     let publicWatchlist = [];
@@ -1180,7 +1346,7 @@ router.get('/profile/:id', async (req, res) => {
       watchlist: publicWatchlist,
       stats: {
         totalHoursWatched: totalHours,
-        totalEpisodesWatched: animeHistory.length,
+        totalEpisodesWatched: totalEpisodes,
         watchlistCount: watchlistCount,
         recentHistory: user.isPrivate ? [] : animeHistory.slice(0, 6)
       }

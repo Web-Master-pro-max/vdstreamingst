@@ -1,19 +1,19 @@
 {
   "1": [
     {
-      "id": "lunar-1735-2",
+      "id": "lunar-1735-4",
       "userId": 1,
       "isLunar": true,
       "lunarId": "1735",
-      "episodeId": "lunar-1735-2",
-      "episodeNumber": 2,
-      "episodeTitle": "Episode 2: Akatsuki Begins Their Move",
+      "episodeId": "lunar-1735-4",
+      "episodeNumber": 4,
+      "episodeTitle": "Episode 4: Battle in the Desert",
       "showTitle": "Naruto: Shippuden",
-      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
+      "poster": "",
       "banner": "",
-      "progress": 414,
-      "duration": 1386,
-      "watchedAt": "2026-10-18T14:16:30.342Z"
+      "progress": 1200,
+      "duration": 1400,
+      "watchedAt": "2026-10-19T12:33:53.691Z"
     },
     {
       "id": "lunar-195604-1",
