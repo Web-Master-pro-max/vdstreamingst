@@ -321,8 +321,7 @@ export const recordWatchHistory = async (show, episode, positionMillis, duration
         const lunarIdVal = show.anilistId || show.lunarId || showId;
         const durSec = Math.floor((durationMillis || 0) / 1000);
         const posSec = Math.floor((positionMillis || 0) / 1000);
-        const watchCoverage = durSec > 0 ? (posSec / durSec) : 0;
-        const isCompleted = progressPercent >= 70 && (durSec <= 60 || watchCoverage >= 0.50);
+        const isCompleted = progressPercent >= 65;
 
         if (durSec > 0) {
           const payload = isLunar ? {
@@ -356,6 +355,26 @@ export const recordWatchHistory = async (show, episode, positionMillis, duration
             },
             body: JSON.stringify(payload)
           }).catch(() => {});
+
+          if (isCompleted) {
+            fetch(`${baseUrl}/api/user/xp`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+              },
+              body: JSON.stringify({
+                amount: 10,
+                reason: 'episode_watched',
+                episodeId: payload.episodeId,
+                lunarId: payload.lunarId,
+                episodeNumber: payload.episodeNumber,
+                episodeTitle: payload.episodeTitle,
+                showTitle: payload.showTitle,
+                completed: true
+              })
+            }).catch(() => {});
+          }
         }
       }
     } catch (_) {}
