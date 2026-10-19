@@ -184,17 +184,41 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
   let referer = reqReferer;
   let origin = reqOrigin;
 
+  // Filter out any internal, client or proxy referers passed in queries
+  if (referer && (
+    referer.includes('vercel.app') || 
+    referer.includes('localhost') || 
+    referer.includes('13.202.95.5') || 
+    referer.includes('127.0.0.1') || 
+    referer.includes('anime-shubh') ||
+    referer.includes('/api/lunarx')
+  )) {
+    referer = null;
+    origin = null;
+  }
+
   if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
     referer = 'https://zokoanime.video/';
     origin = 'https://zokoanime.video';
-  } else if (targetUrl.includes('nexabloom') || targetUrl.includes('silentvoyage') || targetUrl.includes('megaplay') || targetUrl.includes('oakhorizon') || targetUrl.includes('broforgotsave')) {
+  } else if (
+    targetUrl.includes('nexabloom') || 
+    targetUrl.includes('voyage') || 
+    targetUrl.includes('megaplay') || 
+    targetUrl.includes('horizon') || 
+    targetUrl.includes('broforgotsave') ||
+    targetUrl.includes('playercdn') ||
+    /\/anime\/[a-f0-9]{32}\//i.test(targetUrl) ||
+    /seg-\d+/i.test(targetUrl) ||
+    /-v\d+-a\d+/i.test(targetUrl) ||
+    /index-f\d+/i.test(targetUrl)
+  ) {
     referer = 'https://megaplay.buzz/';
     origin = 'https://megaplay.buzz';
   } else if (targetUrl.includes('krussdomi') || targetUrl.includes('kaa.lt')) {
     referer = 'https://kaa.lt/';
     origin = 'https://kaa.lt';
   } else if (targetUrl.includes('echovideo')) {
-    referer = (reqReferer && reqReferer.includes('echovideo')) ? reqReferer : 'https://play.echovideo.ru/';
+    referer = (referer && referer.includes('echovideo')) ? referer : 'https://play.echovideo.ru/';
     origin = 'https://play.echovideo.ru';
   } else if (targetUrl.includes('flixcloud') || targetUrl.includes('matrixcdn')) {
     referer = 'https://lunarx.to/';
@@ -261,9 +285,27 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
     const reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
 
     const isDub = req.query.type === 'dub';
-    const { referer, origin, headers } = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
+    const upstream = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
 
-    const { res: upstreamRes, finalUrl } = await fetchWithRedirects(targetUrl, headers);
+    let fetchResult = await fetchWithRedirects(targetUrl, upstream.headers);
+    if (fetchResult.res.statusCode === 403 && upstream.headers['Referer'] !== 'https://megaplay.buzz/') {
+      console.warn(`[Proxy M3U8] Upstream 403 for ${targetUrl}, retrying with megaplay.buzz referer...`);
+      const retryHeaders = {
+        ...upstream.headers,
+        'Referer': 'https://megaplay.buzz/',
+        'Origin': 'https://megaplay.buzz'
+      };
+      try {
+        const retryResult = await fetchWithRedirects(targetUrl, retryHeaders);
+        if (retryResult.res.statusCode === 200) {
+          fetchResult = retryResult;
+          upstream.referer = 'https://megaplay.buzz/';
+          upstream.origin = 'https://megaplay.buzz';
+        }
+      } catch (retryErr) { }
+    }
+
+    const { res: upstreamRes, finalUrl } = fetchResult;
 
     if (upstreamRes.statusCode !== 200) {
       return res.status(upstreamRes.statusCode).send(`Stream upstream returned ${upstreamRes.statusCode}`);
@@ -282,8 +324,8 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
       const lines = body.split('\n');
       const targetQuality = req.query.quality ? req.query.quality.toLowerCase() : null;
       const forwardedProto = req.headers['x-forwarded-proto'];
-      const referer = req.headers['referer'] || '';
-      const isHttpsClient = forwardedProto === 'https' || referer.startsWith('https://');
+      const clientReferer = req.headers['referer'] || '';
+      const isHttpsClient = forwardedProto === 'https' || clientReferer.startsWith('https://');
       const forwardedHost = req.headers['x-forwarded-host'];
       const hostHeader = forwardedHost || req.get('host');
       const protocol = isHttpsClient ? 'https' : (forwardedProto || req.protocol || 'http');
@@ -322,7 +364,7 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
             if (trimmed.includes('URI="')) {
               trimmed = trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
                 const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
-                const up = getUpstreamHeaders(fullUri, referer, origin);
+                const up = getUpstreamHeaders(fullUri, upstream.referer, upstream.origin);
                 const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
                 if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
                   return `URI="${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(fullUri)}${qParams}"`;
@@ -399,7 +441,7 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
 
         const outputLines = [...headerLines];
         for (const v of finalVariants) {
-          const up = getUpstreamHeaders(v.uri, referer, origin);
+          const up = getUpstreamHeaders(v.uri, upstream.referer, upstream.origin);
           const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
           outputLines.push(v.inf);
           outputLines.push(`${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(v.uri)}${qParams}`);
@@ -430,7 +472,7 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
           if (trimmed.includes('URI="')) {
             return trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
               const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
-              const up = getUpstreamHeaders(fullUri, referer, origin);
+              const up = getUpstreamHeaders(fullUri, upstream.referer, upstream.origin);
               const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
               if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
                 return `URI="${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(fullUri)}${qParams}"`;
@@ -443,7 +485,7 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
 
         // Line is a URI: sub-playlist or segment
         const fullUrl = resolvePlaylistUrl(trimmed, finalUrl, baseUrl);
-        const up = getUpstreamHeaders(fullUrl, referer, origin);
+        const up = getUpstreamHeaders(fullUrl, upstream.referer, upstream.origin);
         const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
         if (fullUrl.includes('.m3u8') || fullUrl.includes('manifest') || fullUrl.includes('playlist')) {
           return `${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(fullUrl)}${qParams}`;
@@ -478,7 +520,23 @@ router.get('/proxy/segment', async (req, res) => {
       headers['Range'] = req.headers.range;
     }
 
-    const { res: upstreamRes } = await fetchWithRedirects(targetUrl, headers);
+    let fetchResult = await fetchWithRedirects(targetUrl, headers);
+    if (fetchResult.res.statusCode === 403 && headers['Referer'] !== 'https://megaplay.buzz/') {
+      console.warn(`[Proxy Segment] Upstream 403 for segment, retrying with megaplay.buzz referer...`);
+      const retryHeaders = {
+        ...headers,
+        'Referer': 'https://megaplay.buzz/',
+        'Origin': 'https://megaplay.buzz'
+      };
+      try {
+        const retryResult = await fetchWithRedirects(targetUrl, retryHeaders);
+        if (retryResult.res.statusCode === 200 || retryResult.res.statusCode === 206) {
+          fetchResult = retryResult;
+        }
+      } catch (retryErr) { }
+    }
+
+    const { res: upstreamRes } = fetchResult;
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', '*');

@@ -981,35 +981,46 @@ class LunarXService {
       console.warn('[LunarX] Skipping obfuscated stream provider (flixcloud/fallencdn):', url);
       return Promise.resolve(false);
     }
-    return new Promise(resolve => {
-      const client = url.startsWith('https://') ? https : http;
-      const headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        ...(referer ? { 'Referer': referer } : {}),
-        ...(origin ? { 'Origin': origin } : {})
-      };
-      const req = client.get(url, { headers }, res => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          let chunk = '';
-          res.on('data', c => {
-            chunk += c;
-            if (chunk.length > 50) {
-              req.destroy();
-              resolve(chunk.includes('#EXTM3U') || chunk.includes('EXTINF'));
-            }
-          });
-          res.on('end', () => {
-            resolve(chunk.includes('#EXTM3U') || chunk.includes('EXTINF'));
-          });
-        } else {
-          resolve(false);
-        }
-      });
-      req.on('error', () => resolve(false));
-      req.setTimeout(10000, () => {
-        req.destroy();
-        resolve(false);
-      });
+    const checkOnce = (ref, orig) => new Promise(resolve => {
+      try {
+        const client = url.startsWith('https://') ? https : http;
+        const headers = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          ...(ref ? { 'Referer': ref } : {}),
+          ...(orig ? { 'Origin': orig } : {})
+        };
+        const req = client.get(url, { headers }, res => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            let chunk = '';
+            res.on('data', c => {
+              chunk += c;
+              if (chunk.length > 50) {
+                req.destroy();
+                resolve({ ok: chunk.includes('#EXTM3U') || chunk.includes('EXTINF'), status: res.statusCode });
+              }
+            });
+            res.on('end', () => {
+              resolve({ ok: chunk.includes('#EXTM3U') || chunk.includes('EXTINF'), status: res.statusCode });
+            });
+          } else {
+            resolve({ ok: false, status: res.statusCode });
+          }
+        });
+        req.on('error', () => resolve({ ok: false, status: 0 }));
+        req.setTimeout(8000, () => {
+          req.destroy();
+          resolve({ ok: false, status: 0 });
+        });
+      } catch (e) {
+        resolve({ ok: false, status: 0 });
+      }
+    });
+
+    return checkOnce(referer, origin).then(res => {
+      if (!res.ok && res.status === 403 && referer !== 'https://megaplay.buzz/') {
+        return checkOnce('https://megaplay.buzz/', 'https://megaplay.buzz').then(r => r.ok);
+      }
+      return res.ok;
     });
   }
 
@@ -1029,8 +1040,24 @@ class LunarXService {
         }
 
         if (decrypted3rd && (decrypted3rd.startsWith('http://') || decrypted3rd.startsWith('https://'))) {
-          // Verify stream is alive with Flixcloud upstream headers
-          const isAlive = await this.verifyM3u8(decrypted3rd, 'https://lunarx.to/', 'https://lunarx.to');
+          // Determine upstream referer for 3rdprovider target
+          let upRef = 'https://lunarx.to/';
+          let upOrig = 'https://lunarx.to';
+          if (
+            decrypted3rd.includes('nexabloom') || 
+            decrypted3rd.includes('voyage') || 
+            decrypted3rd.includes('megaplay') || 
+            decrypted3rd.includes('horizon') || 
+            decrypted3rd.includes('broforgotsave') ||
+            decrypted3rd.includes('playercdn') ||
+            /\/anime\/[a-f0-9]{32}\//i.test(decrypted3rd)
+          ) {
+            upRef = 'https://megaplay.buzz/';
+            upOrig = 'https://megaplay.buzz';
+          }
+
+          // Verify stream is alive with upstream headers
+          const isAlive = await this.verifyM3u8(decrypted3rd, upRef, upOrig);
           if (!isAlive) {
             console.warn('[LunarX] 3rdprovider stream manifest returned unplayable status');
             return null;
@@ -1065,7 +1092,7 @@ class LunarXService {
             }
           }
 
-          const qParams = `&ref=${encodeURIComponent('https://lunarx.to/')}&orig=${encodeURIComponent('https://lunarx.to')}&type=${type}`;
+          const qParams = `&ref=${encodeURIComponent(upRef)}&orig=${encodeURIComponent(upOrig)}&type=${type}`;
           const finalStreamUrl = `/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(decrypted3rd)}${qParams}`;
 
           return {
@@ -1184,7 +1211,21 @@ class LunarXService {
             if (candidateStreamUrl.includes('dramahot') || candidateStreamUrl.includes('drama1.cfd') || candidateStreamUrl.includes('zokoanime')) {
               reqReferer = 'https://zokoanime.video/';
               reqOrigin = 'https://zokoanime.video';
-            } else if (candidateStreamUrl.includes('nexabloom') || candidateStreamUrl.includes('silentvoyage') || candidateStreamUrl.includes('megaplay') || candidateStreamUrl.includes('oakhorizon')) {
+            } else if (
+              host === 'yuki' ||
+              host === 'zuna' ||
+              type === 'dub' ||
+              candidateStreamUrl.includes('nexabloom') || 
+              candidateStreamUrl.includes('voyage') || 
+              candidateStreamUrl.includes('megaplay') || 
+              candidateStreamUrl.includes('horizon') || 
+              candidateStreamUrl.includes('broforgotsave') ||
+              candidateStreamUrl.includes('playercdn') ||
+              /\/anime\/[a-f0-9]{32}\//i.test(candidateStreamUrl) ||
+              /seg-\d+/i.test(candidateStreamUrl) ||
+              /-v\d+-a\d+/i.test(candidateStreamUrl) ||
+              /index-f\d+/i.test(candidateStreamUrl)
+            ) {
               reqReferer = 'https://megaplay.buzz/';
               reqOrigin = 'https://megaplay.buzz';
             } else if (candidateStreamUrl.includes('krussdomi') || candidateStreamUrl.includes('kaa.lt')) {
