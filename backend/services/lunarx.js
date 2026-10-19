@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
 const DEFAULT_AXIS = 'LqVVXhKGmruGmMDZyIWW5ZTkKz3IMChM6BzpJI2w02E9u8ivKdxYxxPgqMpPAVvUhjkk3WFYDirMyxLTDvbuq97FeotHEaHk';
@@ -1092,8 +1093,13 @@ class LunarXService {
             }
           }
 
-          const qParams = `&ref=${encodeURIComponent(upRef)}&orig=${encodeURIComponent(upOrig)}&type=${type}`;
-          const finalStreamUrl = `/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(decrypted3rd)}${qParams}`;
+          const token = encryptStreamToken({
+            u: decrypted3rd,
+            r: upRef,
+            o: upOrig,
+            d: type === 'dub' ? 1 : 0
+          });
+          const finalStreamUrl = `/api/stream/hls/live.m3u8?t=${token}`;
 
           return {
             success: true,
@@ -1102,7 +1108,6 @@ class LunarXService {
             host: '3rdprovider',
             type: type,
             streamUrl: finalStreamUrl,
-            rawStreamUrl: decrypted3rd,
             quality: 'auto',
             isM3U8: true,
             intro: intro,
@@ -1257,14 +1262,17 @@ class LunarXService {
               id: sub.id || `sub-${i}`,
               label: sub.label || sub.lang || `Subtitle ${i + 1}`,
               lang: sub.lang || 'en',
-              url: sub.url ? `/api/lunarx/proxy/subtitle?url=${encodeURIComponent(sub.url)}` : '',
-              rawUrl: sub.url,
+              url: sub.url ? `/api/stream/hls/sub.vtt?t=${encryptStreamToken({ u: sub.url, r: reqReferer, o: reqOrigin })}` : '',
               default: !!sub.default
             }));
 
-            // All streams are securely routed through our backend proxy with exact Referer, Origin, and type parameters
-            const queryParams = `&ref=${encodeURIComponent(reqReferer)}${reqOrigin ? `&orig=${encodeURIComponent(reqOrigin)}` : ''}&type=${type}`;
-            const finalStreamUrl = `/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(candidateStreamUrl)}${queryParams}`;
+            const token = encryptStreamToken({
+              u: candidateStreamUrl,
+              r: reqReferer,
+              o: reqOrigin,
+              d: type === 'dub' ? 1 : 0
+            });
+            const finalStreamUrl = `/api/stream/hls/live.m3u8?t=${token}`;
 
             return {
               success: true,
@@ -1273,7 +1281,6 @@ class LunarXService {
               host: host,
               type: type,
               streamUrl: finalStreamUrl,
-              rawStreamUrl: candidateStreamUrl,
               quality: rawSource?.quality || 'auto',
               isM3U8: true,
               intro: res.data.intro || null,

@@ -71,6 +71,8 @@ app.use((req, res, next) => {
 // API Routes
 app.use('/api/auth', authRouter);
 app.use('/api/shows', showsRouter);
+app.use('/api/stream', lunarxRouter);
+app.use('/api/anime', lunarxRouter);
 app.use('/api/lunarx', lunarxRouter);
 app.use('/api/user', userRouter);
 app.use('/api/admin', adminRouter);

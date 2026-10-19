@@ -3,6 +3,7 @@ const https = require('https');
 const http = require('http');
 const router = express.Router();
 const lunarx = require('../services/lunarx');
+const { encryptStreamToken, decryptStreamToken } = require('../services/StreamSecurity');
 
 // 1. Get Trending & Seasonal Anime (Posters, Banners, Media Info)
 router.get('/trending', async (req, res) => {
@@ -110,7 +111,7 @@ router.get('/seasons/:anilistId', async (req, res) => {
 
 
 // 6. Get Decrypted Video Stream with Timestamps & Subtitles
-router.get('/stream/:anilistId/:epNum', async (req, res) => {
+router.get(['/stream/:anilistId/:epNum', '/watch/:anilistId/:epNum'], async (req, res) => {
   try {
     const { anilistId, epNum } = req.params;
     const host = req.query.host || 'zuna';
@@ -270,21 +271,39 @@ function resolvePlaylistUrl(relativeOrAbsolute, baseFullUrl, baseDirectoryUrl) {
   }
 }
 
-// 7. HLS M3U8 Playlist Stream Proxy (attaches required Referer header and rewrites playlist URLs)
-router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
+// 7. HLS M3U8 Playlist Stream Proxy (Stealth encrypted token or legacy query params)
+router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
   try {
-    let targetUrl = req.query.url;
-    if (!targetUrl) {
-      return res.status(400).send('Missing url parameter');
+    let targetUrl = null;
+    let reqRef = null;
+    let reqOrig = null;
+    let isDub = false;
+
+    if (req.query.t) {
+      const tokenData = decryptStreamToken(req.query.t);
+      if (tokenData && tokenData.u) {
+        targetUrl = tokenData.u;
+        reqRef = tokenData.r || null;
+        reqOrig = tokenData.o || null;
+        isDub = tokenData.d === 1 || req.query.type === 'dub';
+      }
     }
-    targetUrl = safelyDecode(targetUrl);
+
+    if (!targetUrl && req.query.url) {
+      targetUrl = safelyDecode(req.query.url);
+      reqRef = req.query.ref ? safelyDecode(req.query.ref) : null;
+      reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
+      isDub = req.query.type === 'dub';
+    }
+
+    if (!targetUrl) {
+      return res.status(400).send('Missing stream token or url');
+    }
+
     if (!isSafeUpstreamUrl(targetUrl)) {
       return res.status(403).send('Forbidden: Prohibited upstream target');
     }
-    const reqRef = req.query.ref ? safelyDecode(req.query.ref) : null;
-    const reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
 
-    const isDub = req.query.type === 'dub';
     const upstream = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
 
     let fetchResult = await fetchWithRedirects(targetUrl, upstream.headers);
@@ -365,11 +384,11 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
               trimmed = trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
                 const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
                 const up = getUpstreamHeaders(fullUri, upstream.referer, upstream.origin);
-                const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
+                const token = encryptStreamToken({ u: fullUri, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });
                 if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
-                  return `URI="${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(fullUri)}${qParams}"`;
+                  return `URI="${proxyBase}/api/stream/hls/live.m3u8?t=${token}"`;
                 }
-                return `URI="${proxyBase}/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUri)}${qParams}"`;
+                return `URI="${proxyBase}/api/stream/hls/segment.ts?t=${token}"`;
               });
             }
             headerLines.push(trimmed);
@@ -390,8 +409,6 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
           return { w, h };
         };
 
-        // Determine if variant causes hardware decoder chroma pitch corruption
-        // 854 is NOT 16-aligned (854/2=427 is odd, causing horizontal/diagonal green static)
         const isCorruptVariant = (item) => {
           const { w } = getDimensions(item);
           if (w === 854 || item.uri.includes('index-f3') || item.inf.includes('854x480')) return true;
@@ -413,7 +430,6 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
           });
 
           if (hasCleanHd) {
-            // Omit unaligned variants (e.g. index-f3 854x480) so ExoPlayer only adapts between 1080p and 720p
             selectedVariants = variantPairs.filter(v => !isCorruptVariant(v));
           } else {
             selectedVariants = variantPairs.map(v => {
@@ -425,26 +441,20 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
           }
         }
 
-        // Sort descending so initial stream selection starts at highest quality
         selectedVariants.sort((a, b) => {
           const dimA = getDimensions(a);
           const dimB = getDimensions(b);
           return (dimB.h || 0) - (dimA.h || 0);
         });
 
-        // CRITICAL DECODER HARDWARE STRIDE FIX:
-        // Multi-variant HLS manifests cause ExoPlayer on Android to switch resolutions mid-stream.
-        // In Android TextureView / MediaCodec, dynamic resolution shifts corrupt the surface stride
-        // buffer, causing bright green scan lines and horizontal video tearing.
-        // Locking to the single optimal rendition guarantees constant buffer dimensions and pristine playback.
         const finalVariants = selectedVariants.length > 0 ? [selectedVariants[0]] : [];
 
         const outputLines = [...headerLines];
         for (const v of finalVariants) {
           const up = getUpstreamHeaders(v.uri, upstream.referer, upstream.origin);
-          const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
+          const token = encryptStreamToken({ u: v.uri, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });
           outputLines.push(v.inf);
-          outputLines.push(`${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(v.uri)}${qParams}`);
+          outputLines.push(`${proxyBase}/api/stream/hls/live.m3u8?t=${token}`);
         }
 
         return res.send(outputLines.join('\n'));
@@ -455,7 +465,6 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
         let trimmed = line.trim();
         if (!trimmed) return line;
 
-        // If English Dub is requested, ensure English audio track is marked DEFAULT=YES
         if (isDub && trimmed.startsWith('#EXT-X-MEDIA:TYPE=AUDIO')) {
           const isEng = trimmed.includes('LANGUAGE="eng"') || trimmed.includes('NAME="English"') || trimmed.includes('NAME="Dub"');
           const isJpn = trimmed.includes('LANGUAGE="jpn"') || trimmed.includes('NAME="Japanese"') || trimmed.includes('NAME="Native"');
@@ -467,17 +476,16 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
           }
         }
 
-        // Handle URI="..." tags (e.g. #EXT-X-KEY, #EXT-X-MEDIA)
         if (trimmed.startsWith('#')) {
           if (trimmed.includes('URI="')) {
             return trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
               const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
               const up = getUpstreamHeaders(fullUri, upstream.referer, upstream.origin);
-              const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
+              const token = encryptStreamToken({ u: fullUri, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });
               if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
-                return `URI="${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(fullUri)}${qParams}"`;
+                return `URI="${proxyBase}/api/stream/hls/live.m3u8?t=${token}"`;
               }
-              return `URI="${proxyBase}/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUri)}${qParams}"`;
+              return `URI="${proxyBase}/api/stream/hls/segment.ts?t=${token}"`;
             });
           }
           return trimmed;
@@ -486,11 +494,11 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
         // Line is a URI: sub-playlist or segment
         const fullUrl = resolvePlaylistUrl(trimmed, finalUrl, baseUrl);
         const up = getUpstreamHeaders(fullUrl, upstream.referer, upstream.origin);
-        const qParams = `&ref=${encodeURIComponent(up.referer)}${up.origin ? `&orig=${encodeURIComponent(up.origin)}` : ''}${isDub ? '&type=dub' : ''}`;
+        const token = encryptStreamToken({ u: fullUrl, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });
         if (fullUrl.includes('.m3u8') || fullUrl.includes('manifest') || fullUrl.includes('playlist')) {
-          return `${proxyBase}/api/lunarx/proxy/playlist.m3u8?url=${encodeURIComponent(fullUrl)}${qParams}`;
+          return `${proxyBase}/api/stream/hls/live.m3u8?t=${token}`;
         }
-        return `${proxyBase}/api/lunarx/proxy/segment?url=${encodeURIComponent(fullUrl)}${qParams}`;
+        return `${proxyBase}/api/stream/hls/segment.ts?t=${token}`;
       }).join('\n');
 
       res.send(rewritten);
@@ -501,19 +509,35 @@ router.get(['/proxy/m3u8', '/proxy/playlist.m3u8'], async (req, res) => {
   }
 });
 
-// 8. HLS Video Segment Proxy (streams chunks with Referer and CORS so browser and ExoPlayer never get 403 or MIME errors)
-router.get('/proxy/segment', async (req, res) => {
+// 8. HLS Video Segment Proxy (Decodes encrypted token and streams chunks securely)
+router.get(['/hls/segment.ts', '/proxy/segment'], async (req, res) => {
   try {
-    let targetUrl = req.query.url;
-    if (!targetUrl) {
-      return res.status(400).send('Missing url parameter');
+    let targetUrl = null;
+    let reqRef = null;
+    let reqOrig = null;
+
+    if (req.query.t) {
+      const tokenData = decryptStreamToken(req.query.t);
+      if (tokenData && tokenData.u) {
+        targetUrl = tokenData.u;
+        reqRef = tokenData.r || null;
+        reqOrig = tokenData.o || null;
+      }
     }
-    targetUrl = safelyDecode(targetUrl);
+
+    if (!targetUrl && req.query.url) {
+      targetUrl = safelyDecode(req.query.url);
+      reqRef = req.query.ref ? safelyDecode(req.query.ref) : null;
+      reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
+    }
+
+    if (!targetUrl) {
+      return res.status(400).send('Missing segment token or url');
+    }
+
     if (!isSafeUpstreamUrl(targetUrl)) {
       return res.status(403).send('Forbidden: Prohibited upstream target');
     }
-    const reqRef = req.query.ref ? safelyDecode(req.query.ref) : null;
-    const reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
 
     const { referer, origin, headers } = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
     if (req.headers.range) {
@@ -546,7 +570,6 @@ router.get('/proxy/segment', async (req, res) => {
     res.status(upstreamRes.statusCode);
 
     let contentType = upstreamRes.headers['content-type'] || 'video/mp2t';
-    // If upstream labeled TS segment with image MIME types (.png, .jpg, .webp) or generic octet-stream, enforce video/mp2t for ExoPlayer
     if (contentType.includes('image/') || contentType.includes('application/octet-stream') || !contentType) {
       contentType = 'video/mp2t';
     }
@@ -562,19 +585,35 @@ router.get('/proxy/segment', async (req, res) => {
   }
 });
 
-// 9. Subtitle VTT Proxy (ensures VTT files are served with proper Referer, UTF-8, and CORS)
-router.get('/proxy/subtitle', async (req, res) => {
+// 9. Subtitle VTT Proxy (Decodes encrypted token and streams clean VTT)
+router.get(['/hls/sub.vtt', '/proxy/subtitle'], async (req, res) => {
   try {
-    let targetUrl = req.query.url;
-    if (!targetUrl) {
-      return res.status(400).send('Missing url parameter');
+    let targetUrl = null;
+    let reqRef = null;
+    let reqOrig = null;
+
+    if (req.query.t) {
+      const tokenData = decryptStreamToken(req.query.t);
+      if (tokenData && tokenData.u) {
+        targetUrl = tokenData.u;
+        reqRef = tokenData.r || null;
+        reqOrig = tokenData.o || null;
+      }
     }
-    targetUrl = safelyDecode(targetUrl);
+
+    if (!targetUrl && req.query.url) {
+      targetUrl = safelyDecode(req.query.url);
+      reqRef = req.query.ref ? safelyDecode(req.query.ref) : null;
+      reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
+    }
+
+    if (!targetUrl) {
+      return res.status(400).send('Missing subtitle token or url');
+    }
+
     if (!isSafeUpstreamUrl(targetUrl)) {
       return res.status(403).send('Forbidden: Prohibited upstream target');
     }
-    const reqRef = req.query.ref ? safelyDecode(req.query.ref) : null;
-    const reqOrig = req.query.orig ? safelyDecode(req.query.orig) : null;
 
     const { headers } = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
     const { res: upstreamRes } = await fetchWithRedirects(targetUrl, headers);
@@ -593,7 +632,7 @@ router.get('/proxy/subtitle', async (req, res) => {
   }
 });
 
-router.options('/proxy/*', (req, res) => {
+router.options(['/hls/*', '/proxy/*'], (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
