@@ -283,6 +283,11 @@ app.use((req, res, next) => {
     return res.sendFile(foundPath);
   }
 
+  // Do not send poster fallback for /assets/ (avatars, banners, etc.) so client onerror can fire if missing
+  if (req.path.startsWith('/assets/')) {
+    return next();
+  }
+
   // If an image asset is requested but not found, send default poster fallback to prevent console 404s
   const fallbackCandidates = [
     path.join(frontendPath, 'Postes', 'spyfamS3p.jpg'),
