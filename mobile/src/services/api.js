@@ -887,7 +887,7 @@ export const apiService = {
 
   getLunarTrending: async () => {
     try {
-      const data = await fetchWithTimeout('/api/anime/trending', {}, 10000);
+      const data = await fetchWithTimeout('/api/lunarx/trending', {}, 10000);
       if (data && (data.popularThisSeason || data.trendingNow || data.upcomingNextSeason)) {
         return data;
       }
@@ -911,7 +911,7 @@ export const apiService = {
       if (params.limit) queryParams.append('limit', params.limit);
 
       const qs = queryParams.toString();
-      const data = await fetchWithTimeout(`/api/anime/browse${qs ? `?${qs}` : ''}`, {}, 10000);
+      const data = await fetchWithTimeout(`/api/lunarx/browse${qs ? `?${qs}` : ''}`, {}, 10000);
       if (data && (data.media || Array.isArray(data))) return data;
     } catch (e) {
       console.warn('browseLunarAnime error:', e.message);
@@ -922,7 +922,7 @@ export const apiService = {
   searchLunarAnime: async (query, limit = 20) => {
     if (!query || !query.trim()) return [];
     try {
-      const data = await fetchWithTimeout(`/api/anime/search?q=${encodeURIComponent(query.trim())}&limit=${limit}`, {}, 8000);
+      const data = await fetchWithTimeout(`/api/lunarx/search?q=${encodeURIComponent(query.trim())}&limit=${limit}`, {}, 8000);
       if (Array.isArray(data)) return data;
     } catch (e) {
       console.warn('searchLunarAnime error:', e.message);
@@ -933,14 +933,14 @@ export const apiService = {
   getLunarAnimeInfo: async (anilistId) => {
     if (!anilistId) throw new Error('Missing anilistId');
     const cleanId = String(anilistId).replace(/^lunar-/, '');
-    return await fetchWithTimeout(`/api/anime/info/${cleanId}`, {}, 10000);
+    return await fetchWithTimeout(`/api/lunarx/info/${cleanId}`, {}, 10000);
   },
 
   getLunarAnimeEpisodes: async (anilistId) => {
     if (!anilistId) return [];
     const cleanId = String(anilistId).replace(/^lunar-/, '');
     try {
-      const data = await fetchWithTimeout(`/api/anime/episodes/${cleanId}`, {}, 10000);
+      const data = await fetchWithTimeout(`/api/lunarx/episodes/${cleanId}`, {}, 10000);
       if (Array.isArray(data)) return data;
     } catch (e) {
       console.warn('getLunarAnimeEpisodes error:', e.message);
@@ -951,7 +951,7 @@ export const apiService = {
   getLunarAnimeAll: async (anilistId) => {
     if (!anilistId) throw new Error('Missing anilistId');
     const cleanId = String(anilistId).replace(/^lunar-/, '');
-    const data = await fetchWithTimeout(`/api/anime/all/${cleanId}`, {}, 12000);
+    const data = await fetchWithTimeout(`/api/lunarx/all/${cleanId}`, {}, 12000);
     return data;
   },
 
@@ -959,7 +959,7 @@ export const apiService = {
     if (!anilistId) return [];
     const cleanId = String(anilistId).replace(/^lunar-/, '');
     try {
-      const data = await fetchWithTimeout(`/api/anime/seasons/${cleanId}`, {}, 8000);
+      const data = await fetchWithTimeout(`/api/lunarx/seasons/${cleanId}`, {}, 8000);
       if (Array.isArray(data)) return data;
     } catch (e) {
       console.warn('getLunarAnimeSeasons error:', e.message);
@@ -971,7 +971,7 @@ export const apiService = {
     if (!anilistId) throw new Error('Missing anilistId');
     const cleanId = String(anilistId).replace(/^lunar-/, '');
     const data = await fetchWithTimeout(
-      `/api/stream/watch/${cleanId}/${epNum}?host=${encodeURIComponent(host)}&type=${encodeURIComponent(type)}`,
+      `/api/lunarx/stream/${cleanId}/${epNum}?host=${encodeURIComponent(host)}&type=${encodeURIComponent(type)}`,
       {},
       30000
     );
