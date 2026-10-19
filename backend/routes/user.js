@@ -498,7 +498,14 @@ router.post('/history', authenticate, async (req, res) => {
     const floatProg = parseFloat(progress) || 0;
     const floatDur = parseFloat(duration) || 1;
     const progressRatio = floatDur > 0 ? (floatProg / floatDur) : 0;
-    const isWatchedComplete = Boolean(completed) || progressRatio >= 0.70;
+    const watchTime = parseFloat(req.body.watchTime) || 0;
+    const watchCoverage = parseFloat(req.body.watchCoverage) || (floatDur > 0 ? (watchTime / floatDur) : 0);
+    const isAdmin = req.user.role === 'ADMIN';
+
+    // ANTI-CHEAT: Must have reached >= 70% or ended, AND streamed at least 50% of the episode duration (or admin)
+    // Small skips (intro/outro/recap) are naturally accepted since they take < 25% of an episode.
+    const hasSufficientWatchTime = (floatDur <= 60) || (watchTime >= floatDur * 0.50) || (watchCoverage >= 0.50) || isAdmin;
+    const isWatchedComplete = (progressRatio >= 0.70 || Boolean(completed)) && hasSufficientWatchTime;
 
     // Handle dynamic Anime show progress
     if (isLunar || lunarId || isNaN(parseInt(episodeId))) {
@@ -551,6 +558,10 @@ router.post('/history', authenticate, async (req, res) => {
           inWatchParty ? 'watch_party' : 'episode_watched',
           epKey,
           {
+            duration: floatDur,
+            progress: floatProg,
+            watchTime: watchTime,
+            watchCoverage: watchCoverage,
             episodeTitle: req.body.episodeTitle || existingEntry.episodeTitle,
             showTitle: req.body.showTitle || req.body.title || existingEntry.showTitle
           }
@@ -615,6 +626,10 @@ router.post('/history', authenticate, async (req, res) => {
         inWatchParty ? 'watch_party' : 'episode_watched',
         epKey,
         {
+          duration: floatDur,
+          progress: floatProg,
+          watchTime: watchTime,
+          watchCoverage: watchCoverage,
           episodeTitle: episode.title,
           showTitle: episode.show?.title
         }
@@ -904,6 +919,24 @@ async function awardUserXpInternal(userId, requestedAmount = 10, reason = 'episo
         vipRank: user.vipRank || 'GENIN',
         leveledUp: false
       };
+    }
+  }
+
+  // Anti-cheat: Validate real watch time coverage (Must stream at least 50% of the episode duration)
+  // Allows skipping intro/outro/recaps while preventing skipping the whole episode
+  if (!isAdmin && metadata && (metadata.duration || metadata.watchTime || metadata.watchCoverage)) {
+    const dur = parseFloat(metadata.duration) || 0;
+    const watchTime = parseFloat(metadata.watchTime) || 0;
+    const watchCov = parseFloat(metadata.watchCoverage) || (dur > 0 ? (watchTime / dur) : 0);
+
+    if (dur > 60) {
+      if (watchTime < dur * 0.50 && watchCov < 0.50) {
+        return {
+          success: false,
+          insufficientWatchTime: true,
+          error: `Insufficient watch time (${Math.round(watchCov * 100)}%). Stream at least 50% of the episode naturally to earn XP.`
+        };
+      }
     }
   }
 
@@ -1270,8 +1303,13 @@ router.post('/xp', authenticate, async (req, res) => {
     const xpReason = reason || (isParty ? 'watch_party' : 'episode_watched');
 
     const result = await awardUserXpInternal(req.user.id, xpAmount, xpReason, epKey, req.body);
-    if (!result.success && result.rateLimited) {
-      return res.status(429).json({ error: result.error, xp: result.xp, level: result.level });
+    if (!result.success) {
+      if (result.insufficientWatchTime) {
+        return res.status(400).json({ error: result.error, insufficientWatchTime: true, xp: result.xp, level: result.level });
+      }
+      if (result.rateLimited) {
+        return res.status(429).json({ error: result.error, xp: result.xp, level: result.level });
+      }
     }
     res.json(result);
   } catch (error) {

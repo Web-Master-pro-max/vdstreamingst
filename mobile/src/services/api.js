@@ -321,7 +321,8 @@ export const recordWatchHistory = async (show, episode, positionMillis, duration
         const lunarIdVal = show.anilistId || show.lunarId || showId;
         const durSec = Math.floor((durationMillis || 0) / 1000);
         const posSec = Math.floor((positionMillis || 0) / 1000);
-        const isCompleted = progressPercent >= 70;
+        const watchCoverage = durSec > 0 ? (posSec / durSec) : 0;
+        const isCompleted = progressPercent >= 70 && (durSec <= 60 || watchCoverage >= 0.50);
 
         if (durSec > 0) {
           const payload = isLunar ? {
@@ -335,11 +336,15 @@ export const recordWatchHistory = async (show, episode, positionMillis, duration
             banner: show.banner || show.bannerUrl || '',
             progress: posSec,
             duration: durSec,
+            watchTime: posSec,
+            watchCoverage: Math.round(watchCoverage * 100) / 100,
             completed: isCompleted
           } : {
             episodeId: parseInt(episode?.id || showId) || 1,
             progress: posSec,
             duration: durSec,
+            watchTime: posSec,
+            watchCoverage: Math.round(watchCoverage * 100) / 100,
             completed: isCompleted
           };
 
