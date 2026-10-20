@@ -213,6 +213,132 @@ function formatEpisodeWithServers(ep) {
   };
 }
 
+const ANIME_VIEWS_FILE = path.join(__dirname, '..', 'data', 'anime_views.json');
+
+function getAnimeViewsStore() {
+  try {
+    const dataDir = path.join(__dirname, '..', 'data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    if (fs.existsSync(ANIME_VIEWS_FILE)) {
+      return JSON.parse(fs.readFileSync(ANIME_VIEWS_FILE, 'utf-8'));
+    }
+  } catch (err) {
+    console.error('Error reading anime_views.json:', err);
+  }
+  return { episodes: {}, shows: {} };
+}
+
+function saveAnimeViewsStore(data) {
+  try {
+    const dataDir = path.join(__dirname, '..', 'data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    fs.writeFileSync(ANIME_VIEWS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving anime_views.json:', err);
+  }
+}
+
+function getAnimeInitialSeedViews(lunarId, epNum) {
+  let hash = 0;
+  const str = String(lunarId || '1735');
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const base = (Math.abs(hash) % 4800) + 1200;
+  return base + (parseInt(epNum || 1) * 23);
+}
+
+// POST /api/shows/episode/view - Increment episode and show views dynamically
+router.post('/episode/view', async (req, res) => {
+  try {
+    const { episodeId, lunarId, episodeNumber } = req.body;
+    const rawEpId = String(episodeId || '').trim();
+    const isDbEpisode = /^\d+$/.test(rawEpId);
+
+    if (isDbEpisode) {
+      try {
+        const ep = await prisma.episode.update({
+          where: { id: parseInt(rawEpId) },
+          data: { views: { increment: 1 } },
+          include: { show: true }
+        });
+        if (ep.showId) {
+          await prisma.show.update({
+            where: { id: ep.showId },
+            data: { views: { increment: 1 } }
+          }).catch(() => {});
+        }
+        return res.json({ success: true, views: ep.views });
+      } catch (e) {
+        // Fall back to anime store
+      }
+    }
+
+    const anilistIdVal = String(lunarId || (rawEpId.startsWith('lunar-') ? rawEpId.split('-')[1] : 'anime'));
+    const epNumVal = parseInt(episodeNumber || (rawEpId.startsWith('lunar-') ? rawEpId.split('-')[2] : 1)) || 1;
+    const epKey = rawEpId.startsWith('lunar-') ? rawEpId : `lunar-${anilistIdVal}-${epNumVal}`;
+
+    const store = getAnimeViewsStore();
+    if (!store.episodes) store.episodes = {};
+    if (!store.shows) store.shows = {};
+
+    if (store.episodes[epKey] === undefined) {
+      store.episodes[epKey] = getAnimeInitialSeedViews(anilistIdVal, epNumVal);
+    }
+    store.episodes[epKey] += 1;
+
+    if (store.shows[anilistIdVal] === undefined) {
+      store.shows[anilistIdVal] = store.episodes[epKey] * 3;
+    } else {
+      store.shows[anilistIdVal] += 1;
+    }
+
+    saveAnimeViewsStore(store);
+
+    res.json({
+      success: true,
+      episodeId: epKey,
+      views: store.episodes[epKey],
+      showViews: store.shows[anilistIdVal]
+    });
+  } catch (error) {
+    console.error('Error tracking episode view:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// GET /api/shows/episode/view - Fetch views count
+router.get('/episode/view', async (req, res) => {
+  try {
+    const rawEpId = String(req.query.episodeId || '').trim();
+    const lunarId = String(req.query.lunarId || '');
+    const epNum = parseInt(req.query.episodeNumber || 1) || 1;
+
+    const isDbEpisode = /^\d+$/.test(rawEpId);
+    if (isDbEpisode) {
+      try {
+        const ep = await prisma.episode.findUnique({ where: { id: parseInt(rawEpId) } });
+        if (ep) return res.json({ success: true, views: ep.views });
+      } catch (_) {}
+    }
+
+    const anilistIdVal = String(lunarId || (rawEpId.startsWith('lunar-') ? rawEpId.split('-')[1] : 'anime'));
+    const epKey = rawEpId.startsWith('lunar-') ? rawEpId : `lunar-${anilistIdVal}-${epNum}`;
+
+    const store = getAnimeViewsStore();
+    const currentViews = store.episodes && store.episodes[epKey] !== undefined
+      ? store.episodes[epKey]
+      : getAnimeInitialSeedViews(anilistIdVal, epNum);
+
+    res.json({ success: true, episodeId: epKey, views: currentViews });
+  } catch (error) {
+    console.error('Error getting views:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+
 // Get single show by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -352,131 +478,6 @@ router.get('/episodes/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching episode:', error);
     res.status(500).json({ error: 'Internal server error: ' + (error.message || '') });
-  }
-});
-
-const ANIME_VIEWS_FILE = path.join(__dirname, '..', 'data', 'anime_views.json');
-
-function getAnimeViewsStore() {
-  try {
-    const dataDir = path.join(__dirname, '..', 'data');
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-    if (fs.existsSync(ANIME_VIEWS_FILE)) {
-      return JSON.parse(fs.readFileSync(ANIME_VIEWS_FILE, 'utf-8'));
-    }
-  } catch (err) {
-    console.error('Error reading anime_views.json:', err);
-  }
-  return { episodes: {}, shows: {} };
-}
-
-function saveAnimeViewsStore(data) {
-  try {
-    const dataDir = path.join(__dirname, '..', 'data');
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(ANIME_VIEWS_FILE, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error saving anime_views.json:', err);
-  }
-}
-
-function getAnimeInitialSeedViews(lunarId, epNum) {
-  let hash = 0;
-  const str = String(lunarId || '1735');
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  const base = (Math.abs(hash) % 4800) + 1200;
-  return base + (parseInt(epNum || 1) * 23);
-}
-
-// POST /api/shows/episode/view - Increment episode and show views dynamically
-router.post('/episode/view', async (req, res) => {
-  try {
-    const { episodeId, lunarId, episodeNumber } = req.body;
-    const rawEpId = String(episodeId || '').trim();
-    const isDbEpisode = /^\d+$/.test(rawEpId);
-
-    if (isDbEpisode) {
-      try {
-        const ep = await prisma.episode.update({
-          where: { id: parseInt(rawEpId) },
-          data: { views: { increment: 1 } },
-          include: { show: true }
-        });
-        if (ep.showId) {
-          await prisma.show.update({
-            where: { id: ep.showId },
-            data: { views: { increment: 1 } }
-          }).catch(() => {});
-        }
-        return res.json({ success: true, views: ep.views });
-      } catch (e) {
-        // Fall back to anime store
-      }
-    }
-
-    const anilistIdVal = String(lunarId || (rawEpId.startsWith('lunar-') ? rawEpId.split('-')[1] : 'anime'));
-    const epNumVal = parseInt(episodeNumber || (rawEpId.startsWith('lunar-') ? rawEpId.split('-')[2] : 1)) || 1;
-    const epKey = rawEpId.startsWith('lunar-') ? rawEpId : `lunar-${anilistIdVal}-${epNumVal}`;
-
-    const store = getAnimeViewsStore();
-    if (!store.episodes) store.episodes = {};
-    if (!store.shows) store.shows = {};
-
-    if (store.episodes[epKey] === undefined) {
-      store.episodes[epKey] = getAnimeInitialSeedViews(anilistIdVal, epNumVal);
-    }
-    store.episodes[epKey] += 1;
-
-    if (store.shows[anilistIdVal] === undefined) {
-      store.shows[anilistIdVal] = store.episodes[epKey] * 3;
-    } else {
-      store.shows[anilistIdVal] += 1;
-    }
-
-    saveAnimeViewsStore(store);
-
-    res.json({
-      success: true,
-      episodeId: epKey,
-      views: store.episodes[epKey],
-      showViews: store.shows[anilistIdVal]
-    });
-  } catch (error) {
-    console.error('Error tracking episode view:', error);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// GET /api/shows/episode/view - Fetch views count
-router.get('/episode/view', async (req, res) => {
-  try {
-    const rawEpId = String(req.query.episodeId || '').trim();
-    const lunarId = String(req.query.lunarId || '');
-    const epNum = parseInt(req.query.episodeNumber || 1) || 1;
-
-    const isDbEpisode = /^\d+$/.test(rawEpId);
-    if (isDbEpisode) {
-      try {
-        const ep = await prisma.episode.findUnique({ where: { id: parseInt(rawEpId) } });
-        if (ep) return res.json({ success: true, views: ep.views });
-      } catch (_) {}
-    }
-
-    const anilistIdVal = String(lunarId || (rawEpId.startsWith('lunar-') ? rawEpId.split('-')[1] : 'anime'));
-    const epKey = rawEpId.startsWith('lunar-') ? rawEpId : `lunar-${anilistIdVal}-${epNum}`;
-
-    const store = getAnimeViewsStore();
-    const currentViews = store.episodes && store.episodes[epKey] !== undefined
-      ? store.episodes[epKey]
-      : getAnimeInitialSeedViews(anilistIdVal, epNum);
-
-    res.json({ success: true, episodeId: epKey, views: currentViews });
-  } catch (error) {
-    console.error('Error getting views:', error);
-    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
