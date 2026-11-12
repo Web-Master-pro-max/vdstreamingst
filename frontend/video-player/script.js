@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       : (isLocalFrontendPort
         ? (savedServer || 'http://localhost:8000')
         : ((window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
-          ? (savedServer || 'http://13.202.95.5:8000')
+          ? (savedServer || 'http://16.179.30.197:8000')
           : ''));
     const API_BASE = `${SERVER_ORIGIN}/api`;
 
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           return url.replace(/^http:\/\/[^/]+(\/.*)$/i, `${window.location.origin}$1`);
         }
         // Rewrite direct EC2 / localhost backend references to current HTTPS origin
-        if (url.startsWith('http://13.202.95.5') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+        if (url.startsWith('http://16.179.30.197') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
           return url.replace(/^http:\/\/[^/]+/i, window.location.origin);
         }
       }

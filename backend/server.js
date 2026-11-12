@@ -254,8 +254,11 @@ app.use('/uploads', (req, res, next) => {
 });
 
 app.use('/uploads', express.static(uploadsPath));
+app.use('/api/uploads', express.static(uploadsPath));
 app.use('/posters', express.static(path.join(uploadsPath, 'posters')));
+app.use('/api/posters', express.static(path.join(uploadsPath, 'posters')));
 app.use('/banners', express.static(path.join(uploadsPath, 'banners')));
+app.use('/api/banners', express.static(path.join(uploadsPath, 'banners')));
 app.use('/assets', express.static(path.join(frontendPath, 'assets')));
 
 // Fallback resolver for image files requested at root (e.g. /1791215324723-abc.jpg)
