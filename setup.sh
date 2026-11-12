@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Infinx Anime Streaming Platform - Complete EC2 Production Setup & Manager
-# Target OS: Ubuntu 22.04 / 24.04 / 26.04 LTS (x86_64 / arm64)
+# Target OS: Ubuntu (20.04 / 22.04 / 24.04 / 26.04) & Fedora (38 / 39 / 40 / 41 / Rawhide)
+# Also compatible with: Debian 11/12, RHEL, CentOS Stream, Rocky Linux, AlmaLinux
 # ==============================================================================
 
 set -eo pipefail
@@ -32,6 +33,32 @@ check_root() {
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
+
+# Detect OS Family and Package Manager early
+detect_os_family() {
+    OS_FAMILY="debian"
+    PKG_MGR="apt-get"
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS_NAME="${NAME:-Linux}"
+        OS_VERSION="${VERSION_ID:-}"
+        OS_ID="${ID:-unknown}"
+        OS_LIKE="${ID_LIKE:-}"
+
+        if [[ "$OS_ID" =~ ^(fedora|rhel|centos|rocky|almalinux)$ ]] || [[ "$OS_LIKE" =~ (fedora|rhel) ]]; then
+            OS_FAMILY="fedora"
+            if command -v dnf5 >/dev/null 2>&1; then
+                PKG_MGR="dnf5"
+            else
+                PKG_MGR="dnf"
+            fi
+        else
+            OS_FAMILY="debian"
+            PKG_MGR="apt-get"
+        fi
+    fi
+}
+detect_os_family
 
 # Safely extract credentials from .env without shell-eval risks
 load_env_credentials() {
@@ -106,8 +133,12 @@ case "${1:-}" in
             exit 1
         fi
         log_step "Configuring Let's Encrypt Free SSL for $DOMAIN"
-        apt-get update -y
-        apt-get install -y certbot python3-certbot-nginx
+        if [ "$OS_FAMILY" = "debian" ]; then
+            apt-get update -y
+            apt-get install -y certbot python3-certbot-nginx
+        else
+            $PKG_MGR install -y certbot python3-certbot-nginx
+        fi
         certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email || certbot --nginx -d "$DOMAIN"
         systemctl reload nginx
         log_success "SSL enabled successfully! Visit: https://$DOMAIN"
@@ -143,22 +174,23 @@ echo -e "${NC}"
 # ------------------------------------------------------------------------------
 log_step "Phase 1: Pre-flight & System Environment Checks"
 
-# Detect OS
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS_NAME=$NAME
-    OS_VERSION=$VERSION_ID
-    log_info "Detected OS: $OS_NAME $OS_VERSION ($ID)"
-else
-    log_warn "Could not reliably read /etc/os-release. Proceeding assuming Ubuntu/Debian."
-fi
+log_info "Detected OS: $OS_NAME $OS_VERSION (Family: $OS_FAMILY, Package Manager: $PKG_MGR)"
 
 # Detect Architecture
 ARCH=$(uname -m)
 log_info "System Architecture: $ARCH"
 
-# Detect actual non-root user (e.g. ubuntu, ec2-user)
-ACTUAL_USER="${SUDO_USER:-$(logname 2>/dev/null || echo "ubuntu")}"
+# Detect actual non-root user (e.g. ubuntu, fedora, ec2-user)
+ACTUAL_USER="${SUDO_USER:-$(logname 2>/dev/null || echo "")}"
+if [ -z "$ACTUAL_USER" ] || [ "$ACTUAL_USER" = "root" ]; then
+    for u in fedora ec2-user ubuntu rocky almalinux; do
+        if id "$u" >/dev/null 2>&1; then
+            ACTUAL_USER="$u"
+            break
+        fi
+    done
+fi
+ACTUAL_USER="${ACTUAL_USER:-ubuntu}"
 log_info "Primary host user: $ACTUAL_USER"
 
 # ------------------------------------------------------------------------------
@@ -167,8 +199,8 @@ log_info "Primary host user: $ACTUAL_USER"
 log_step "Phase 2: Memory & Swap Optimization"
 
 SWAP_SIZE_MB=$(free -m | awk '/^Swap:/ {print $2}')
-if [ "$SWAP_SIZE_MB" -lt 2000 ]; then
-    log_info "Swap space is low (${SWAP_SIZE_MB}MB). Creating 4GB swapfile for rock-solid stability..."
+if [ -z "$SWAP_SIZE_MB" ] || [ "$SWAP_SIZE_MB" -lt 2000 ]; then
+    log_info "Swap space is low (${SWAP_SIZE_MB:-0}MB). Creating 4GB swapfile for rock-solid stability..."
     if [ ! -f /swapfile ]; then
         fallocate -l 4G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=4096
         chmod 600 /swapfile
@@ -178,6 +210,7 @@ if [ "$SWAP_SIZE_MB" -lt 2000 ]; then
             echo '/swapfile none swap sw 0 0' >> /etc/fstab
         fi
         sysctl vm.swappiness=10
+        mkdir -p /etc/sysctl.d
         echo 'vm.swappiness=10' >> /etc/sysctl.d/99-infinx-swap.conf
         log_success "4GB Swapfile created and enabled permanently."
     else
@@ -190,6 +223,7 @@ fi
 
 # Increase file descriptor ceiling for heavy streaming traffic
 log_info "Tuning system file descriptor limits..."
+mkdir -p /etc/security/limits.d
 cat << 'EOF' > /etc/security/limits.d/99-infinx.conf
 * soft nofile 65535
 * hard nofile 65535
@@ -203,21 +237,37 @@ sysctl -w fs.file-max=2097152 >/dev/null 2>&1 || true
 # ------------------------------------------------------------------------------
 log_step "Phase 3: Installing Essential System Packages"
 
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release \
-    git \
-    ufw \
-    net-tools \
-    htop \
-    jq \
-    tar \
-    unzip \
-    nginx
+if [ "$OS_FAMILY" = "debian" ]; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release \
+        git \
+        ufw \
+        net-tools \
+        htop \
+        jq \
+        tar \
+        unzip \
+        nginx
+else
+    # Fedora / RHEL
+    $PKG_MGR -y install \
+        ca-certificates \
+        curl \
+        gnupg \
+        git \
+        net-tools \
+        htop \
+        jq \
+        tar \
+        unzip \
+        nginx \
+        firewalld
+fi
 
 log_success "Base system packages installed."
 
@@ -227,23 +277,34 @@ log_success "Base system packages installed."
 log_step "Phase 4: Installing & Configuring Docker Engine"
 
 if ! command -v docker >/dev/null 2>&1; then
-    log_info "Configuring official Docker repository..."
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg --yes
-    chmod a+r /etc/apt/keyrings/docker.gpg
+    if [ "$OS_FAMILY" = "debian" ]; then
+        log_info "Configuring official Docker repository for Ubuntu/Debian..."
+        install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg --yes
+        chmod a+r /etc/apt/keyrings/docker.gpg
 
-    UBUNTU_CODENAME="$(lsb_release -cs 2>/dev/null || echo "noble")"
-    case "$UBUNTU_CODENAME" in
-        jammy|noble|focal) ;;
-        *) UBUNTU_CODENAME="noble" ;;
-    esac
+        UBUNTU_CODENAME="$(lsb_release -cs 2>/dev/null || echo "noble")"
+        case "$UBUNTU_CODENAME" in
+            jammy|noble|focal) ;;
+            *) UBUNTU_CODENAME="noble" ;;
+        esac
 
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $UBUNTU_CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $UBUNTU_CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-    apt-get update -y
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        apt-get update -y
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    else
+        log_info "Configuring official Docker repository for Fedora..."
+        if [ "$PKG_MGR" = "dnf5" ]; then
+            curl -fsSL https://download.docker.com/linux/fedora/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
+        else
+            dnf -y install dnf-plugins-core || true
+            curl -fsSL https://download.docker.com/linux/fedora/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
+        fi
+        $PKG_MGR -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    fi
     log_success "Docker Engine and Compose plugin installed."
 else
     log_info "Docker is already installed: $(docker --version)"
@@ -268,14 +329,34 @@ if ! command -v docker-compose >/dev/null 2>&1; then
 fi
 
 # ------------------------------------------------------------------------------
-# Phase 5: Production Nginx Reverse Proxy Setup
+# Phase 5: SELinux Policy Configuration (Fedora / RHEL Hardening)
 # ------------------------------------------------------------------------------
-log_step "Phase 5: Configuring Nginx Reverse Proxy & WebSocket Streaming"
+if command -v getenforce >/dev/null 2>&1; then
+    SELINUX_STATE=$(getenforce 2>/dev/null || echo "Disabled")
+    if [ "$SELINUX_STATE" != "Disabled" ]; then
+        log_step "Phase 5A: Configuring SELinux for Nginx Reverse Proxy & Containers"
+        log_info "SELinux status is: $SELINUX_STATE"
+        # Allow Nginx reverse-proxy to connect to upstream port 8000
+        setsebool -P httpd_can_network_connect 1 2>/dev/null || true
+        # Allow containers to bind host volumes cleanly
+        if command -v chcon >/dev/null 2>&1; then
+            chcon -Rt svirt_sandbox_file_t "$PROJECT_DIR" 2>/dev/null || true
+        fi
+        log_success "SELinux policies configured successfully."
+    fi
+fi
 
-NGINX_CONF_AVAILABLE="/etc/nginx/sites-available/infinx"
-NGINX_CONF_ENABLED="/etc/nginx/sites-enabled/infinx"
+# ------------------------------------------------------------------------------
+# Phase 6: Production Nginx Reverse Proxy Setup
+# ------------------------------------------------------------------------------
+log_step "Phase 6: Configuring Nginx Reverse Proxy & WebSocket Streaming"
 
-cat << 'EOF' > "$NGINX_CONF_AVAILABLE"
+# Create universal conf.d location supported across Ubuntu and Fedora
+mkdir -p /etc/nginx/conf.d
+
+NGINX_CONF="/etc/nginx/conf.d/infinx.conf"
+
+cat << 'EOF' > "$NGINX_CONF"
 # Infinx Anime Streaming Nginx Reverse Proxy Configuration
 server {
     listen 80 default_server;
@@ -327,12 +408,17 @@ server {
 }
 EOF
 
-# Disable default nginx page
+# Clean up default site conflicts on Debian/Ubuntu
 if [ -L "/etc/nginx/sites-enabled/default" ] || [ -f "/etc/nginx/sites-enabled/default" ]; then
     rm -f "/etc/nginx/sites-enabled/default"
 fi
 
-ln -sf "$NGINX_CONF_AVAILABLE" "$NGINX_CONF_ENABLED"
+# Clean up default server conflict in Fedora's main /etc/nginx/nginx.conf
+if [ -f "/etc/nginx/nginx.conf" ]; then
+    if grep -q "default_server" /etc/nginx/nginx.conf 2>/dev/null; then
+        sed -i 's/default_server//g' /etc/nginx/nginx.conf 2>/dev/null || true
+    fi
+fi
 
 nginx -t
 systemctl restart nginx
@@ -340,24 +426,35 @@ systemctl enable nginx
 log_success "Nginx reverse proxy active on Port 80 -> Port 8000."
 
 # ------------------------------------------------------------------------------
-# Phase 6: Firewall (UFW) Security Setup
+# Phase 7: Firewall Security Setup (UFW on Ubuntu / Firewalld on Fedora)
 # ------------------------------------------------------------------------------
-log_step "Phase 6: Configuring Firewall (UFW) Rules"
+log_step "Phase 7: Configuring Firewall Rules"
 
-# Allow SSH first so connection is never interrupted
-ufw allow 22/tcp comment 'SSH'
-ufw allow 80/tcp comment 'HTTP Nginx'
-ufw allow 443/tcp comment 'HTTPS SSL'
-ufw allow 8000/tcp comment 'Direct Backend API'
-
-# Enable firewall without interactive prompt
-echo "y" | ufw enable || true
-log_success "Firewall enabled. (Ports 22, 80, 443, 8000 open; Database/Redis secured)."
+if [ "$OS_FAMILY" = "debian" ] && command -v ufw >/dev/null 2>&1; then
+    # Debian / Ubuntu UFW
+    ufw allow 22/tcp comment 'SSH'
+    ufw allow 80/tcp comment 'HTTP Nginx'
+    ufw allow 443/tcp comment 'HTTPS SSL'
+    ufw allow 8000/tcp comment 'Direct Backend API'
+    echo "y" | ufw enable || true
+    log_success "UFW Firewall configured (Ports 22, 80, 443, 8000 open)."
+elif command -v firewall-cmd >/dev/null 2>&1; then
+    # Fedora / RHEL Firewalld
+    systemctl enable firewalld --now 2>/dev/null || true
+    firewall-cmd --permanent --add-service=ssh 2>/dev/null || true
+    firewall-cmd --permanent --add-service=http 2>/dev/null || true
+    firewall-cmd --permanent --add-service=https 2>/dev/null || true
+    firewall-cmd --permanent --add-port=8000/tcp 2>/dev/null || true
+    firewall-cmd --reload 2>/dev/null || true
+    log_success "Firewalld configured (Ports 22, 80, 443, 8000 open)."
+else
+    log_warn "Neither UFW nor Firewalld active. Please verify your cloud security groups."
+fi
 
 # ------------------------------------------------------------------------------
-# Phase 7: Environment & Directory Preparation
+# Phase 8: Environment & Directory Preparation
 # ------------------------------------------------------------------------------
-log_step "Phase 7: Setting up Project Storage & Environment Variables"
+log_step "Phase 8: Setting up Project Storage & Environment Variables"
 
 # Create uploads directories
 mkdir -p "$PROJECT_DIR/uploads/posters"
@@ -399,9 +496,9 @@ fi
 load_env_credentials
 
 # ------------------------------------------------------------------------------
-# Phase 8: Start Database & Redis Services
+# Phase 9: Start Database & Redis Services
 # ------------------------------------------------------------------------------
-log_step "Phase 8: Launching Database & Cache Services"
+log_step "Phase 9: Launching Database & Cache Services"
 
 log_info "Starting MySQL and Redis containers..."
 docker compose up -d db redis
@@ -427,9 +524,9 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# Phase 9: SQL Migration / Database Restore from infinx_backup.sql
+# Phase 10: SQL Migration / Database Restore from infinx_backup.sql
 # ------------------------------------------------------------------------------
-log_step "Phase 9: Checking Database Migration Dump (infinx_backup.sql)"
+log_step "Phase 10: Checking Database Migration Dump (infinx_backup.sql)"
 
 if [ -f "$PROJECT_DIR/infinx_backup.sql" ]; then
     log_info "Found SQL backup file: infinx_backup.sql"
@@ -453,9 +550,9 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# Phase 10: Build and Launch Backend & Worker Containers
+# Phase 11: Build and Launch Backend & Worker Containers
 # ------------------------------------------------------------------------------
-log_step "Phase 10: Building and Launching Backend & Worker Containers"
+log_step "Phase 11: Building and Launching Backend & Worker Containers"
 
 log_info "Building and launching backend API and transcode worker..."
 docker compose up --build -d backend worker
@@ -483,7 +580,7 @@ fi
 TOTAL_SHOWS=$(docker exec infinx_db mysql -uroot -p"${MYSQL_PASS_VAL}" "${MYSQL_DB_VAL}" -N -e "SELECT count(*) FROM \`Show\`;" 2>/dev/null || echo "N/A")
 
 # ------------------------------------------------------------------------------
-# Phase 11: Summary & Access Information
+# Phase 12: Summary & Access Information
 # ------------------------------------------------------------------------------
 # Retrieve Public IP
 PUBLIC_IP=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true)

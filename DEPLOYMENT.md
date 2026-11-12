@@ -1,16 +1,24 @@
 # Infinx Anime EC2 Deployment Guide
 
-This guide walks you through deploying the Infinx Anime application on an **AWS EC2 Ubuntu server** (Ubuntu 22.04 / 24.04 / 26.04 LTS).
+This guide walks you through deploying the Infinx Anime application on **Ubuntu** (20.04 / 22.04 / 24.04 / 26.04) or **Fedora Linux** (38 / 39 / 40 / 41 / Rawhide, RHEL 9+, Rocky/AlmaLinux).
 
 ---
 
 ## Quick Start (Automated 1-Command Setup)
 
-Once you launch your Ubuntu EC2 instance and clone/copy this repository into it, you only need to run:
+Once you launch your Ubuntu or Fedora EC2 instance and clone/copy this repository into it, you only need to run:
 
+### On Ubuntu / Debian:
 ```bash
 chmod +x setup.sh
 sudo ./setup.sh
+```
+
+### On Fedora / RHEL / Rocky Linux:
+```bash
+chmod +x setup.sh setup-fedora.sh
+sudo ./setup-fedora.sh
+# (Or run sudo ./setup.sh — it automatically detects Fedora and switches package managers!)
 ```
 
 The script will automatically:
