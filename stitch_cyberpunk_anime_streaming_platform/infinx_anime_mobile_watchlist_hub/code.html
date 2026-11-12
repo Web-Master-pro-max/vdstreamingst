@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#131313;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#23005c", "on-tertiary-container": "#340080", "primary-fixed-dim": "#ffb2b8", "primary-fixed": "#ffdadb", "inverse-on-surface": "#303030", "background": "#131313", "on-background": "#e2e2e2", "on-error": "#690005", "secondary": "#d3fbff", "tertiary": "#d0bcff", "primary-container": "#ff506e", "on-primary-fixed-variant": "#91002d", "secondary-container": "#00eefc", "outline-variant": "#5e3e41", "surface-container-lowest": "#0e0e0e", "tertiary-fixed-dim": "#d0bcff", "inverse-surface": "#e2e2e2", "tertiary-fixed": "#e9ddff", "surface-container-highest": "#353535", "on-secondary-fixed": "#002022", "surface-container-low": "#1b1b1b", "secondary-fixed": "#7df4ff", "surface-dim": "#131313", "surface-variant": "#353535", "on-error-container": "#ffdad6", "outline": "#ae8789", "on-primary-container": "#5b0018", "secondary-fixed-dim": "#00dbe9", "on-primary": "#67001d", "error-container": "#93000a", "on-secondary": "#00363a", "surface-container": "#1f1f1f", "surface-bright": "#393939", "primary": "#ffb2b8", "on-surface-variant": "#e8bcbe", "error": "#ffb4ab", "on-surface": "#e2e2e2", "tertiary-container": "#a078ff", "on-secondary-fixed-variant": "#004f54", "on-secondary-container": "#00686f", "inverse-primary": "#be003d", "on-primary-fixed": "#40000f", "surface": "#131313", "surface-container-high": "#2a2a2a", "on-tertiary-fixed-variant": "#5516be", "on-tertiary": "#3c0091", "surface-tint": "#ffb2b8" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "gutter-mobile": "0.75rem", "margin": "3rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, "fontFamily": { "headline-sm": ["Outfit"], "headline-md": ["Outfit"], "display-hero": ["Outfit"], "label-md": ["Inter"], "display-hero-mobile": ["Outfit"], "body-sm": ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], "headline-lg-mobile": ["Outfit"], "label-lg": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Outfit"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "display-hero": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }], "display-hero-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "800" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.6)]"><div class="h-16 px-gutter-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="flex items-center justify-center w-11 h-11 text-secondary-container"><span class="material-symbols-outlined text-[28px] drop-shadow-[0_0_8px_rgba(0,238,252,0.7)]">all_inclusive</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">INFINX</span><span class="px-1.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm border border-primary-container/40 shadow-[0_0_8px_rgba(255,80,110,0.3)]">VIP</span></div><span class="font-label-sm text-label-sm text-secondary-fixed-dim tracking-wider uppercase truncate">Watchlist</span></div></div><div class="flex items-center gap-space-xs"><a class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-secondary-fixed transition-colors" data-path="search-explore" href="#"><span class="material-symbols-outlined text-[22px]">search</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs shadow-[0_0_12px_rgba(255,178,184,0.4)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface">
+<!-- Ambient Chromatic Glow Field (Subtle backdrop lights) -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-12 -left-20 w-56 h-56 rounded-full bg-secondary-container/10 blur-3xl pointer-events-none"></div>
+<div class="absolute top-28 -right-20 w-64 h-64 rounded-full bg-primary-container/10 blur-3xl pointer-events-none"></div>
+<!-- Segmented Navigation Hub (Top Pills) -->
+<div class="px-gutter-mobile pt-space-sm pb-space-xs">
+<div class="flex items-center justify-between p-1 bg-surface-container-low/90 rounded-full shadow-lg">
+<button class="flex-1 py-2 px-space-xs rounded-full bg-surface-container-high text-secondary-fixed flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(0,238,252,0.25)] transition-all" id="tab-watchlist">
+<span class="material-symbols-outlined text-[16px]">bookmark</span>
+<span class="font-label-sm text-label-sm tracking-tight truncate">Watchlist (14)</span>
+</button>
+<button class="flex-1 py-2 px-space-xs rounded-full text-on-surface-variant hover:text-white flex items-center justify-center gap-1.5 transition-all" id="tab-history">
+<span class="material-symbols-outlined text-[16px]">history</span>
+<span class="font-label-sm text-label-sm tracking-tight truncate">History (48)</span>
+</button>
+<button class="flex-1 py-2 px-space-xs rounded-full text-on-surface-variant hover:text-white flex items-center justify-center gap-1.5 transition-all" id="tab-genres">
+<span class="material-symbols-outlined text-[16px]">category</span>
+<span class="font-label-sm text-label-sm tracking-tight truncate">Genres (32)</span>
+</button>
+</div>
+<!-- Sync Status Pill Indicator -->
+<div class="flex items-center justify-between mt-space-sm px-1">
+<div class="flex items-center gap-1.5 bg-surface-container-lowest/80 px-2.5 py-1 rounded-full shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container shadow-[0_0_8px_#00eefc] animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-secondary-fixed tracking-wider uppercase">Sync Live: AniList &amp; MAL</span>
+</div>
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-secondary-fixed text-label-sm font-label-sm transition-colors">
+<span class="material-symbols-outlined text-[15px]">sync</span>
+<span>Just now</span>
+</button>
+</div>
+</div>
+<!-- Filter Horizon Chips -->
+<div class="w-full overflow-x-auto no-scrollbar py-space-sm px-gutter-mobile flex gap-2">
+<button class="filter-pill flex-shrink-0 px-3.5 py-1.5 rounded-full bg-secondary-container/20 text-secondary-container font-label-md text-label-md uppercase tracking-wider shadow-[0_0_12px_rgba(0,238,252,0.3)]">
+        All (14)
+      </button>
+<button class="filter-pill flex-shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-white font-label-md text-label-md uppercase tracking-wider shadow-sm transition-colors">
+        Watching (5)
+      </button>
+<button class="filter-pill flex-shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-white font-label-md text-label-md uppercase tracking-wider shadow-sm transition-colors">
+        Plan to Watch (6)
+      </button>
+<button class="filter-pill flex-shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-white font-label-md text-label-md uppercase tracking-wider shadow-sm transition-colors">
+        Completed (3)
+      </button>
+</div>
+<!-- Section 1: Currently Watching Carousel (16:9 Cards) -->
+<div class="mt-space-sm">
+<div class="flex items-center justify-between px-gutter-mobile mb-space-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-sm bg-primary-container shadow-[0_0_8px_#ff506e]"></span>
+<h2 class="font-headline-sm text-headline-sm tracking-tight text-white">Currently Watching</h2>
+</div>
+<span class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-wider">5 Active Stems</span>
+</div>
+<!-- Horizontal Peek Track -->
+<div class="w-full overflow-x-auto flex gap-3 px-gutter-mobile pb-space-sm snap-x snap-mandatory">
+<!-- Card 1: Chainsaw Man -->
+<div class="snap-start flex-shrink-0 w-[276px] bg-surface-container-low rounded-xl overflow-hidden shadow-xl flex flex-col group relative">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300" data-alt="Futuristic neon Tokyo alleyway battle with Chainsaw Man cinematic frame, high voltage blood sparks and crimson bokeh reflections against wet asphalt, ultra-detailed anime screencap 4k OLED contrast" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMcbb21GguJYec3R9lCoVRczjBQ8R6CqfLsKFyAr2A6U6XK4jpXKYOFTEttShJwqPC34RL9fP9TkNH9zrtjOpV_qQTbIR4ZwnMwLRBTnssTrEIu8kq0xPAYOcV0-RUVOOH4hljz9IxEWI6-YTm7GFiS-QWxTk9LYBuDsR2H6-SYHCVSd2rElqKYKCOYXSUlQTuxwDu-nwTeEqLDSaCqyx-_WekC8PsRlXnPcLCLI1kPOGrt7ZpgW2GcA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+<!-- Badges -->
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="bg-black/80 text-secondary-container font-label-sm text-label-sm px-1.5 py-0.5 rounded shadow">4K HDR</span>
+<span class="bg-black/80 text-white font-label-sm text-label-sm px-1.5 py-0.5 rounded shadow">EP 8</span>
+</div>
+<!-- Resume Floating Micro Button -->
+<div class="absolute bottom-2 right-2 flex items-center">
+<button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-label-sm font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span>
+<span>Resume</span>
+</button>
+</div>
+</div>
+<!-- Progress Bar Ribbon -->
+<div class="w-full h-1 bg-surface-container-highest relative">
+<div class="h-full bg-primary-container shadow-[0_0_8px_#ff506e]" style="width: 68%;"></div>
+</div>
+<!-- Card Metadata -->
+<div class="p-space-xs bg-surface-container-low flex flex-col justify-between flex-grow">
+<div>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Chainsaw Man: Reze Arc</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Ep 8: Midnight Detonation • 68%</p>
+</div>
+<div class="flex items-center justify-between mt-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-secondary-fixed">8m 14s remaining</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-white">cast</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Solo Leveling -->
+<div class="snap-start flex-shrink-0 w-[276px] bg-surface-container-low rounded-xl overflow-hidden shadow-xl flex flex-col group relative">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300" data-alt="Sung Jinwoo standing amidst glowing blue shadow monarch mist with violet glowing dagger eyes, digital dungeon stone walls in high-contrast cyberpunk anime render" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlz2NGVpg1YUklnLxR8Cl_vwcGIlxQk_dNXDGuDCT2p3_S1XfW5OBieRS-ugJWAa-NiTtEOmsUvtQe_ElFoido97WiDe9lJ27JEVFKR4kitwJn3_STFQHzlOKjnRCJ7wTYXQFVtO-MBXC-Bg8H60wsvkZ57IV-DORbfG253MflWw6YxXD-haFpIYRHiUEIyQKcpalReylMA4n_vnm_TbqjIrbbSpJrpHSjMkKp_YCGu-xblsPQTrTm9Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="bg-black/80 text-secondary-container font-label-sm text-label-sm px-1.5 py-0.5 rounded shadow">DOLBY VISION</span>
+<span class="bg-black/80 text-white font-label-sm text-label-sm px-1.5 py-0.5 rounded shadow">EP 11</span>
+</div>
+<div class="absolute bottom-2 right-2 flex items-center">
+<button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-label-sm font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span>
+<span>Resume</span>
+</button>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container-highest relative">
+<div class="h-full bg-primary-container shadow-[0_0_8px_#ff506e]" style="width: 82%;"></div>
+</div>
+<div class="p-space-xs bg-surface-container-low flex flex-col justify-between flex-grow">
+<div>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Solo Leveling</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Ep 11: A Knight Who Defends an Empty Throne • 82%</p>
+</div>
+<div class="flex items-center justify-between mt-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-secondary-fixed">4m 20s remaining</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-white">cast</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Cyberpunk Edgerunners -->
+<div class="snap-start flex-shrink-0 w-[276px] bg-surface-container-low rounded-xl overflow-hidden shadow-xl flex flex-col group relative">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300" data-alt="Cyberpunk anime city skyline drenched in hyper neon yellow and electric teal laser beams with Lucy looking at the moon, dystopian high tech architecture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4k6KfN7izHJ5nM6-tvOvQxxoTxR4nx7-gMtQKr7eS-2NVq6oO2wA7Xe6Kz1wpihxPMCDRFKXj_jFZA87YHBJI_pVQyM4NizOLdrIKVaG8r8jLUIj3nuyAjIjy1LL73D2OIsxXJ1145o-A9OMB1pCDFPSM9Gdz1p8lhwUO7cGyyWUY-bULZyTqBdCtWhrYKBexptdnD31wvfg0_ER1hdx6goWR_PcRMTFFbIOwLelOkA57cIEGLetGaw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="bg-black/80 text-secondary-container font-label-sm text-label-sm px-1.5 py-0.5 rounded shadow">MASTER DUB</span>
+<span class="bg-black/80 text-white font-label-sm text-label-sm px-1.5 py-0.5 rounded shadow">EP 6</span>
+</div>
+<div class="absolute bottom-2 right-2 flex items-center">
+<button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-label-sm font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span>
+<span>Resume</span>
+</button>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container-highest relative">
+<div class="h-full bg-primary-container shadow-[0_0_8px_#ff506e]" style="width: 35%;"></div>
+</div>
+<div class="p-space-xs bg-surface-container-low flex flex-col justify-between flex-grow">
+<div>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Cyberpunk: Edgerunners</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Ep 6: Girl on Fire • 35%</p>
+</div>
+<div class="flex items-center justify-between mt-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-secondary-fixed">15m 48s remaining</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-white">cast</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 2: Plan to Watch Vault (2-Column Grid) -->
+<div class="mt-space-md px-gutter-mobile">
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-sm bg-secondary-container shadow-[0_0_8px_#00eefc]"></span>
+<h2 class="font-headline-sm text-headline-sm tracking-tight text-white">Plan to Watch Vault</h2>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span>Swipe to edit</span>
+<span class="material-symbols-outlined text-[14px]">swipe</span>
+</div>
+</div>
+<!-- 2-Column Poster Grid -->
+<div class="grid grid-cols-2 gap-3" id="vault-grid">
+<!-- Grid Item 1: Dandadan -->
+<div class="vault-card relative rounded-xl overflow-hidden bg-surface-container-low shadow-lg group flex flex-col">
+<div class="relative w-full aspect-[3/4] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Anime poster of Dandadan supernatural spirits neon green turbos and high school occult sci-fi characters running under glowing hyper-saturated sky, studio trigger style aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxfVZb2O-7NPOIYCeXhDR0zXOA4oT-k2Gl2JDBoR5fKrpPssIPCJyH0VnyJi39sZyZBv6Vi5BezAyPzbe_RH3NhA4CXKkuz_4lZ4j_lu1-fgDLxJuRyUv0M_z4Yz7GKdOIx6qdBOuSiX_nhYMjCBpsHv2qMR5UoB6Wqpmv3T85FoAEFv2gocJ2-fwhDjxLV1qF-uvzWVecU3fRzJgmfCSY804kjCTVFvBQB-jNTI7fhHNJdjQ6CfsNzA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+<!-- Quick Action Top Ribbon -->
+<div class="absolute top-2 right-2 flex flex-col gap-1">
+<button class="w-7 h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-on-surface-variant hover:text-primary-container shadow">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Score & Type Micro Tag -->
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-secondary-fixed text-label-sm font-label-sm flex items-center gap-0.5 shadow">
+<span class="material-symbols-outlined text-[11px] text-secondary-container">star</span> 8.9
+              </span>
+</div>
+<!-- Bottom Poster Content -->
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider">Simulcast Fall</span>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Dandadan</h3>
+</div>
+</div>
+<div class="p-2 bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">12 Episodes</span>
+<button class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-secondary-container hover:bg-secondary-container hover:text-black transition-colors">
+<span class="material-symbols-outlined text-[14px]">playlist_add_check</span>
+</button>
+</div>
+</div>
+<!-- Grid Item 2: Frieren -->
+<div class="vault-card relative rounded-xl overflow-hidden bg-surface-container-low shadow-lg group flex flex-col">
+<div class="relative w-full aspect-[3/4] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Anime poster of white haired elven mage Frieren holding a polished wooden staff standing in a magical field of glowing blue mirror flowers under starlight night" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATNBk5YZdsX5OSwE48bexywlhPaTe7yrjrmEzKmYrqFPTz7K8kkOd_a3Px9PaGeKM6cSyjZMBi75ALEE4Ug6xHOv0-S7oWWfsZc0x36Ib9SfNwcez_t4Sw2H-V5RLm89mn_AGLXE8muivuFy3Cee_J-yrzK87Z7O1WtooD4zq5odG3mnxANKM1rJcG25gbpnSBr2MeTeOi52yZw5LtokZPRddHUEDR48r3t-zKDSfdn-Hr6w8ewo1gJA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+<div class="absolute top-2 right-2 flex flex-col gap-1">
+<button class="w-7 h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-on-surface-variant hover:text-primary-container shadow">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-secondary-fixed text-label-sm font-label-sm flex items-center gap-0.5 shadow">
+<span class="material-symbols-outlined text-[11px] text-secondary-container">star</span> 9.3
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-sm text-label-sm text-tertiary-fixed uppercase tracking-wider">Masterpiece</span>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Frieren: Beyond Journey</h3>
+</div>
+</div>
+<div class="p-2 bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">28 Episodes</span>
+<button class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-secondary-container hover:bg-secondary-container hover:text-black transition-colors">
+<span class="material-symbols-outlined text-[14px]">playlist_add_check</span>
+</button>
+</div>
+</div>
+<!-- Grid Item 3: Demon Slayer -->
+<div class="vault-card relative rounded-xl overflow-hidden bg-surface-container-low shadow-lg group flex flex-col">
+<div class="relative w-full aspect-[3/4] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Cinematic anime poster featuring flaming Nichirin sword slashing with dynamic fire sparks and sun breathing dragons against pitch black night sky, ufotable rendering" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdjhiyE6CfbFQ8an-b9yyq-R4oF0y8uUI3xvWaaNfwaXQAz_PDlMjkXKPelbLWL65q0c2ET8AV8frBTDFnonYaxp3XO5kcqeNBxG6huFx7SrfxyJPkUePVsbd6AMjv3KQKkfLvLnKbpg9tnyd2rVWJ6cWDB9UiXBGiqmmpunOLZgVjNeNunfqqNHC3TAu-cuwRbRVgfxIWrQqrrsj1fQJyjvX3kEI4Ok1cS-EAmCH_9tx8QPodkxZWcA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+<div class="absolute top-2 right-2 flex flex-col gap-1">
+<button class="w-7 h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-on-surface-variant hover:text-primary-container shadow">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-secondary-fixed text-label-sm font-label-sm flex items-center gap-0.5 shadow">
+<span class="material-symbols-outlined text-[11px] text-secondary-container">star</span> 8.8
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-wider">Hashira Arc</span>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Demon Slayer</h3>
+</div>
+</div>
+<div class="p-2 bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">8 Episodes</span>
+<button class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-secondary-container hover:bg-secondary-container hover:text-black transition-colors">
+<span class="material-symbols-outlined text-[14px]">playlist_add_check</span>
+</button>
+</div>
+</div>
+<!-- Grid Item 4: Vinland Saga -->
+<div class="vault-card relative rounded-xl overflow-hidden bg-surface-container-low shadow-lg group flex flex-col">
+<div class="relative w-full aspect-[3/4] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Dramatic grim anime shot of Thorfinn staring at golden wheat fields bathed in sunset lighting, wind blowing hair, high emotional weight, gritty cinematic anime aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3L5mzi29hOaAQci0C64FLFaPc32TJ-KQE1lp8mEdP36wZrmrlCxven6r_ESPuoauvm7bf42VAZ84LrJT1yHdDibG9xoicIqZI40O5R-_bK5aOV7Fld9-I__shzPdEvQpong1dindSJRPEM3CTwydfPdYaXDz-uJesC0JA3DgTjwPbGcN65MmTbhuLgN0uEz0HcHq6lS1adeJV8xp9zM-SiS18yh17UYh2VuFNMXhwoSDS8cho904qNA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+<div class="absolute top-2 right-2 flex flex-col gap-1">
+<button class="w-7 h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-on-surface-variant hover:text-primary-container shadow">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-secondary-fixed text-label-sm font-label-sm flex items-center gap-0.5 shadow">
+<span class="material-symbols-outlined text-[11px] text-secondary-container">star</span> 9.1
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Season 2</span>
+<h3 class="font-label-lg text-label-lg font-bold text-white truncate">Vinland Saga</h3>
+</div>
+</div>
+<div class="p-2 bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">24 Episodes</span>
+<button class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-secondary-container hover:bg-secondary-container hover:text-black transition-colors">
+<span class="material-symbols-outlined text-[14px]">playlist_add_check</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 3: Completed Masterpieces Compact Feed -->
+<div class="mt-space-lg px-gutter-mobile">
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-sm bg-tertiary shadow-[0_0_8px_#d0bcff]"></span>
+<h2 class="font-headline-sm text-headline-sm tracking-tight text-white">Completed Masterpieces</h2>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-fixed tracking-wider uppercase">Hall of Fame</span>
+</div>
+<div class="flex flex-col gap-2.5">
+<!-- Masterpiece Item 1 -->
+<div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-xl shadow-md">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-16 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Evangelion Unit-01 roaring in purple armor under red apocalyptic moon, neon lit mecha anime artwork" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3SzoaxUgrtJkPughhsHMf8GjRCKbDOoviK3Q5MftNhYHwFChFRoU5CIAbOtRtSRmDzZUZntsgr2U9Tv_uVFzd8Ie2szUdj4P_MPsTE3qdNrhqFPHbSjeRU99C2uF-aL65Md_OQGXVX9YsxcSB--YFVd0FFr8GbpqFQnxkfAZ4ja9ccQtYKNSKu3DpxCf_5X7ZYND6YMR9Qz-EXYRNxT_VP74fyh8NXR-VbESf9YJtqtGkQxR2JcdFfg"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h4 class="font-label-lg text-label-lg font-bold text-white truncate">Neon Genesis: End of Eva</h4>
+<span class="px-1.5 py-0.2 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm border-0 font-bold shadow-[0_0_6px_rgba(255,80,110,0.4)]">10/10</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Completed Nov 12 • 26 Ep + Film</p>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-tertiary-fixed font-label-sm text-label-sm">Criterion 4K Re-master</span>
+</div>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-secondary-container hover:bg-secondary-container hover:text-black font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm transition-all ml-2 flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">replay</span>
+<span>Rewatch</span>
+</button>
+</div>
+<!-- Masterpiece Item 2 -->
+<div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-xl shadow-md">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-16 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Steins Gate Okabe Rintaro in laboratory coat standing in front of diverging green nixie worldline clock tubes in Akihabara" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDEtrmCAZd5AlFJ-_zpDkEbch98-32zQcuhW3bjcRfUHVUExgMQk-5Oh0eSv37tj9DnnuViNocLDf-YhD7h26YVWAAFEFJvqjJ-dkq535eLHeBMxpB6bdLMciA_WV23CvPpahR50gB79IOLvCYHdhZsB-JrE-D_ThkcSVubvyIxr97uykF_Og4umEMnqyy9D6HlBdl1jAgnzO_uwL9z3fhY7vLU16GoBdRdWO5s8sa5QGnhUs_nMq4uA"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h4 class="font-label-lg text-label-lg font-bold text-white truncate">Steins;Gate</h4>
+<span class="px-1.5 py-0.2 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm border-0 font-bold shadow-[0_0_6px_rgba(255,80,110,0.4)]">10/10</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Completed Oct 04 • 24 Episodes</p>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-secondary-fixed font-label-sm text-label-sm">Worldline 1.048596%</span>
+</div>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-secondary-container hover:bg-secondary-container hover:text-black font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm transition-all ml-2 flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">replay</span>
+<span>Rewatch</span>
+</button>
+</div>
+<!-- Masterpiece Item 3 -->
+<div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-xl shadow-md">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-16 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Cowboy Bebop Spike Spiegel silhouette smoking a cigarette in deep cobalt jazz club with saxophone reflections and smoke" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvf5IM7X9w-amtB5YXADF17ocMg0MRgBYj5GbiIpDL10M5qCegVv43Atd4TJYU81Z50lSA8KsDhm2ZF7aPsmZUii_nV0JVf11gTPJncHm2d3XiIUCG7rv7LOiDEdUs-411OcUpoF4CYXYCMnI_6AeEGIIZKqCLMDAlu7Ygp157dHHTS3X89mDep3zYkS1ti64LduoGDV8kpQ6Tg9e9X199LR7JAaUxDKjFqWbIzpQIhz6It4JqssyvNQ"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h4 class="font-label-lg text-label-lg font-bold text-white truncate">Cowboy Bebop</h4>
+<span class="px-1.5 py-0.2 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm border-0 font-bold shadow-[0_0_6px_rgba(255,80,110,0.4)]">10/10</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Completed Sep 18 • 26 Sessions</p>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-tertiary-fixed font-label-sm text-label-sm">Hi-Res FLAC Audio</span>
+</div>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-secondary-container hover:bg-secondary-container hover:text-black font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm transition-all ml-2 flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">replay</span>
+<span>Rewatch</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section 4: Floating / Embedded Offline Vault Storage Capsule -->
+<div class="mt-space-lg px-gutter-mobile pb-space-sm">
+<div class="p-3.5 bg-surface-container-low/95 backdrop-blur-xl rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-secondary-container/20 flex items-center justify-center text-secondary-container shadow-[0_0_10px_rgba(0,238,252,0.3)]">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-white">Encrypted Offline Vault</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed">38.4 GB / 128 GB used</span>
+</div>
+</div>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface hover:text-secondary-fixed font-label-sm text-label-sm font-medium flex items-center gap-1 transition-colors" id="manage-storage-btn">
+<span>Manage</span>
+<span class="material-symbols-outlined text-[14px]">tune</span>
+</button>
+</div>
+<!-- Storage Dual Segment Bar -->
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary-container shadow-[0_0_8px_#00eefc]" style="width: 30%;" title="Anime Video Cache"></div>
+<div class="h-full bg-tertiary-container shadow-[0_0_8px_#a078ff]" style="width: 12%;" title="Spatial Audio &amp; Subs"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-0.5">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+<span>12 Episodes Saved</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+<span>Lossless Atmos</span>
+</div>
+<span class="text-white font-medium">89.6 GB Free</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple interactive micro-state handling for filter pills and top segment buttons
+  document.querySelectorAll('.filter-pill').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-pill').forEach(b => {
+        b.className = 'filter-pill flex-shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-white font-label-md text-label-md uppercase tracking-wider shadow-sm transition-colors';
+      });
+      this.className = 'filter-pill flex-shrink-0 px-3.5 py-1.5 rounded-full bg-secondary-container/20 text-secondary-container font-label-md text-label-md uppercase tracking-wider shadow-[0_0_12px_rgba(0,238,252,0.3)]';
+    });
+  });
+
+  const tabWatchlist = document.getElementById('tab-watchlist');
+  const tabHistory = document.getElementById('tab-history');
+  const tabGenres = document.getElementById('tab-genres');
+  const tabs = [tabWatchlist, tabHistory, tabGenres];
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      tabs.forEach(t => {
+        t.className = 'flex-1 py-2 px-space-xs rounded-full text-on-surface-variant hover:text-white flex items-center justify-center gap-1.5 transition-all';
+      });
+      this.className = 'flex-1 py-2 px-space-xs rounded-full bg-surface-container-high text-secondary-fixed flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(0,238,252,0.25)] transition-all';
+    });
+  });
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.8)]" data-active-classes="text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.6)]"><div class="flex justify-around items-center h-16 px-gutter-mobile"><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm font-medium">Home</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="browse-catalog" href="#"><span class="material-symbols-outlined text-[22px]">explore</span><span class="font-label-sm text-label-sm font-medium">Browse</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 transition-colors text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.6)]" data-path="watchlist" href="#"><span class="material-symbols-outlined text-[22px]">bookmarks</span><span class="font-label-sm text-label-sm font-medium">Watchlist</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-sm text-label-sm font-medium">Profile</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="more-hub" href="#"><span class="material-symbols-outlined text-[22px]">dashboard_customize</span><span class="font-label-sm text-label-sm font-medium">More</span></a></div></nav></body></html>

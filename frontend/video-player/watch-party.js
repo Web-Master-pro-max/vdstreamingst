@@ -216,8 +216,8 @@
     partyBtn.setAttribute('title', 'Watch Party (Watch with Friends)');
     partyBtn.innerHTML = '<i class="fas fa-users"></i>';
 
-    if (fullscreenBtn) {
-      controlsButtons.insertBefore(partyBtn, fullscreenBtn);
+    if (fullscreenBtn && fullscreenBtn.parentNode) {
+      fullscreenBtn.parentNode.insertBefore(partyBtn, fullscreenBtn);
     } else {
       controlsButtons.appendChild(partyBtn);
     }
@@ -541,6 +541,24 @@
 
     document.getElementById('partyCloseDrawer').addEventListener('click', closePartyDrawer);
     backdrop.addEventListener('click', closePartyDrawer);
+
+    const lobbyInviteBtn = document.getElementById('playerPartyInviteBtn');
+    if (lobbyInviteBtn) {
+      lobbyInviteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openPartyDrawer();
+      });
+    }
+
+    ['btnOpenWatchParty', 'btnOpenWatchPartyMobile'].forEach(btnId => {
+      const b = document.getElementById(btnId);
+      if (b) {
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openPartyDrawer();
+        });
+      }
+    });
 
     // 6. Drawer Tab Switching
     drawer.querySelectorAll('.party-tab-nav-btn').forEach(tabBtn => {

@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"error-container":"#93000a","primary-fixed":"#ffdadb","outline":"#ae8789","on-tertiary-container":"#340080","primary-fixed-dim":"#ffb2b8","tertiary-container":"#a078ff","secondary":"#d3fbff","on-surface":"#e2e2e2","on-background":"#e2e2e2","tertiary-fixed-dim":"#d0bcff","on-primary":"#67001d","primary-container":"#ff506e","background":"#131313","on-secondary":"#00363a","on-tertiary-fixed":"#23005c","surface":"#131313","on-primary-fixed-variant":"#91002d","surface-tint":"#ffb2b8","surface-container-lowest":"#0e0e0e","on-secondary-container":"#00686f","on-primary-fixed":"#40000f","secondary-fixed-dim":"#00dbe9","inverse-on-surface":"#303030","inverse-primary":"#be003d","on-error":"#690005","surface-dim":"#131313","on-surface-variant":"#e8bcbe","tertiary-fixed":"#e9ddff","error":"#ffb4ab","surface-variant":"#353535","primary":"#ffb2b8","secondary-container":"#00eefc","surface-container-high":"#2a2a2a","on-tertiary":"#3c0091","surface-container-low":"#1b1b1b","inverse-surface":"#e2e2e2","outline-variant":"#5e3e41","surface-container-highest":"#353535","on-error-container":"#ffdad6","surface-container":"#1f1f1f","on-primary-container":"#5b0018","on-secondary-fixed-variant":"#004f54","surface-bright":"#393939","tertiary":"#d0bcff","on-secondary-fixed":"#002022","secondary-fixed":"#7df4ff","on-tertiary-fixed-variant":"#5516be"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xl":"2.5rem","space-md":"1rem","margin-mobile":"1rem","margin":"3rem","gutter":"1.5rem","space-lg":"1.5rem","gutter-mobile":"0.75rem","space-xs":"0.25rem","space-sm":"0.5rem"},fontFamily:{"label-md":["Inter"],"body-md":["Inter"],"headline-lg":["Outfit"],"headline-sm":["Outfit"],"label-sm":["Inter"],"label-lg":["Inter"],"display-hero":["Outfit"],"display-hero-mobile":["Outfit"],"body-sm":["Inter"],"headline-lg-mobile":["Outfit"],"body-lg":["Inter"],"headline-md":["Outfit"]},fontSize:{"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.015em","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"600"}],"display-hero":["64px",{"lineHeight":"72px","letterSpacing":"-0.02em","fontWeight":"800"}],"display-hero-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.01em","fontWeight":"800"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"26px","fontWeight":"400"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]"><div class="h-20 w-full px-gutter flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg flex-shrink-0"><a class="flex items-center gap-space-sm group" data-path="home" href="#"><div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300"><svg class="w-6 h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z" fill="#00eefc"></path><circle cx="9.5" cy="13.5" fill="#ff506e" r="1.5"></circle></svg></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span></span><span class="font-label-sm text-label-sm tracking-widest uppercase text-outline">CINEMA LABS</span></div></a><nav class="hidden xl:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-lowest/60 backdrop-blur-md" data-active-classes="bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full"><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="home" href="#">Home</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="catalog-browse" href="#">Catalog / Browse</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="watchlist-hub" href="#">Watchlist &amp; Hub</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="get-app" href="#">Get App</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="admin-studio" href="#">Admin Studio</a></nav></div><div class="flex-1 max-w-md mx-space-md hidden md:block"><div class="relative flex items-center w-full"><span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span><input class="w-full pl-11 pr-14 py-2 bg-surface-container-low/90 backdrop-blur-xl rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container focus:shadow-[0_0_20px_rgba(0,238,252,0.3)] transition-all" placeholder="Search anime, studios, 4K releases..." type="text"/><div class="absolute right-3 px-2 py-0.5 rounded bg-surface-container-highest/80 font-label-sm text-label-sm text-on-surface-variant shadow-inner pointer-events-none">⌘K</div></div></div><div class="flex items-center gap-space-md flex-shrink-0"><a class="relative inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary shadow-[0_0_14px_rgba(255,80,110,0.35)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group" data-path="vip-membership" href="#"><span class="material-symbols-outlined text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span><span class="font-label-sm text-label-sm tracking-wider uppercase font-bold">VIP PASS</span></a><button class="relative p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ff506e]"></span></button><a class="relative p-0.5 rounded-full shadow-[0_0_12px_rgba(0,238,252,0.5)] bg-secondary-container hover:scale-105 transition-transform" data-path="user-profile" href="#"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></a></div></div></header><main class="w-full pt-20 bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Ambient Banner with Grid Scrim & Search Hub -->
+<section class="relative w-full overflow-hidden bg-surface-container-lowest -mt-20 pt-28 pb-10 px-gutter border-b border-transparent">
+<!-- Subtle Animated Cyberpunk Grid Background via Inline SVG -->
+<div class="absolute inset-0 pointer-events-none opacity-25">
+<svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="48" id="cyber-grid" patternunits="userSpaceOnUse" width="48">
+<path d="M 48 0 L 0 0 0 48" fill="none" stroke="#00eefc" stroke-opacity="0.25" stroke-width="0.75"></path>
+<circle cx="48" cy="48" fill="#ff506e" fill-opacity="0.4" r="1.5"></circle>
+</pattern>
+<lineargradient id="grid-fade" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#000" stop-opacity="0.9"></stop>
+<stop offset="50%" stop-color="#000" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#000" stop-opacity="1"></stop>
+</lineargradient>
+</defs>
+<rect fill="url(#cyber-grid)" height="100%" width="100%"></rect>
+<rect fill="url(#grid-fade)" height="100%" width="100%"></rect>
+</svg>
+</div>
+<!-- Soft Glow Orbs -->
+<div class="absolute -top-16 left-1/4 w-96 h-96 rounded-full bg-secondary-container/10 blur-[120px] pointer-events-none"></div>
+<div class="absolute top-12 right-1/4 w-80 h-80 rounded-full bg-primary-container/10 blur-[100px] pointer-events-none"></div>
+<div class="relative max-w-7xl mx-auto flex flex-col gap-space-lg">
+<!-- Breadcrumb & Telemetry Ticker Row -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-outline">
+<span class="hover:text-secondary-container cursor-pointer transition-colors">TERMINAL</span>
+<span class="text-outline-variant">/</span>
+<span class="text-secondary-container font-bold tracking-wider">CATALOG_REPERTOIRE</span>
+<span class="ml-2 px-2 py-0.5 rounded bg-surface-container-high font-label-sm text-label-sm text-secondary-fixed-dim">AMOLED ZERO-FLOOR</span>
+</div>
+<!-- Telemetry Stats Ticker -->
+<div class="flex items-center gap-space-md p-1.5 px-3 rounded-full bg-surface-container-low/80 backdrop-blur-md shadow-inner">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span>
+<span class="font-label-sm text-label-sm text-on-surface"><span class="font-bold text-secondary-container">1,420+</span> TITLES</span>
+</div>
+<span class="text-outline-variant text-[10px]">•</span>
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm text-on-surface"><span class="font-bold text-primary-container">48</span> SIMULCASTS</span>
+</div>
+<span class="text-outline-variant text-[10px]">•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[14px]">speed</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-wider font-semibold">80 MBPS MASTER FEED</span>
+</div>
+</div>
+</div>
+<!-- Main Search & Command Bar -->
+<div class="flex flex-col gap-space-sm">
+<div class="relative flex items-center w-full">
+<div class="absolute left-5 flex items-center pointer-events-none text-secondary-container">
+<span class="material-symbols-outlined text-[24px]">terminal</span>
+</div>
+<input class="w-full pl-14 pr-32 py-4 rounded-xl bg-surface-container-low/90 backdrop-blur-xl font-body-lg text-body-lg text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container focus:shadow-[0_0_24px_rgba(0,238,252,0.35)] transition-all shadow-2xl" id="catalogSearch" placeholder="Query master archive by title, creator, Japanese kana, or franchise tag..." type="text"/>
+<div class="absolute right-4 flex items-center gap-2">
+<kbd class="hidden sm:inline-flex items-center px-2 py-1 rounded bg-surface-container-highest font-label-sm text-label-sm text-outline">ESC to clear</kbd>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">travel_explore</span>
+              Execute
+            </button>
+</div>
+</div>
+<!-- Live Auto-Suggest Hash Tags -->
+<div class="flex flex-wrap items-center gap-space-xs font-label-sm text-label-sm text-outline">
+<span class="text-on-surface-variant font-bold uppercase tracking-widest flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">bolt</span> Rapid Vectors:
+          </span>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high/70 hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface transition-all flex items-center gap-1 shadow-sm">
+<span>#Cyberpunk</span>
+<span class="text-[9px] text-outline font-normal">84</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high/70 hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface transition-all flex items-center gap-1 shadow-sm">
+<span>#DarkFantasy</span>
+<span class="text-[9px] text-outline font-normal">132</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high/70 hover:bg-primary-container/20 hover:text-primary-container text-on-surface transition-all flex items-center gap-1 shadow-sm">
+<span>#Isekai2026</span>
+<span class="text-[9px] text-outline font-normal">41</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high/70 hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface transition-all flex items-center gap-1 shadow-sm">
+<span>#StudioMAPPA</span>
+<span class="text-[9px] text-outline font-normal">19</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high/70 hover:bg-tertiary-container/20 hover:text-tertiary text-on-surface transition-all flex items-center gap-1 shadow-sm">
+<span>#DolbyAtmosTrueHD</span>
+<span class="text-[9px] text-outline font-normal">62</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high/70 hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface transition-all flex items-center gap-1 shadow-sm">
+<span>#TriggerStyle</span>
+<span class="text-[9px] text-outline font-normal">11</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Sticky Cybernetic Filter Matrix & Controls -->
+<section class="sticky top-20 z-40 w-full bg-surface-container-lowest/95 backdrop-blur-2xl py-space-sm px-gutter shadow-[0_12px_36px_rgba(0,0,0,0.85)]">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-sm">
+<!-- Row 1: Primary Genre Carousel & Season Select -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm">
+<!-- Genre Pills Scrollable Container -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+<button class="genre-pill flex-shrink-0 px-4 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(255,80,110,0.5)] transition-all">
+            All Genres
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Action
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Shonen
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Cyberpunk
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Dark Fantasy
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Romance
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Sci-Fi
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Mecha
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Psychological
+          </button>
+<button class="genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all">
+            Isekai
+          </button>
+</div>
+<!-- Season Selector Segment -->
+<div class="flex items-center gap-1 bg-surface-container-high/70 p-1 rounded-lg flex-shrink-0 overflow-x-auto">
+<span class="material-symbols-outlined text-outline text-[16px] ml-1 mr-0.5">calendar_month</span>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase bg-secondary-container/20 text-secondary-container shadow-[0_0_10px_rgba(0,238,252,0.3)] font-bold">
+            Winter 2026
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+            Spring 2026
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+            Summer 2025
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+            Fall 2025
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+            All
+          </button>
+</div>
+</div>
+<!-- Row 2: A-Z Alphabet Quick Jump Index -->
+<div class="flex items-center justify-between gap-1 overflow-x-auto py-1 border-t border-surface-container-high/30 scrollbar-none font-label-sm text-label-sm">
+<span class="text-outline uppercase text-[10px] tracking-widest font-bold mr-1 flex-shrink-0">INDEX:</span>
+<button class="az-btn px-2 py-0.5 rounded bg-secondary-container text-on-secondary font-bold shadow-[0_0_8px_rgba(0,238,252,0.4)]">ALL</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">#</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">A</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">B</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">C</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">D</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">E</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">F</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">G</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">H</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">I</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">J</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">K</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">L</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">M</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">N</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">O</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">P</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">Q</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">R</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">S</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">T</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">U</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">V</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">W</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">X</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">Y</button>
+<button class="az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all">Z</button>
+</div>
+<!-- Row 3: Secondary Controls (Sorting, Audio Track Mode, Layout Switcher) -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-1">
+<!-- Audio Track Mode Selector -->
+<div class="flex items-center gap-1 bg-surface-container p-1 rounded-lg">
+<span class="material-symbols-outlined text-[16px] text-tertiary ml-1 mr-0.5">volume_up</span>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase bg-surface-container-highest text-secondary-container font-bold">
+            All Feeds
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container-high transition-all">
+            Dual Audio (Sub/Dub)
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container-high transition-all">
+            Pure JP (Sub)
+          </button>
+<button class="px-2.5 py-1 rounded font-label-sm text-label-sm tracking-wider uppercase text-outline hover:text-on-surface hover:bg-surface-container-high transition-all">
+            Dub Master
+          </button>
+</div>
+<div class="flex items-center gap-space-md ml-auto">
+<!-- Sort Dropdown -->
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider hidden sm:inline">Sort:</span>
+<div class="relative">
+<select class="appearance-none bg-surface-container text-on-surface font-label-md text-label-md pl-3 pr-8 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-secondary-container shadow-md cursor-pointer">
+<option selected="">★ Highest Rated (OLED Spec)</option>
+<option>Latest Airing Transmission</option>
+<option>Most Streamed This Week</option>
+<option>Bitrate Benchmark (80 Mbps+)</option>
+<option>Alphabetical [A → Z]</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-2 top-2 text-outline text-[16px]">expand_more</span>
+</div>
+</div>
+<!-- View Switcher -->
+<div class="flex items-center bg-surface-container p-1 rounded-lg gap-0.5">
+<button class="p-1 rounded bg-secondary-container/20 text-secondary-container shadow-[0_0_8px_rgba(0,238,252,0.3)]" id="viewGridBtn" title="6-Column Poster Grid">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container-high transition-all" id="viewListBtn" title="Dense Telemetry List">
+<span class="material-symbols-outlined text-[18px]">view_list</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Content Showcase: 6-Column Anime Card Bento Matrix -->
+<section class="w-full px-gutter py-space-lg">
+<div class="max-w-7xl mx-auto">
+<!-- Section Meta Status Header -->
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-1 h-5 bg-primary-container rounded-full shadow-[0_0_8px_#ff506e]"></div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-wide">
+            TRANSMISSION VAULT • <span class="text-outline font-normal">DISPLAYING 12 OF 1,420 RECORDS</span>
+</h2>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-secondary-container">
+<span class="inline-block w-2 h-2 rounded-full bg-secondary-container animate-ping"></span>
+<span>4K REMASTER BITSTREAM STABLE</span>
+</div>
+</div>
+<!-- 6-Column Responsive Grid (Aspect 2:3 Anime Posters) -->
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-gutter" id="catalogGrid">
+<!-- Card 1: Solo Leveling: Ragnarok -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Solo Leveling anime key visual showing a shadow monarch hero surrounded by electric purple necromancy daggers and dark obsidian mist in high-contrast cyberpunk neon lighting cinematic wallpaper" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5lnRPHnRqUzCsTT1ml-oxsqjnTZWAeaz6ngsqhHRgphIxw0j6-3fy_RPCqdM0fglPI0xtd0hBmUeoWMuBkSW6uKAthKYqoc90ajRqL0da7-t3RL18IiGscpsP4LnAGWGAJBCNLuG4Li_obu98VoCYZm5_YQQJROWfR9qeJoR6CH7h6jA5emyYkGYpl9k4A7kgVs0HSBFJv8BGVGYyWMLVGjIdKsWT65ip6cq9mNRMqzgLCqsFU17IwQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<!-- Badges Top -->
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold tracking-wider uppercase shadow-sm">
+                EP 24 SIMUL
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                4K OLED
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.94
+              </span>
+</div>
+<!-- Studio Stamp -->
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                A-1 PICTURES
+              </span>
+</div>
+<!-- Hover Action Overlay -->
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S2:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all" title="Add to Watchlist">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors" title="Quick Detail Preview">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card Body Info -->
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Solo Leveling: Ragnarok</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Action</span>
+<span class="text-secondary font-semibold">SUB • DUB</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Cyberpunk: Edgerunners S2 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Futuristic neon Tokyo Night City anime aesthetic with glowing cyberware implants yellow trench coat high contrast cyan and magenta laser lights Studio Trigger style" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuANlgQqCpjjn1muAyL0tOOQVS4OBlXpxN3EzCN9TtnsgRrCKLps2wrb82ve_sbshEVqx0BRovBzHow-GVxZ5LPL9zw3RkvxsjhXUC86CvxwZd_9KnM6gLEDbgpGYzebMhpRENq-FPMUJaizWlxhAQ7lqpI-St11hVS0ToIczN3B2eRyXi4ERXfaQDC1obFJT3Aj6D9HOczZk_JWfAPpsEpf7Tbmq9Bo3g9JPhM1IWapkwjqv0i6mRu6Jg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-primary-container/90 text-on-primary-container backdrop-blur-md font-label-sm text-[9px] font-bold tracking-wider uppercase shadow-sm">
+                EXCLUSIVE
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                HDR10+
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.88
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                TRIGGER
+              </span>
+</div>
+<!-- Hover Action Overlay -->
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S2:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Edgerunners: Neon Zero</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Cyberpunk</span>
+<span class="text-secondary font-semibold">DUAL AUDIO</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Bleach TYBW Part 3 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Anime warrior with white robes and glowing cyan spiritual reiatsu energy sword standing against dark cloudy sky cinematic poster art" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD9V5Z5yrk5h4Z9SeNMyvfEDJXFHHhlpn1yPCkl12NdDxJC4WvsfjYqQU_AWXgQQF4ueLBfu7i99knQmUVzQRShzv9zi3UgBwOpM2bMtMiukmMdnVx9BOPp1X_eGqVYs_LLmJecRRYAETZFglDnTDkNvquzxgPeub1TuRT_CE_d0gYT7XpNmkcSnlgYRlPMj7I5dkWC-ZUOKLfnkAFOik4yt_7-I46H-6k5vbfJYQw7p5WvSp4ugPT-ig')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold tracking-wider uppercase shadow-sm">
+                COUR 3
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                4K MASTER
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.91
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                PIERROT
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play EP 27
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Bleach: TYBW Part 3</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2025 • Supernatural</span>
+<span class="text-secondary font-semibold">TRUE ATMOS</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Demon Slayer: Infinity Castle -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Intricate infinite rotating Japanese wooden palace fortress in deep shadows with crimson fire sparks and swirling celestial breathing technique swordsman visual" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBM09sOSFFlrARa4SpBFhIdb68spI7JZJf8FUmHUQy-3glVhUtODQESCbFcy5Jd-D2sLH60NcJ3xkHcZYYIAULQ1OaeGlrpMKNIHWv3zz1CzCXl3J084QSK7en1YFB2qt9Vb-JW2ovuSYq07rmkb77_W_6igxV090DyinaafJtD9zv7YUXukK1mnBus_sxCRFZc4CkWUNV7MO-CS1xfezhAJ8228XyiB-8nmoZA1xmxnHSr2cm-c9xjAw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-primary-container/90 text-on-primary-container backdrop-blur-md font-label-sm text-[9px] font-bold tracking-wider uppercase shadow-sm">
+                TRILOGY I
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                THEATRICAL
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.98
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                UFOTABLE
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Stream Feature
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Infinity Castle: Part 1</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Dark Fantasy</span>
+<span class="text-secondary font-semibold">12-BIT COLOR</span>
+</div>
+</div>
+</div>
+<!-- Card 5: Chainsaw Man Season 2 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Gritty dark cinematic anime key art of chainsaw devil under neon blood red city lights in rain aesthetic studio mappa style high detail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1U1kq-WGulAtlabk8XeB2W3T2jzUS2TkcRpWD-XXnAkgSJDcESgMzCgRBB2g7Z8sSPHbcRYxOJFVYrvAzurVKZO-Z11mme5z5jRA6_hkZqSz00bfPx7ie3a70Ci2xG037rvVnCHSFLkHxWnZFqNYu8vpiDEwSAC78ALAd_SGm43yientkZazpuvYNHKdppWAYFzXTPpOioymJthxnUd9cWtKKfgnTij1X-ZtJbkhJ8HQfoNanagy3Eg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold tracking-wider uppercase shadow-sm">
+                REZE ARC
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                4K UNRATED
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.87
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                MAPPA
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S2:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Chainsaw Man: Reze</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Horror</span>
+<span class="text-secondary font-semibold">SUB • DUB</span>
+</div>
+</div>
+</div>
+<!-- Card 6: Jujutsu Kaisen: Culling Game -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Anime sorcerer unleashing massive blue and red domain expansion barrier in apocalyptic destroyed shibuya crossroads cinematic dark fantasy poster" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC938l7OlonbtTSfccmrIQC4pwSSomm8wsXx6p4lknbt5pAZJB5K3eGuOEa0I7CFXTXz7K84aVdQjfsF4PCoxjav0JmUeFHVQorQu6JW4XyeDqufhhEb9VwtzucmLzhJEguWtr1LctYd4FomTn-cL9LMkjAKWAA6RijOw4ZbiBi81ivAQ--2YPZ-JHJECL-MvxUsimEZ3tcvspXV-v-IkEumHKIespoIiCdGCn31b5jQD_11ZUAf0ojsQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold tracking-wider uppercase shadow-sm">
+                S3 PREMIERE
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                DOLBY VISION
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.92
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                MAPPA
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S3:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">JJK: Culling Game</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Supernatural</span>
+<span class="text-secondary font-semibold">DUAL AUDIO</span>
+</div>
+</div>
+</div>
+<!-- Card 7: Kaiju No. 8 Season 2 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Massive glowing cyan bio-luminescent monster jaw opening with armored defense force officer aiming high-tech laser rifle in destroyed neon city" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBSw2GJUs7AWGwXkfnVPksFtocG-a6HmPP3Zr40glSu_apIcqMZNXhKAHfX4hdv9y-D0c32VH-CLtNRwGHlEWJhOYejoL02DKxgfOLdvzfGDh8fWIIDO03l_Nex5194712ZUNaPhpD_qOlr1zp2ZGr5WFPmdgXUBdCiI1rvpJMPRuG7c0RZnKQrFlMnmienYf42Tdt3JCPvx2ozXT2zwCbUF-xtCmXDJbg-ys2jtPUo2wAwXi6yuQchGg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                4K REMASTER
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.65
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                PRODUCTION I.G
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S2:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Kaiju No. 8 S2</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Sci-Fi</span>
+<span class="text-secondary font-semibold">SUB • DUB</span>
+</div>
+</div>
+</div>
+<!-- Card 8: Tokyo Hex Code -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Underground cyberpunk hacker girl surrounded by holographic terminal screens and neural wire braids against neon magenta skyline" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAiVj4o2KvHZBLAf-tjoXiq3ykqOAY7M04wMrRdACrDGrr5ilazqDpMjCPPFnjKMaY68vigmeFfL6uw_NxbPwd0chPKb3O3poF867HgyUamtJCHUs-dqEg5W9C97hhcK3-mCV_Y9qNzqFO04VmbOEB2TGDebxHrRnnVz9JtS7hevbeWnB8d4107RMApwsM6eo02Xet90oOEYPavxgfAq7XxXyg0mG_4i_Ln5d3MHasZ4ARk8tNoPSzfxg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold tracking-wider uppercase shadow-sm">
+                ORIGINAL
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                80 MBPS
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.74
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                BONES
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S1:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Tokyo Hex Code</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Mystery</span>
+<span class="text-secondary font-semibold">DUAL AUDIO</span>
+</div>
+</div>
+</div>
+<!-- Card 9: Ghost Protocol 2099 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Cyborg female agent diving backwards through glass skyscraper window while shooting suppressors with cyber optical HUD overlays in high contrast anime poster style" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPZ6YfIjxbX7PHYlB9desQMsKjV-QK9brhloHedLHJmzx1N_HclT-b89Je43mtkuAHH80zUMsvQCjWrb1hiOf90H-RV3x91qtUA2apm0GjI7JCoKEWtSMS2hdgXVcobv8TuKcsc4ApnA0XNa9Eq2xqKgAC5ApEgDZtX3HoEDgP6Bcd8EBYHo5jtH1DLXeX0EKFMjKSxBskf5U6hqszVdh6zDHAdSm1oTrs_Zz1ZDg-0XHM04d3lkPOag')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                4K OLED
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.81
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                SCIENCE SARU
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S1:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Ghost Protocol 2099</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Cyberpunk</span>
+<span class="text-secondary font-semibold">SUBTITLED</span>
+</div>
+</div>
+</div>
+<!-- Card 10: Armored Core: Fires of Ruin -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Heavy industrial combat mecha mech robot standing in snowy volcanic ash field with red coral energy thrusters burning brightly cinematic anime concept" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAISxnDok_kp6dCdkh0WiCSXOgnxrz7eP4odvfCcIy6xJ4oJDID0VlARRO4l31qtQOIQX8AH-gTgJPQyJTJK_8j4ztldL9hx4WrsBok9FHGexEytBPCP7wyVE7B007tLtRau_qvPP0PVp6BTNVUMv5sKby8Bd2omDvrX6fMJG9aOjTaPmbqyA07A2hi2U9HvuxkqrvDbUVGmuptrHqXKgoMS7vikdRuiA4Q9rgCwtlK-hnAywj9OBuzA')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-primary-container/90 text-on-primary-container backdrop-blur-md font-label-sm text-[9px] font-bold tracking-wider uppercase shadow-sm">
+                MECHA SPECIAL
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                TRUE 4K
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.89
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                SUNRISE
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play S1:E1
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Armored Core: Ruin</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>2026 • Mecha Sci-Fi</span>
+<span class="text-secondary font-semibold">ATMOS 7.1</span>
+</div>
+</div>
+</div>
+<!-- Card 11: Neon Genesis Zero -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Towering purple and green bio-mechanical evangelion unit standing before red sea blood ocean sunset with geometric geometric holy cross explosion in sky" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCULEZS2f2kEtXyPahBkgdLAFQ2Byi0UtJ9pY2C1SI8mRXWrRYcf8IlVZY2MT5OLhtfYqCfqTV9iVuz8Cp4l8FzZmT_HQjxaZ7BrgzG8wlXC-lnp2CDfTK2IXcmkgxOXIjCsMTGVVgOQcZYUicim6EKnytTsHhNG2da6l7LkR4t2CqivnYDuJi0ag3PL4mYdjR9ykVlEAfbUMsvHFiyH7SFHXyRs5DUyFYY3Pyw0necD8hyom2xzcN2fw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-tertiary font-bold tracking-wider uppercase shadow-sm">
+                ARCHIVE S-TIER
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.99
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                KHARA
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Play 3.0+1.0
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Neon Genesis Zero</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>Remaster • Psych</span>
+<span class="text-secondary font-semibold">LOSSLESS FLAC</span>
+</div>
+</div>
+</div>
+<!-- Card 12: Akira: Re-Sync 4K -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Iconic red futuristic motorcycle parked on wet Neo Tokyo asphalt road with glowing taillight beam reflections and glowing skyscrapers in the background cinematic anime" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD24tvMrhwmZ76nf4A3z6NhldOJYVcyrfOU9fPq1wcrTRYkUDaJq4DGmVEaFAFIh_8nus3oZIu5YjmharxQYqj_rApygseEDmCqzG59bXvabW7mMYGjlE80FRNwf99my1A0cScm2SQtX38u6leLogK4hJHaGOtqRGPLxiUKDL6BHj09Oyz-ok7uG1DKy6JUo-CffEtXOhdTMSYNtMXUaP2HgWr1DHk9ST-UXDtVOH9813TQ70CvZcM30g')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+<div class="absolute top-2 left-2 flex flex-col gap-1">
+<span class="px-1.5 py-0.5 rounded bg-primary-container/90 text-on-primary-container backdrop-blur-md font-label-sm text-[9px] font-bold tracking-wider uppercase shadow-sm">
+                HYPERSONIC
+              </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary font-bold tracking-wider uppercase shadow-sm">
+                192KHZ AUDIO
+              </span>
+</div>
+<div class="absolute top-2 right-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
+                ★ 9.97
+              </span>
+</div>
+<div class="absolute bottom-2 left-2 pointer-events-none">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/80 font-label-sm text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+                TMS ENTERTAINMENT
+              </span>
+</div>
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+<button class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Stream Feature
+              </button>
+<div class="flex items-center gap-1.5 w-full">
+<button class="flex-1 py-1.5 rounded bg-surface-container-high text-on-surface hover:text-secondary-container hover:bg-surface-container font-label-sm text-label-sm uppercase tracking-wider font-semibold flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span> Queue
+                </button>
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-2.5 flex flex-col gap-1">
+<h3 class="font-headline-sm text-[15px] font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Akira: Re-Sync 4K</h3>
+<div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+<span>Master Film • Sci-Fi</span>
+<span class="text-secondary font-semibold">DUAL AUDIO</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Futuristic Cyberpunk Pagination & Fast Navigation -->
+<section class="w-full px-gutter py-space-xl border-t border-surface-container-high/30 bg-surface-container-lowest">
+<div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<!-- Telemetry Status Indicator -->
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-outline">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span>Showing <strong class="text-on-surface">1–12</strong> of <strong class="text-on-surface">1,420</strong> indexed master titles</span>
+</div>
+<!-- Navigation Numbers & Buttons -->
+<div class="flex items-center gap-1.5">
+<!-- Prev Button -->
+<button class="px-3 py-2 rounded-lg bg-surface-container text-outline hover:text-on-surface hover:bg-surface-container-high disabled:opacity-40 font-label-md text-label-md flex items-center gap-1 transition-all" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+<span class="hidden md:inline">Prev</span>
+</button>
+<!-- Pages -->
+<button class="w-9 h-9 rounded-lg font-label-md text-label-md font-bold bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(255,80,110,0.55)]">
+          1
+        </button>
+<button class="w-9 h-9 rounded-lg font-label-md text-label-md font-medium text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+          2
+        </button>
+<button class="w-9 h-9 rounded-lg font-label-md text-label-md font-medium text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+          3
+        </button>
+<button class="w-9 h-9 rounded-lg font-label-md text-label-md font-medium text-outline hover:text-on-surface hover:bg-surface-container transition-all hidden sm:inline-flex items-center justify-center">
+          4
+        </button>
+<span class="px-1 text-outline font-label-md text-label-md">…</span>
+<button class="w-9 h-9 rounded-lg font-label-md text-label-md font-medium text-outline hover:text-on-surface hover:bg-surface-container transition-all">
+          28
+        </button>
+<!-- Next Button -->
+<button class="px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:text-secondary-container hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-1 transition-all shadow-md">
+<span class="hidden md:inline">Next</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Quick Jump Input -->
+<div class="flex items-center gap-2">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider" for="jumpInput">Page:</label>
+<div class="relative flex items-center">
+<input class="w-14 px-2 py-1.5 rounded-lg bg-surface-container font-label-md text-label-md text-center text-on-surface focus:outline-none focus:ring-1 focus:ring-secondary-container shadow-inner" id="jumpInput" max="28" min="1" placeholder="1" type="number"/>
+<button class="ml-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-secondary-container hover:text-on-secondary font-label-sm text-label-sm font-bold uppercase transition-all shadow-sm">
+            GO
+          </button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<script>
+  // Genre Pills Filter Interaction
+  document.querySelectorAll('.genre-pill').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.genre-pill').forEach(b => {
+        b.className = 'genre-pill flex-shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container transition-all';
+      });
+      this.className = 'genre-pill flex-shrink-0 px-4 py-1.5 rounded-full font-label-md text-label-md uppercase tracking-wider bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(255,80,110,0.5)] transition-all';
+    });
+  });
+
+  // A-Z Quick Jump Filter Interaction
+  document.querySelectorAll('.az-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.az-btn').forEach(b => {
+        b.className = 'az-btn px-1.5 py-0.5 rounded text-outline hover:text-secondary-container hover:bg-surface-container transition-all';
+      });
+      this.className = 'az-btn px-2 py-0.5 rounded bg-secondary-container text-on-secondary font-bold shadow-[0_0_8px_rgba(0,238,252,0.4)]';
+    });
+  });
+
+  // Layout View Switcher Micro-Interactions
+  const gridBtn = document.getElementById('viewGridBtn');
+  const listBtn = document.getElementById('viewListBtn');
+  const catalogGrid = document.getElementById('catalogGrid');
+
+  if (gridBtn && listBtn && catalogGrid) {
+    gridBtn.addEventListener('click', () => {
+      gridBtn.className = 'p-1 rounded bg-secondary-container/20 text-secondary-container shadow-[0_0_8px_rgba(0,238,252,0.3)]';
+      listBtn.className = 'p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container-high transition-all';
+      catalogGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-gutter';
+    });
+
+    listBtn.addEventListener('click', () => {
+      listBtn.className = 'p-1 rounded bg-secondary-container/20 text-secondary-container shadow-[0_0_8px_rgba(0,238,252,0.3)]';
+      gridBtn.className = 'p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container-high transition-all';
+      catalogGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter';
+    });
+  }
+
+  // Interactive Live Search filter simulation
+  const searchInput = document.getElementById('catalogSearch');
+  if (searchInput) {
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        searchInput.blur();
+      }
+    });
+  }
+</script></main><footer class="w-full bg-surface-container-lowest shadow-[0_-8px_32px_rgba(0,0,0,0.9)]"><div class="w-full px-gutter py-space-xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-md"><div class="flex items-center gap-space-sm"><div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container shadow-[0_0_12px_rgba(0,238,252,0.3)]"><svg class="w-5 h-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178z" fill="#00eefc"></path></svg></div><span class="font-headline-sm text-headline-sm font-extrabold tracking-wide text-secondary-container">INFINX<span class="text-primary-container ml-1">ANIME</span></span></div><p class="font-body-md text-body-md text-outline max-w-sm">Theatre Grade OLED Anime Streaming. Pure AMOLED zero-floor masterings, uncompressed audio bitrate, and simultaneous Tokyo transmissions.</p><div class="flex items-center gap-space-xs mt-space-xs"><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-secondary tracking-widest uppercase shadow-[0_0_8px_rgba(0,238,252,0.2)]">4K UHD</div><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-primary-fixed tracking-widest uppercase shadow-[0_0_8px_rgba(255,80,110,0.2)]">HDR10+</div><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-tertiary tracking-widest uppercase shadow-[0_0_8px_rgba(160,120,255,0.2)]">ATMOS</div></div></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Browse</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Top Airing Masterpieces</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">New Spring Releases</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Dual-Audio Dubbed</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Dolby Vision Features</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Classic Remasters</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Community</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Infinx Discord Core</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Watch Parties</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Soundtrack Lounge</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Fan Art Matrix</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Legal &amp; System</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">License Agreements</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">Privacy Protocols</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="get-app" href="#">Device Compatibility</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="admin-studio" href="#">DRM Calibration</a></li></ul></div></div><div class="mt-space-xl pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-lowest"><span class="font-body-sm text-body-sm text-outline">© 2025 INFINX ANIME BROADCAST CORP. ALL RIGHTS RESERVED. ZERO RE-COMPRESSION STANDARD.</span><div class="flex items-center gap-space-md"><span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Tokyo Ingestion Telemetry: 100% Operational (9.8ms)</span></div></div></div></footer></body></html>

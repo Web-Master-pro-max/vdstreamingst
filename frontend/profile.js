@@ -595,7 +595,7 @@
     const effectiveAura = (!isUserAdmin && (p.avatarFrame === 'gold' || p.avatarFrame === 'aura-gold')) ? 'default' : (p.avatarFrame || 'default');
     const frameContainer = document.getElementById('avatarFrameContainer');
     if (frameContainer) {
-      frameContainer.className = `avatar-frame-container aura-${effectiveAura}`;
+      frameContainer.className = `relative w-32 h-32 md:w-36 md:h-36 rounded-full p-1 bg-surface-container-lowest flex items-center justify-center avatar-frame-container aura-${effectiveAura}`;
     }
 
     // 4. Identity & Rank
@@ -637,9 +637,19 @@
     const xpVal = p.xp || 0;
     const xpNext = p.xpNextLevel || ((p.level || 1) * 200);
     const xpPct = p.xpPercent !== undefined ? p.xpPercent : Math.min(100, Math.round((xpVal / xpNext) * 100));
-    document.getElementById('profileLevelBadge').innerText = `LEVEL ${p.level} • ${p.vipRank ? p.vipRank.replace('_', ' ') : 'GENIN'}`;
+    const rankTitle = (p.vipRank && p.vipRank !== 'GENIN') ? p.vipRank.replace('_', ' ') : (p.level >= 50 ? 'HOKAGE VIP' : (p.level >= 25 ? 'HASHIRA' : (p.level >= 15 ? 'JOUNIN' : (p.level >= 5 ? 'CHUNIN' : 'GENIN'))));
+    document.getElementById('profileLevelBadge').innerText = `LEVEL ${p.level || 1} • ${rankTitle}`;
     document.getElementById('profileXpRatio').innerText = `${xpVal.toLocaleString()} / ${xpNext.toLocaleString()} XP (${xpPct}%)`;
     document.getElementById('profileXpFill').style.width = `${xpPct}%`;
+
+    const hexLevelText = document.getElementById('avatarHexLevelText');
+    if (hexLevelText) hexLevelText.innerText = `LV.${p.level || 1}`;
+    const ringCircle = document.getElementById('profileRingCircle');
+    if (ringCircle) {
+      const circ = 289.02;
+      const offset = circ - (circ * (xpPct / 100));
+      ringCircle.style.strokeDashoffset = offset;
+    }
 
     // 6. Stats
     const stats = p.stats || {};
@@ -1648,16 +1658,38 @@
       });
     });
 
-    // Share Profile Link
+    // Otaku Passport Modal Trigger (Stitch Specification)
     const shareBtn = document.getElementById('shareProfileBtn');
+    const passportModal = document.getElementById('passportModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeModalBottomBtn = document.getElementById('closeModalBottomBtn');
+
+    function openPassport() {
+      if (passportModal) {
+        passportModal.classList.remove('opacity-0', 'pointer-events-none');
+        passportModal.classList.add('opacity-100', 'pointer-events-auto');
+      }
+    }
+
+    function closePassport() {
+      if (passportModal) {
+        passportModal.classList.add('opacity-0', 'pointer-events-none');
+        passportModal.classList.remove('opacity-100', 'pointer-events-auto');
+      }
+    }
+
     if (shareBtn) {
-      shareBtn.addEventListener('click', () => {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Otaku Profile link copied to clipboard! 📋');
-        }).catch(() => {
-          prompt('Copy your profile link:', url);
-        });
+      shareBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openPassport();
+      });
+    }
+
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closePassport);
+    if (closeModalBottomBtn) closeModalBottomBtn.addEventListener('click', closePassport);
+    if (passportModal) {
+      passportModal.addEventListener('click', (e) => {
+        if (e.target === passportModal) closePassport();
       });
     }
   }
@@ -1695,14 +1727,16 @@
 
       if (authHeader) {
         authHeader.innerHTML = `
-          <div class="user-profile-menu">
-            ${adminLink}
-            <a href="/profile.html" class="nav-link profile-name-text"><i class="fas fa-user-ninja" style="color: var(--primary);"></i> <span>${displayName}</span></a>
-            <a href="/profile.html" class="user-avatar-link" title="View Profile (${displayName})">
-              ${avatarHtml}
-            </a>
-            <button class="btn btn-secondary btn-small" id="headerLogoutBtn">Logout</button>
-          </div>
+          ${role === 'ADMIN' ? `<a href="/admin.html" class="px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-secondary-container text-xs font-bold transition-all flex items-center gap-1.5 border border-secondary-container/30 shadow-[0_0_12px_rgba(0,238,252,0.2)]"><i class="fas fa-shield-alt text-[14px]"></i><span class="hidden sm:inline">Admin</span></a>` : ''}
+          <a href="/profile.html" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-bold transition-all border border-white/10 shadow-md">
+            ${avatarUrl 
+              ? `<img src="${avatarUrl}" class="w-6 h-6 rounded-full object-cover" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; border-radius: 9999px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span class="hidden w-6 h-6 rounded-full bg-primary text-white items-center justify-center text-[10px] font-bold" style="width: 24px; height: 24px;">${initial}</span>` 
+              : `<div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold" style="width: 24px; height: 24px;">${initial}</div>`}
+            <span class="font-bold text-xs hidden sm:inline">${displayName}</span>
+          </a>
+          <button type="button" class="p-2 rounded-full text-outline hover:text-on-surface hover:bg-surface-container transition-all" id="headerLogoutBtn" title="Logout">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </button>
         `;
         const logoutBtn = document.getElementById('headerLogoutBtn');
         if (logoutBtn) logoutBtn.onclick = handleLogout;
@@ -1730,7 +1764,7 @@
       }
     } else {
       if (authHeader) {
-        authHeader.innerHTML = `<a href="index.html#login" class="btn btn-secondary btn-small">Sign In</a>`;
+        authHeader.innerHTML = `<button type="button" class="px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md transition-all text-xs font-bold" onclick="window.location.href='index.html#login'">Sign In</button>`;
       }
       if (drawerAuthHeader) {
         drawerAuthHeader.innerHTML = `
@@ -1882,14 +1916,23 @@
       const ratioEl = document.getElementById('profileXpRatio');
       const fillEl = document.getElementById('profileXpFill');
       const badgeEl = document.getElementById('profileLevelBadge');
+      const ringCircle = document.getElementById('profileRingCircle');
+      const hexLevelText = document.getElementById('avatarHexLevelText');
       if (ratioEl && d.xp !== undefined) {
         const next = d.xpNextLevel || ((d.level || 1) * 200);
         const pct = d.xpPercent !== undefined ? d.xpPercent : Math.min(100, Math.round((d.xp / next) * 100));
         ratioEl.innerText = `${(d.xp || 0).toLocaleString()} / ${next.toLocaleString()} XP (${pct}%)`;
         if (fillEl) fillEl.style.width = `${pct}%`;
+        if (ringCircle) {
+          const circ = 289.02;
+          ringCircle.style.strokeDashoffset = circ - (circ * (pct / 100));
+        }
       }
       if (badgeEl && d.level) {
         badgeEl.innerText = `LEVEL ${d.level} • ${(d.vipRank || 'GENIN').replace('_', ' ')}`;
+      }
+      if (hexLevelText && d.level) {
+        hexLevelText.innerText = `LV.${d.level}`;
       }
     }
   });
@@ -1901,15 +1944,24 @@
         const ratioEl = document.getElementById('profileXpRatio');
         const fillEl = document.getElementById('profileXpFill');
         const badgeEl = document.getElementById('profileLevelBadge');
+        const ringCircle = document.getElementById('profileRingCircle');
+        const hexLevelText = document.getElementById('avatarHexLevelText');
         if (ratioEl && d.xp !== undefined) {
           const lvl = d.level || 1;
           const next = lvl * 200;
           const pct = Math.min(100, Math.round((d.xp / next) * 100));
           ratioEl.innerText = `${(d.xp || 0).toLocaleString()} / ${next.toLocaleString()} XP (${pct}%)`;
           if (fillEl) fillEl.style.width = `${pct}%`;
+          if (ringCircle) {
+            const circ = 289.02;
+            ringCircle.style.strokeDashoffset = circ - (circ * (pct / 100));
+          }
         }
         if (badgeEl && d.level) {
           badgeEl.innerText = `LEVEL ${d.level} • ${(d.vipRank || 'GENIN').replace('_', ' ')}`;
+        }
+        if (hexLevelText && d.level) {
+          hexLevelText.innerText = `LV.${d.level}`;
         }
       } catch (_) {}
     }

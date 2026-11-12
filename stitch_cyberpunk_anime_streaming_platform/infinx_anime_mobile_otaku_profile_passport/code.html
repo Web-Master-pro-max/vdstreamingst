@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#131313;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#23005c", "on-tertiary-container": "#340080", "primary-fixed-dim": "#ffb2b8", "primary-fixed": "#ffdadb", "inverse-on-surface": "#303030", "background": "#131313", "on-background": "#e2e2e2", "on-error": "#690005", "secondary": "#d3fbff", "tertiary": "#d0bcff", "primary-container": "#ff506e", "on-primary-fixed-variant": "#91002d", "secondary-container": "#00eefc", "outline-variant": "#5e3e41", "surface-container-lowest": "#0e0e0e", "tertiary-fixed-dim": "#d0bcff", "inverse-surface": "#e2e2e2", "tertiary-fixed": "#e9ddff", "surface-container-highest": "#353535", "on-secondary-fixed": "#002022", "surface-container-low": "#1b1b1b", "secondary-fixed": "#7df4ff", "surface-dim": "#131313", "surface-variant": "#353535", "on-error-container": "#ffdad6", "outline": "#ae8789", "on-primary-container": "#5b0018", "secondary-fixed-dim": "#00dbe9", "on-primary": "#67001d", "error-container": "#93000a", "on-secondary": "#00363a", "surface-container": "#1f1f1f", "surface-bright": "#393939", "primary": "#ffb2b8", "on-surface-variant": "#e8bcbe", "error": "#ffb4ab", "on-surface": "#e2e2e2", "tertiary-container": "#a078ff", "on-secondary-fixed-variant": "#004f54", "on-secondary-container": "#00686f", "inverse-primary": "#be003d", "on-primary-fixed": "#40000f", "surface": "#131313", "surface-container-high": "#2a2a2a", "on-tertiary-fixed-variant": "#5516be", "on-tertiary": "#3c0091", "surface-tint": "#ffb2b8" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "gutter-mobile": "0.75rem", "margin": "3rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, "fontFamily": { "headline-sm": ["Outfit"], "headline-md": ["Outfit"], "display-hero": ["Outfit"], "label-md": ["Inter"], "display-hero-mobile": ["Outfit"], "body-sm": ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], "headline-lg-mobile": ["Outfit"], "label-lg": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Outfit"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "display-hero": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }], "display-hero-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "800" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.6)]"><div class="h-16 px-gutter-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="flex items-center justify-center w-11 h-11 text-secondary-container"><span class="material-symbols-outlined text-[28px] drop-shadow-[0_0_8px_rgba(0,238,252,0.7)]">all_inclusive</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">INFINX</span><span class="px-1.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm border border-primary-container/40 shadow-[0_0_8px_rgba(255,80,110,0.3)]">VIP</span></div><span class="font-label-sm text-label-sm text-secondary-fixed-dim tracking-wider uppercase truncate">Profile</span></div></div><div class="flex items-center gap-space-xs"><a class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-secondary-fixed transition-colors" data-path="search-explore" href="#"><span class="material-symbols-outlined text-[22px]">search</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs shadow-[0_0_12px_rgba(255,178,184,0.4)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full pb-10 space-y-space-lg px-gutter-mobile">
+<!-- PROFILE HEADER CARD (Cyberpunk Glassmorphism) -->
+<div class="relative w-full rounded-xl p-space-md bg-surface-container-high/90 backdrop-blur-xl shadow-xl overflow-hidden mt-space-sm">
+<!-- Ambient Holographic Glow Mesh -->
+<div class="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-secondary-container/15 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-16 -left-16 w-44 h-44 rounded-full bg-primary-container/20 blur-3xl pointer-events-none"></div>
+<div class="flex items-center gap-space-md relative z-10">
+<!-- Avatar with SVG Conic Level Ring -->
+<div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+<svg class="absolute inset-0 w-full h-full -rotate-90" viewbox="0 0 80 80">
+<circle cx="40" cy="40" fill="none" r="36" stroke="rgba(255,255,255,0.08)" stroke-width="4"></circle>
+<circle class="drop-shadow-[0_0_8px_rgba(0,238,252,0.8)]" cx="40" cy="40" fill="none" r="36" stroke="url(#levelGradient)" stroke-dasharray="226.2" stroke-dashoffset="36.2" stroke-linecap="round" stroke-width="4.5"></circle>
+<defs>
+<lineargradient id="levelGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#00eefc"></stop>
+<stop offset="60%" stop-color="#ff506e"></stop>
+<stop offset="100%" stop-color="#a078ff"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="w-16 h-16 rounded-full overflow-hidden p-0.5 bg-surface-container-lowest">
+<img class="w-full h-full object-cover rounded-full" data-alt="Cyberpunk anime warrior avatar with neon glowing magenta hair, sleek robotic visor glowing cyber cyan, atmospheric dark rainy Neo-Tokyo backdrop, high contrast dramatic cinematic lighting, ultra-detailed digital illustration." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl5BNRF8zmtYDCGMm4saz-0NQpH9RW24e314JxjHrqsrRQYNqwbU8MwpsnPJ1EC_UpM0P8vUOilCIaebsULSiON-Z_5j3IRQh-dfwbuJE99Ki1leZ9Ki35wqdHN1kqP_YqumN717HcmYmMdztcFsCVu_OrfVkHGmXe79816zXHtpqe6OX723yectIyPjlLCR1u_GA9PAbB1xIsI0RFt2nxKHp6YuvCfjFW2JiEDlpCTpvW-hqrvNOIIQ"/>
+</div>
+<div class="absolute -bottom-1 bg-surface-container-lowest text-secondary-container px-1.5 py-0.5 rounded-full font-label-sm text-label-sm shadow-[0_0_10px_rgba(0,238,252,0.5)]">
+          LV.18
+        </div>
+</div>
+<!-- Identity & Tier -->
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight truncate">@KenshiroCyber</h2>
+<span class="material-symbols-outlined text-secondary-container text-[18px] drop-shadow-[0_0_6px_rgba(0,238,252,0.6)]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="font-label-sm text-label-sm text-tertiary font-medium tracking-wide">Otaku Grandmaster</p>
+<div class="mt-1 flex items-center gap-1.5">
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold shadow-[0_0_12px_rgba(255,80,110,0.4)]">
+            PRO VIP PASS
+          </span>
+<span class="px-1.5 py-0.5 rounded-full bg-surface-container-highest text-secondary-fixed-dim font-label-sm text-label-sm">
+            #00492
+          </span>
+</div>
+</div>
+</div>
+<!-- XP Meter Bar -->
+<div class="mt-space-md pt-space-xs relative z-10">
+<div class="flex justify-between items-center mb-1.5 font-label-sm text-label-sm">
+<span class="text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-secondary-container">bolt</span>
+          XP 8,450 / 10,000
+        </span>
+<span class="text-secondary-fixed font-semibold tracking-wider">84% → LV.19 SENTINEL</span>
+</div>
+<div class="h-2 w-full bg-surface-container-lowest rounded-full overflow-hidden p-[1px]">
+<div class="h-full rounded-full bg-gradient-to-r from-secondary-container via-tertiary-container to-primary-container shadow-[0_0_12px_rgba(255,80,110,0.6)]" style="width: 84%;"></div>
+</div>
+</div>
+<!-- Quick Action Dual CTAs -->
+<div class="mt-space-md grid grid-cols-2 gap-space-sm relative z-10">
+<button class="w-full py-2.5 px-3 rounded-full bg-surface-container-highest/60 hover:bg-surface-container-highest text-on-surface font-label-md text-label-md transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Edit Profile</span>
+</button>
+<button class="w-full py-2.5 px-3 rounded-full bg-primary-container hover:bg-primary-container/90 text-white font-label-md text-label-md transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-[0_0_16px_rgba(255,80,110,0.5)]" id="qrTriggerBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+<span>Passport QR</span>
+</button>
+</div>
+</div>
+<!-- QUICK STATS 2x2 BENTO TILES -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+        Neural Stream Metrics
+      </span>
+<span class="font-label-sm text-label-sm text-secondary-fixed-dim">AMOLED Verified</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Tile 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-high/80 backdrop-blur-md shadow-md flex flex-col justify-between">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-secondary-container mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">movie</span>
+</div>
+<div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface tracking-tight">142</div>
+<div class="font-label-sm text-label-sm font-semibold text-secondary-fixed mt-0.5">Anime Completed</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-1">Top 2.4% Archive Depth</p>
+</div>
+</div>
+<!-- Tile 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-high/80 backdrop-blur-md shadow-md flex flex-col justify-between">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary-container mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">motion_photos_on</span>
+</div>
+<div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface tracking-tight">2,840</div>
+<div class="font-label-sm text-label-sm font-semibold text-primary-fixed mt-0.5">Episodes Watched</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-1">Zero Filler Skips</p>
+</div>
+</div>
+<!-- Tile 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-high/80 backdrop-blur-md shadow-md flex flex-col justify-between">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-tertiary-container mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+</div>
+<div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface tracking-tight">1,136.5</div>
+<div class="font-label-sm text-label-sm font-semibold text-tertiary-fixed mt-0.5">Hours Streamed</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-1">Tokyo Shift Synchronized</p>
+</div>
+</div>
+<!-- Tile 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-high/80 backdrop-blur-md shadow-md flex flex-col justify-between">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-secondary-container mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">network_intelligence</span>
+</div>
+<div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface tracking-tight">4.8 <span class="font-label-sm text-label-sm text-secondary-container">TB</span></div>
+<div class="font-label-sm text-label-sm font-semibold text-secondary-fixed mt-0.5">Lossless Streamed</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-1">AV1 CineMaster Mastered</p>
+</div>
+</div>
+</div>
+</div>
+<!-- HALL OF FAME SHOWCASE (Horizontal Peek Rail) -->
+<div class="flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]">stars</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Hall of Fame</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Top Tier • 4 Spotlight</span>
+</div>
+<!-- Scroll Container -->
+<div class="flex gap-space-sm overflow-x-auto pb-2 pt-1 no-scrollbar -mx-gutter-mobile px-gutter-mobile snap-x snap-mandatory">
+<!-- Card 1: Cyberpunk Edgerunners -->
+<div class="snap-start flex-shrink-0 w-44 rounded-xl overflow-hidden bg-surface-container-high flex flex-col shadow-lg relative group">
+<div class="relative w-full h-56 bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="Cyberpunk anime poster of David Martinez and Lucy against a saturated yellow neon skyline with cyber moon, razor sharp edges, holographic chromatic aberration, gritty futuristic anime aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkfiyYPRVlfkf3jpFULmE9Ina4KKtgLZj-twsKyDyRexI4cjzTvh_X1pOib7AE2wfvwwvD2LANWjW3jTk2sq4f7NA2uQSXabuOjAnrmFpora7W_AGVyT6NEgxObNnRH7kQEO44yrfbY3SXNC1Tyy-9IzhfRhyUbHuNNKXqFJan8WFzNHPMF75h_of64pIXoMfthhRniV78ZtPbZzFK6iGkpuL_4ZCOgWbnRDw53EmYlibGX6C_OuZWcg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-transparent to-black/30"></div>
+<div class="absolute top-2 left-2 flex items-center gap-1 bg-surface-container-lowest/80 backdrop-blur-md px-1.5 py-0.5 rounded-full shadow">
+<span class="material-symbols-outlined text-secondary-container text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">10/10</span>
+</div>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm backdrop-blur-md">
+              4x Rewatched
+            </span>
+<span class="material-symbols-outlined text-secondary-container text-[16px]">verified</span>
+</div>
+</div>
+<div class="p-space-sm flex flex-col justify-between flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-bold truncate">Edgerunners</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Trigger • 2022</span>
+</div>
+</div>
+<!-- Card 2: Solo Leveling -->
+<div class="snap-start flex-shrink-0 w-44 rounded-xl overflow-hidden bg-surface-container-high flex flex-col shadow-lg relative group">
+<div class="relative w-full h-56 bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="Anime hero Sung Jinwoo in dark hunter trench coat with glowing electric cyan dual daggers, shadowy blue spectral monarch legion soldiers rising behind him, moody cinematic dark fantasy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoJeRZ9Da1QDbA-0Nne043kB6Mtqyy72fs5xMnlugGUE4Vlx7SN-a7GHXs7EVKniPpfI4m0ND_c1FFoQn1tMArG7wKvP4dfVkEp8FkouR8FK-yZn3S6zZhBLfmona3Qt8sK7mIEI8mQGsqovYVtSR-HEO3iBCmubn6NulN2OLAI8DOF4oR_9SuIhnpnBEB2H35NoFAJDXcceMM7v65j-iClkjnOmdPpVZnJ38OKDBLHNGAvjic3oDBUg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-transparent to-black/30"></div>
+<div class="absolute top-2 left-2 flex items-center gap-1 bg-surface-container-lowest/80 backdrop-blur-md px-1.5 py-0.5 rounded-full shadow">
+<span class="material-symbols-outlined text-secondary-container text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">10/10</span>
+</div>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded-full bg-tertiary-container/30 text-tertiary-fixed font-label-sm text-label-sm backdrop-blur-md">
+              2x Rewatched
+            </span>
+<span class="material-symbols-outlined text-tertiary text-[16px]">verified</span>
+</div>
+</div>
+<div class="p-space-sm flex flex-col justify-between flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-bold truncate">Solo Leveling</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">A-1 Pictures • 2024</span>
+</div>
+</div>
+<!-- Card 3: Neon Genesis Evangelion -->
+<div class="snap-start flex-shrink-0 w-44 rounded-xl overflow-hidden bg-surface-container-high flex flex-col shadow-lg relative group">
+<div class="relative w-full h-56 bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="Iconic purple and neon green biomechanical giant mecha Unit 01 silhouetted under blood red moon with geometric angel cross explosion in Tokyo-3 ruins, vintage 90s cel-animation anime lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYjow23ve4EXkV4JHjzozr3WjqU41KGpF58x3p3KTC0Oki3aw22IOyYNC6KYumxOVMuD2uT45Ohr0iCpkYD_PuknraLnKLl7DvOnE6Vr9teayaHQtSOcVpZ5MGkW9A4lYHXOFIwqr4UZ9ciNqldcLJ70NQ243DXk9TSusmg5zulhuy_lMTrL9EdJBNthWq-0CtqDMRvAELcoyEAF7gbiepwPVUDgDWA2EaKxlH5l2nJMgCtgAk0yZ3yw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-transparent to-black/30"></div>
+<div class="absolute top-2 left-2 flex items-center gap-1 bg-surface-container-lowest/80 backdrop-blur-md px-1.5 py-0.5 rounded-full shadow">
+<span class="material-symbols-outlined text-secondary-container text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">10/10</span>
+</div>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm backdrop-blur-md">
+              7x Rewatched
+            </span>
+<span class="material-symbols-outlined text-primary-container text-[16px]">workspace_premium</span>
+</div>
+</div>
+<div class="p-space-sm flex flex-col justify-between flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-bold truncate">Evangelion: Final</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Khara • Masterpiece</span>
+</div>
+</div>
+<!-- Card 4: Jujutsu Kaisen -->
+<div class="snap-start flex-shrink-0 w-44 rounded-xl overflow-hidden bg-surface-container-high flex flex-col shadow-lg relative group">
+<div class="relative w-full h-56 bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="Gojo Satoru pulling down black blindfold revealing limitless boundless azure blue glowing eyes with infinite void swirling cosmic distortion around him, hyper-clean MAPPA visual fidelity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx4niZXeSA2EG3tA0uwGWzpgObmRRf0OkpvyUZz55-eznHfaEHfcC47_hPUVcJF7bIPKmwoeUn3LAxumnIeKp5h18VH5DGAr32YgVbOVhKUUqCuUPv5HG7OaM34cXO_5EDIZLFxcfSbH7FGpQEkhLzCO_-k5QMlF6kY-ht7oQJ0U4tGOvLZWn5ttIksxQO9O_AXC08YE2tOc6NU-oCe5RNCgWMb0c441xiStZQNtC3eXFM6ELbe5Nu9g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-transparent to-black/30"></div>
+<div class="absolute top-2 left-2 flex items-center gap-1 bg-surface-container-lowest/80 backdrop-blur-md px-1.5 py-0.5 rounded-full shadow">
+<span class="material-symbols-outlined text-secondary-container text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">10/10</span>
+</div>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm backdrop-blur-md">
+              3x Rewatched
+            </span>
+<span class="material-symbols-outlined text-secondary-container text-[16px]">verified</span>
+</div>
+</div>
+<div class="p-space-sm flex flex-col justify-between flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-bold truncate">Jujutsu Kaisen</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">MAPPA • Shibuya Arc</span>
+</div>
+</div>
+</div>
+</div>
+<!-- COLLECTIBLE BADGES & TROPHIES (3-Column Matrix) -->
+<div class="flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">military_tech</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Vault Relics</h3>
+</div>
+<span class="font-label-sm text-label-sm text-secondary-fixed-dim">5 / 24 Unlocked</span>
+</div>
+<div class="grid grid-cols-3 gap-space-sm">
+<!-- Badge 1 -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/60 flex flex-col items-center text-center justify-center relative overflow-hidden group">
+<div class="w-12 h-12 rounded-full bg-secondary-container/10 flex items-center justify-center text-secondary-container mb-1.5 shadow-[0_0_12px_rgba(0,238,252,0.3)]">
+<span class="material-symbols-outlined text-[24px]">bedtime</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Night Owl</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant scale-90">Binge King</span>
+</div>
+<!-- Badge 2 -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/60 flex flex-col items-center text-center justify-center relative overflow-hidden group">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-container mb-1.5 shadow-[0_0_12px_rgba(255,80,110,0.3)]">
+<span class="material-symbols-outlined text-[24px]">broadcast_on_personal</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Simulcast</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant scale-90">First 100</span>
+</div>
+<!-- Badge 3 -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/60 flex flex-col items-center text-center justify-center relative overflow-hidden group">
+<div class="w-12 h-12 rounded-full bg-tertiary-container/15 flex items-center justify-center text-tertiary-fixed mb-1.5 shadow-[0_0_12px_rgba(160,120,255,0.3)]">
+<span class="material-symbols-outlined text-[24px]">local_fire_department</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Studio Trigger</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant scale-90">Zealot</span>
+</div>
+<!-- Badge 4 -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/60 flex flex-col items-center text-center justify-center relative overflow-hidden group">
+<div class="w-12 h-12 rounded-full bg-secondary-container/10 flex items-center justify-center text-secondary-container mb-1.5 shadow-[0_0_12px_rgba(0,238,252,0.3)]">
+<span class="material-symbols-outlined text-[24px]">hdr_on</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">4K OLED</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant scale-90">Purist Audio</span>
+</div>
+<!-- Badge 5 -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/60 flex flex-col items-center text-center justify-center relative overflow-hidden group">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-fixed mb-1.5 shadow-[0_0_12px_rgba(255,80,110,0.3)]">
+<span class="material-symbols-outlined text-[24px]">forum</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Danmaku</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant scale-90">Master Sender</span>
+</div>
+<!-- Badge 6 Locked -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest/70 flex flex-col items-center text-center justify-center relative overflow-hidden opacity-50">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant mb-1.5">
+<span class="material-symbols-outlined text-[22px]">lock</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface-variant leading-tight">Cinephile 500</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant scale-90">Classified</span>
+</div>
+</div>
+</div>
+<!-- MOBILE STREAM PREFERENCES & HARDWARE CALIBRATION -->
+<div class="flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">tune</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Stream Engine Settings</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">VIP Engine</span>
+</div>
+<div class="flex flex-col rounded-xl bg-surface-container-high overflow-hidden shadow-lg p-space-sm space-y-space-sm">
+<!-- Audio Track Option -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container/80">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-secondary-container">
+<span class="material-symbols-outlined text-[20px]">graphic_eq</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Default Audio Stream</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lossless Master Channel</span>
+</div>
+</div>
+<div class="relative">
+<select class="appearance-none bg-surface-container-highest text-secondary-fixed text-label-sm font-label-sm rounded-full pl-3 pr-8 py-1.5 outline-none focus:ring-0 shadow-inner">
+<option>JP (FLAC 5.1 Master)</option>
+<option>JP (Studio Stereo)</option>
+<option>EN (Dolby Atmos Dub)</option>
+</select>
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed pointer-events-none absolute right-2.5 top-2">expand_more</span>
+</div>
+</div>
+<!-- OLED Calibration Toggle -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container/80">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]">brightness_high</span>
+</div>
+<div class="flex flex-col pr-2">
+<span class="font-label-md text-label-md text-on-surface font-medium">AMOLED Zero-Floor Calibration</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Pixel black clamping for pure HDR contrast</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary-container shadow-inner"></div>
+</label>
+</div>
+<!-- Autoplay Toggle -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container/80">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">playlist_play</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Autoplay Next Episode</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">5 second buffer countdown</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary-container shadow-inner"></div>
+</label>
+</div>
+<!-- Auto Skip OP/ED Toggle -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container/80">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined text-[20px]">skip_next</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Auto Skip OP &amp; ED</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Timestamp smart boundary skipping</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary-container shadow-inner"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- CONNECTED ANIME ECOSYSTEMS -->
+<div class="flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+        Vault Sync Bridges
+      </span>
+<span class="font-label-sm text-label-sm text-secondary-container">3 Live Streams</span>
+</div>
+<div class="grid grid-cols-3 gap-space-sm">
+<!-- Discord -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/70 flex flex-col items-center justify-center text-center gap-1">
+<div class="w-10 h-10 rounded-full bg-[#5865F2]/20 flex items-center justify-center text-white mb-1">
+<span class="material-symbols-outlined text-[20px]">alternate_email</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Discord RPC</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm scale-90">Connected</span>
+</div>
+<!-- AniList -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/70 flex flex-col items-center justify-center text-center gap-1">
+<div class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center text-secondary-container mb-1">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">AniList API</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm scale-90">Auto-Scrobble</span>
+</div>
+<!-- MyAnimeList -->
+<div class="p-space-sm rounded-xl bg-surface-container-high/70 flex flex-col items-center justify-center text-center gap-1">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/20 flex items-center justify-center text-tertiary mb-1">
+<span class="material-symbols-outlined text-[20px]">library_books</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">MyAnimeList</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm scale-90">Synced</span>
+</div>
+</div>
+</div>
+<!-- INTERACTIVE PASSPORT QR MODAL DIALOG OVERLAY -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-space-md bg-black/80 backdrop-blur-2xl transition-opacity duration-300 opacity-0 pointer-events-none" id="passportModal">
+<div class="relative w-full max-w-sm rounded-xl bg-surface-container-high p-space-lg flex flex-col items-center text-center shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden">
+<!-- Glow beam -->
+<div class="absolute -top-12 inset-x-0 h-28 bg-gradient-to-b from-secondary-container/25 to-transparent blur-xl pointer-events-none"></div>
+<!-- Close Action -->
+<button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:text-white" id="closeModalBtn">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">badge</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Otaku Passport QR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-[240px]">
+        Scan at Tokyo CineMaster booths or IRL Con lounges for instant VIP synch.
+      </p>
+<!-- Holographic QR Container -->
+<div class="my-space-md p-space-md rounded-xl bg-white flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,238,252,0.5)] relative">
+<div class="w-48 h-48 bg-surface-container-lowest flex flex-col items-center justify-center p-3 rounded-lg relative overflow-hidden">
+<!-- Procedural Stylized SVG QR Code Representation -->
+<svg class="w-full h-full text-secondary-container fill-current" viewbox="0 0 100 100">
+<!-- Corner Markers -->
+<rect fill="#00eefc" height="28" rx="2" width="28" x="0" y="0"></rect>
+<rect fill="#0e0e0e" height="20" rx="1" width="20" x="4" y="4"></rect>
+<rect fill="#ff506e" height="12" width="12" x="8" y="8"></rect>
+<rect fill="#00eefc" height="28" rx="2" width="28" x="72" y="0"></rect>
+<rect fill="#0e0e0e" height="20" rx="1" width="20" x="76" y="4"></rect>
+<rect fill="#ff506e" height="12" width="12" x="80" y="8"></rect>
+<rect fill="#00eefc" height="28" rx="2" width="28" x="0" y="72"></rect>
+<rect fill="#0e0e0e" height="20" rx="1" width="20" x="4" y="76"></rect>
+<rect fill="#ff506e" height="12" width="12" x="8" y="80"></rect>
+<!-- Matrix Pattern Dots -->
+<rect fill="#00eefc" height="6" width="6" x="36" y="6"></rect>
+<rect fill="#00eefc" height="6" width="8" x="48" y="10"></rect>
+<rect fill="#ff506e" height="8" width="6" x="60" y="4"></rect>
+<rect fill="#d0bcff" height="8" width="8" x="34" y="24"></rect>
+<rect fill="#00eefc" height="6" width="12" x="48" y="28"></rect>
+<rect fill="#00eefc" height="10" width="6" x="6" y="36"></rect>
+<rect fill="#ff506e" height="8" width="8" x="18" y="42"></rect>
+<!-- Center Otaku Crest -->
+<rect fill="#0e0e0e" height="28" rx="4" width="28" x="36" y="36"></rect>
+<circle cx="50" cy="50" fill="#ff506e" r="10"></circle>
+<circle cx="50" cy="50" fill="#00eefc" r="5"></circle>
+<rect fill="#00eefc" height="8" width="10" x="72" y="36"></rect>
+<rect fill="#d0bcff" height="8" width="8" x="86" y="44"></rect>
+<rect fill="#00eefc" height="14" width="8" x="36" y="70"></rect>
+<rect fill="#ff506e" height="6" width="14" x="50" y="78"></rect>
+<rect fill="#00eefc" height="8" width="8" x="70" y="72"></rect>
+<rect fill="#00eefc" height="12" width="12" x="82" y="80"></rect>
+</svg>
+<!-- Dynamic Laser Line -->
+<div class="absolute inset-x-0 h-0.5 bg-secondary-container shadow-[0_0_8px_#00eefc] animate-pulse top-1/2"></div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span>
+<span class="font-label-sm text-label-sm font-semibold text-secondary-fixed uppercase tracking-wider">
+          Token Valid: 04:59s
+        </span>
+</div>
+<button class="mt-space-md w-full py-2.5 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md hover:bg-surface-bright transition-colors" id="closeModalBottomBtn">
+        Dismiss Passport
+      </button>
+</div>
+</div>
+<!-- Micro-script for delightful Passport QR interaction -->
+<script>
+    (function initPassportModal() {
+      const trigger = document.getElementById('qrTriggerBtn');
+      const modal = document.getElementById('passportModal');
+      const closeTop = document.getElementById('closeModalBtn');
+      const closeBottom = document.getElementById('closeModalBottomBtn');
+
+      if (!trigger || !modal) return;
+
+      const open = () => {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+      };
+
+      const close = () => {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+      };
+
+      trigger.addEventListener('click', open);
+      if (closeTop) closeTop.addEventListener('click', close);
+      if (closeBottom) closeBottom.addEventListener('click', close);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) close();
+      });
+    })();
+  </script>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.8)]" data-active-classes="text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.6)]"><div class="flex justify-around items-center h-16 px-gutter-mobile"><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm font-medium">Home</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="browse-catalog" href="#"><span class="material-symbols-outlined text-[22px]">explore</span><span class="font-label-sm text-label-sm font-medium">Browse</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="watchlist" href="#"><span class="material-symbols-outlined text-[22px]">bookmarks</span><span class="font-label-sm text-label-sm font-medium">Watchlist</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 transition-colors text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.6)]" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-sm text-label-sm font-medium">Profile</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="more-hub" href="#"><span class="material-symbols-outlined text-[22px]">dashboard_customize</span><span class="font-label-sm text-label-sm font-medium">More</span></a></div></nav></body></html>

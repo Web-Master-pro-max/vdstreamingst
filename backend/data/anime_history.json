@@ -1,19 +1,49 @@
 {
   "1": [
     {
-      "id": "lunar-1735-4",
+      "id": "lunar-1-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "1",
+      "episodeId": "lunar-1-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Asteroid Blues",
+      "showTitle": "Cowboy Bebop",
+      "poster": "https://artworks.thetvdb.com/banners/posters/76885-3.jpg",
+      "banner": "",
+      "progress": 0,
+      "duration": 1483,
+      "watchedAt": "2026-10-25T05:47:30.574Z"
+    },
+    {
+      "id": "lunar-169581-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "169581",
+      "episodeId": "lunar-169581-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Reincarnated as a Sidekick Character in an Eroge, but I`ll Use My Game Knowledge to Do What I Want",
+      "showTitle": "Magical Explorer",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/440056/posters/6aa5c0c6e42cb.jpg",
+      "banner": "",
+      "progress": 508,
+      "duration": 1419,
+      "watchedAt": "2026-10-25T04:57:33.272Z"
+    },
+    {
+      "id": "lunar-1735-5",
       "userId": 1,
       "isLunar": true,
       "lunarId": "1735",
-      "episodeId": "lunar-1735-4",
-      "episodeNumber": 4,
-      "episodeTitle": "Episode 4: Battle in the Desert",
+      "episodeId": "lunar-1735-5",
+      "episodeNumber": 5,
+      "episodeTitle": "As the Kazekage...!",
       "showTitle": "Naruto: Shippuden",
-      "poster": "",
+      "poster": "https://artworks.thetvdb.com/banners/posters/79824-16.jpg",
       "banner": "",
-      "progress": 1200,
-      "duration": 1400,
-      "watchedAt": "2026-10-19T12:33:53.691Z"
+      "progress": 1176,
+      "duration": 1387,
+      "watchedAt": "2026-10-24T18:16:28.768Z"
     },
     {
       "id": "lunar-195604-1",
@@ -26,9 +56,9 @@
       "showTitle": "Black Clover Season 2",
       "poster": "https://artworks.thetvdb.com/banners/v4/series/331753/posters/60f9d40c43dbc.jpg",
       "banner": "",
-      "progress": 548,
+      "progress": 574,
       "duration": 1430,
-      "watchedAt": "2026-10-18T14:03:34.784Z"
+      "watchedAt": "2026-10-24T16:28:12.000Z"
     },
     {
       "id": "lunar-130298-1",
@@ -44,21 +74,6 @@
       "progress": 0,
       "duration": 1419,
       "watchedAt": "2026-10-18T11:27:32.675Z"
-    },
-    {
-      "id": "lunar-169581-1",
-      "userId": 1,
-      "isLunar": true,
-      "lunarId": "169581",
-      "episodeId": "lunar-169581-1",
-      "episodeNumber": 1,
-      "episodeTitle": "Reincarnated as a Sidekick Character in an Eroge, but I`ll Use My Game Knowledge to Do What I Want",
-      "showTitle": "Magical Explorer",
-      "poster": "https://artworks.thetvdb.com/banners/v4/series/440056/posters/6aa5c0c6e42cb.jpg",
-      "banner": "",
-      "progress": 0,
-      "duration": 1419,
-      "watchedAt": "2026-10-18T08:12:08.180Z"
     },
     {
       "id": "lunar-21-6",

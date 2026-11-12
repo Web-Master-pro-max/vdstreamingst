@@ -9,16 +9,27 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DB}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
 
   redis:
     image: redis:7-alpine
     container_name: infinx_redis
     restart: always
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   backend:
     build:
@@ -30,8 +41,8 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
-      - DATABASE_URL=mysql://root:${MYSQL_PASSWORD}@db:3306/${MYSQL_DB}
-      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=mysql://${MYSQL_USER:-root}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DB}
+      - REDIS_URL=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - WORKER_WEBHOOK_SECRET=${WORKER_WEBHOOK_SECRET}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -40,12 +51,17 @@ services:
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - STORAGE_TYPE=${STORAGE_TYPE:-local}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - shared_uploads:/app/uploads
+      - ./uploads:/app/uploads
       - ./frontend:/app/frontend
+      - ./worker:/worker
+      - ./worker:/app/worker
 
   worker:
     build:
@@ -54,19 +70,22 @@ services:
     container_name: infinx_worker
     restart: always
     environment:
-      - REDIS_URL=${REDIS_URL}
-      - DATABASE_URL=mysql://root:${MYSQL_PASSWORD}@db:3306/${MYSQL_DB}
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=mysql://${MYSQL_USER:-root}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DB}
       - WORKER_WEBHOOK_SECRET=${WORKER_WEBHOOK_SECRET}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION}
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
       - BACKEND_URL=http://backend:8000
+      - STORAGE_TYPE=${STORAGE_TYPE:-local}
     depends_on:
-      - redis
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
     volumes:
-      - shared_uploads:/app/uploads
+      - ./uploads:/app/uploads
 
 volumes:
   mysql_data:
-  shared_uploads:

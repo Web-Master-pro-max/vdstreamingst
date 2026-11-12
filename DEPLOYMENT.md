@@ -1,111 +1,166 @@
-# Infinx Anime Deployment Guide
+# Infinx Anime EC2 Deployment Guide
 
-This guide walks you through deploying the Infinx Anime application. Following your requested strategy, we will set up the backend + frontend to run locally on an AWS EC2 instance first, and then deploy the frontend to Vercel.
+This guide walks you through deploying the Infinx Anime application on an **AWS EC2 Ubuntu server** (Ubuntu 22.04 / 24.04 / 26.04 LTS).
 
 ---
 
-## Phase 1: Deploying to AWS EC2 (Runs Both Backend & Frontend Locally)
+## Quick Start (Automated 1-Command Setup)
 
-On your AWS EC2 instance, the backend Express server will run and serve the static files from the `frontend/` folder directly. Visiting `http://<YOUR_EC2_IP>:8000/` will load the application.
+Once you launch your Ubuntu EC2 instance and clone/copy this repository into it, you only need to run:
 
-### 1. Launch & Configure your AWS EC2 Instance
-- **OS**: Ubuntu Server 22.04 LTS (recommended) or any modern Linux AMI.
-- **Instance Type**: `t2.medium` or `t3.medium` (recommended for video transcoding stability).
-- **Security Group (Inbound Rules)**:
-  - Allow **SSH** (Port 22) from your IP.
-  - Allow **HTTP** (Port 80) and **HTTPS** (Port 443).
-  - Allow **Custom TCP** (Port `8000`) for the backend Express API server.
-  - Allow **Custom TCP** (Port `3306`) only if you need direct external access to MySQL (Docker Compose maps this, but internal communication is secure).
-
-### 2. Install Docker & Docker Compose on the EC2 Instance
-Run the following commands on your EC2 terminal:
 ```bash
-# Update package database
-sudo apt update -y && sudo apt upgrade -y
-
-# Install Docker, Git & FFmpeg (for video transcoding)
-sudo apt install docker.io git ffmpeg -y
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# Allow your user to run docker without sudo
-sudo usermod -aG docker $USER
-# Log out and log back in for group changes to take effect!
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+chmod +x setup.sh
+sudo ./setup.sh
 ```
 
-### 3. Clone/Copy Project Code to EC2 & Set Up Environment
-Copy your project folder to the EC2 instance (e.g., using `git`, `rsync`, or `scp`).
-Create a `.env` file in the project root on EC2 with your production values:
+The script will automatically:
+1. Detect system resources and configure a **4GB swapfile** to prevent out-of-memory (OOM) errors during Docker builds and video transcoding.
+2. Install **Docker Engine** & **Docker Compose plugin** from Docker's official repositories.
+3. Configure and activate an optimized **Nginx Reverse Proxy** on Port 80 with:
+   - WebSocket proxying for live chat and watch party syncing.
+   - 5GB video upload capacity (`client_max_body_size 5000M`).
+   - 1-hour timeout allowances for heavy transcoding.
+4. Secure internal ports with **UFW Firewall** (Opens SSH 22, HTTP 80, HTTPS 443, Direct API 8000; keeps MySQL and Redis private).
+5. Prepare project storage folders (`uploads/posters`, `uploads/banners`, `uploads/videos`).
+6. Launch **MySQL 8.0** and **Redis 7** containers and wait for healthiness.
+7. Automatically import your complete database from **`infinx_backup.sql`** (preserving all 50+ shows, categories, episodes, comments, and watch history), then synchronize admin credentials directly from `.env`.
+8. Build and start **Infinx Backend** and **Worker** containers.
+9. Verify API server health and print your website URL, admin panel link, and login credentials.
+
+---
+
+## AWS EC2 Instance Requirements
+
+### 1. EC2 Instance Configuration
+- **AMI**: Ubuntu Server 24.04 LTS or 22.04 LTS (x86_64 or arm64).
+- **Instance Type**:
+  - `t3.medium` (2 vCPU, 4GB RAM) or `t2.medium` recommended for video transcoding.
+  - Can also run on `t3.small` (swapfile handles memory spikes).
+- **Storage / EBS**: At least 30 GB gp3 volume (recommended 50GB+ if storing videos locally).
+
+### 2. AWS Security Group (Inbound Rules)
+Ensure the following ports are open in your EC2 Security Group:
+
+| Type | Port Range | Protocol | Source | Purpose |
+|------|------------|----------|--------|---------|
+| SSH | 22 | TCP | Your IP (or 0.0.0.0/0) | Remote Server Administration |
+| HTTP | 80 | TCP | 0.0.0.0/0 | Main Website & API (Nginx) |
+| HTTPS | 443 | TCP | 0.0.0.0/0 | Encrypted Traffic (SSL) |
+| Custom TCP | 8000 | TCP | 0.0.0.0/0 | Direct Backend API access |
+
+> 🔒 **Security Notice:** Do NOT open Port `3306` (MySQL) or Port `6379` (Redis) to the public internet! `docker-compose.yml` binds them safely to `127.0.0.1`.
+
+---
+
+## Step-by-Step Deployment Instructions
+
+### Step 1: Connect to your EC2 Instance
+```bash
+ssh -i /path/to/your-key.pem ubuntu@<YOUR_EC2_PUBLIC_IP>
+```
+
+### Step 2: Transfer or Clone the Codebase
+**Option A: Clone via Git**
+```bash
+git clone https://github.com/<your-username>/<your-repo-name>.git app
+cd app
+```
+
+**Option B: Copy from your local machine (SCP or Rsync)**
+From your local terminal:
+```bash
+scp -i /path/to/your-key.pem -r d:/Dev ubuntu@<YOUR_EC2_PUBLIC_IP>:~/app
+```
+Then on the EC2 server:
+```bash
+cd ~/app
+```
+
+### Step 3: Run the Setup Script
+```bash
+chmod +x setup.sh
+sudo ./setup.sh
+```
+
+Sit back and let the script configure the entire server.
+
+---
+
+## Management & Daily Operations
+
+The `setup.sh` script doubles as a management utility:
+
+### Check Status of Containers & Nginx
+```bash
+sudo ./setup.sh --status
+```
+*(Or run `docker compose ps`)*
+
+### View Real-Time Container Logs
+```bash
+sudo ./setup.sh --logs
+```
+*(Or run `docker compose logs -f --tail=100`)*
+
+### Restart Stack
+```bash
+sudo ./setup.sh --restart
+```
+
+### Re-Import or Restore SQL Dump (`infinx_backup.sql`)
+```bash
+sudo ./setup.sh --import-sql
+```
+
+### Export Current Database to a New SQL Backup
+```bash
+sudo ./setup.sh --export-sql
+```
+
+### Update Stack after Code Changes
+```bash
+sudo ./setup.sh --update
+```
+
+### Enable Free HTTPS / SSL (Let's Encrypt)
+Once you point your custom domain DNS (A record) to the EC2 Public IP:
+```bash
+sudo ./setup.sh --ssl yourdomain.com
+```
+
+---
+
+## Environment Variables Reference (`.env`)
+
+The setup script automatically uses your existing `.env` or creates one from `.env.example`:
+
 ```env
-# Database Configuration (Docker container matches this)
+# Database Configuration
 MYSQL_USER=root
-MYSQL_PASSWORD=9981
+MYSQL_PASSWORD=your_secure_mysql_password
 MYSQL_DB=infinx
-DATABASE_URL="mysql://root:9981@db:3306/infinx"
+DATABASE_URL="mysql://root:your_secure_mysql_password@db:3306/infinx"
 
 # Server Configuration
 PORT=8000
-JWT_SECRET=your_production_jwt_secret_key_here
-WORKER_WEBHOOK_SECRET=your_worker_shared_secret_here
+JWT_SECRET=your_jwt_secret_key
+WORKER_WEBHOOK_SECRET=your_worker_secret
 
-# Redis Queue Configuration (Points to Docker Redis service)
+# Redis Configuration
 REDIS_URL=redis://redis:6379
 
-# AWS S3 Storage Configuration (Make sure the IAM user has full access to the bucket)
+# Storage Configuration
+# 'local' = stores uploads on EC2 disk in ./uploads
+# 's3'    = uploads to AWS S3 bucket
+STORAGE_TYPE=local
+
+# AWS S3 Settings (if using S3 storage or streaming existing S3 media)
 AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET_ACCESS_KEY
 AWS_REGION=ap-south-1
-AWS_S3_BUCKET=serverbuket-12
+AWS_S3_BUCKET=your-s3-bucket-name
 
-# Seed Admin User Setup
+# Admin Seed Account
 ADMIN_EMAIL=admin@infinx.com
-ADMIN_PASSWORD=admin123
+ADMIN_PASSWORD=your_strong_admin_password
 ```
-
-### 4. Build and Launch Containers
-Navigate to your project root folder on the EC2 instance and run:
-```bash
-# Start all services (MySQL, Redis, Backend, Worker) in detached background mode
-docker-compose up --build -d
-```
-Docker Compose will download dependencies, push the Prisma schema migrations, seed the initial database, and serve your app.
-Access the web dashboard at `http://<YOUR_EC2_IP>:8000/`.
-
----
-
-## Phase 2: Deploying the Frontend to Vercel
-
-Once you have verified that the EC2 deployment is working, you can host the frontend on Vercel to offload static file hosting.
-
-### 1. Update `frontend/vercel.json`
-Before pushing to Vercel, open `frontend/vercel.json` and replace `<YOUR_EC2_IP_OR_DNS>` with your EC2 public IP or domain name:
-```json
-{
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "http://<YOUR_EC2_IP_OR_DNS_OR_DOMAIN>:8000/api/:path*"
-    }
-  ]
-}
-```
-
-### 2. Deploy to Vercel
-You can deploy the frontend folder using the Vercel Dashboard or CLI:
-- **Using Vercel Web Dashboard**:
-  1. Go to [Vercel](https://vercel.com) and click **Add New** -> **Project**.
-  2. Import your Git repository.
-  3. Set the **Root Directory** of the project to `frontend`.
-  4. Leave Build Settings as default (since it is a static HTML/JS site, no build command is needed).
-  5. Click **Deploy**.
-- **Using Vercel CLI**:
-  ```bash
-  cd frontend
-  vercel --prod
-  ```
-
-Vercel will build and assign you a secure production domain (e.g., `https://infinx-anime.vercel.app`). All API calls prefixed with `/api` will be proxied automatically to your backend EC2 instance!

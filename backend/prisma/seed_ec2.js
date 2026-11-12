@@ -150,6 +150,44 @@ async function main() {
     });
   }
 
+  // Synchronize admin credentials dynamically from environment variables
+  const envAdminEmail = (process.env.ADMIN_EMAIL || 'admin@infinx.com').trim().toLowerCase();
+  const envAdminPassword = (process.env.ADMIN_PASSWORD || 'admin123').trim();
+  const envAdminHash = await bcrypt.hash(envAdminPassword, 10);
+
+  const existingAdmin = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: envAdminEmail },
+        { role: 'ADMIN' }
+      ]
+    }
+  });
+
+  if (existingAdmin) {
+    await prisma.user.update({
+      where: { id: existingAdmin.id },
+      data: {
+        email: envAdminEmail,
+        passwordHash: envAdminHash,
+        role: 'ADMIN',
+        isBanned: false
+      }
+    });
+    console.log(`   ✅ Admin user updated from env: ${envAdminEmail}`);
+  } else {
+    await prisma.user.create({
+      data: {
+        email: envAdminEmail,
+        username: 'Admin',
+        passwordHash: envAdminHash,
+        role: 'ADMIN',
+        isBanned: false
+      }
+    });
+    console.log(`   ✅ Admin user created from env: ${envAdminEmail}`);
+  }
+
   // 3. Seed Shows & Episodes
   console.log("Seeding shows and episodes...");
   for (const s of showsData) {

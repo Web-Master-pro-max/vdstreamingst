@@ -1,695 +1,839 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Download App - InfinX Anime & Movie Streaming</title>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" name="viewport" />
+  <meta name="description" content="Download Infinx Anime for Android, Android TV, FireTV, and install the Progressive Web App. Experience pure uncompressed anime streaming anywhere.">
+  <title>Get App &amp; Client Downloads | Infinx Anime</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-    <!-- Google Fonts & Font Awesome -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Material Symbols & Google Fonts: Outfit & Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        :root {
-            --primary: #ff0055;
-            --primary-hover: #ff2a75;
-            --primary-glow: rgba(255, 0, 85, 0.4);
-            --accent: #7000ff;
-            --accent-glow: rgba(112, 0, 255, 0.4);
-            --bg-dark: #07070c;
-            --bg-card: rgba(18, 18, 28, 0.7);
-            --bg-card-hover: rgba(26, 26, 42, 0.85);
-            --text-main: #ffffff;
-            --text-sub: #a0a0b8;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --radius-lg: 20px;
-            --radius-md: 14px;
-            --radius-sm: 8px;
-            --font-display: 'Outfit', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --gradient-primary: linear-gradient(135deg, #ff0055 0%, #7000ff 100%);
-            --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  <!-- Unified Motion System -->
+  <link rel="stylesheet" href="animations.css">
+
+  <!-- Tailwind CSS CDN for Cyberpunk Cinema Glass tokens -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#131313",
+            "surface-dim": "#131313",
+            "surface-bright": "#393939",
+            "surface-container-lowest": "#0e0e0e",
+            "surface-container-low": "#1b1b1b",
+            "surface-container": "#1f1f1f",
+            "surface-container-high": "#2a2a2a",
+            "surface-container-highest": "#353535",
+            "on-surface": "#e2e2e2",
+            "on-surface-variant": "#e8bcbe",
+            "primary": "#ffb2b8",
+            "primary-container": "#ff506e",
+            "on-primary-container": "#5b0018",
+            "secondary": "#d3fbff",
+            "secondary-container": "#00eefc",
+            "on-secondary-container": "#00686f",
+            "secondary-fixed": "#7df4ff",
+            "secondary-fixed-dim": "#00dbe9",
+            "tertiary": "#d0bcff",
+            "tertiary-container": "#a078ff",
+            "outline": "#ae8789",
+            "outline-variant": "#5e3e41"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2.5rem",
+            "gutter": "1.5rem"
+          },
+          fontFamily: {
+            "headline-lg": ["Outfit", "sans-serif"],
+            "headline-md": ["Outfit", "sans-serif"],
+            "headline-sm": ["Outfit", "sans-serif"],
+            "body-lg": ["Inter", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "label-lg": ["Inter", "sans-serif"],
+            "label-md": ["Inter", "sans-serif"],
+            "label-sm": ["Inter", "sans-serif"],
+            "display-hero": ["Outfit", "sans-serif"]
+          }
         }
+      }
+    };
+  </script>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: var(--font-body);
-            line-height: 1.6;
-            overflow-x: hidden;
-            background-image:
-                radial-gradient(circle at 10% 20%, rgba(255, 0, 85, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(112, 0, 255, 0.15) 0%, transparent 40%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* Header Navigation */
-        .site-header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: rgba(7, 7, 12, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 5%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .brand-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: var(--font-display);
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--text-main);
-            letter-spacing: -0.5px;
-        }
-
-        .brand-logo i {
-            color: var(--primary);
-            font-size: 2.2rem;
-            filter: drop-shadow(0 0 10px var(--primary-glow));
-        }
-
-        .brand-logo span {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            list-style: none;
-        }
-
-        .nav-link {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-sub);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            color: var(--text-main);
-        }
-
-        .nav-link.active {
-            color: var(--primary);
-        }
-
-        .btn-header-download {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 9px 20px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 15px var(--primary-glow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-header-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--primary-glow);
-        }
-
-        /* Hero Section */
-        .hero-section {
-            padding: 80px 5% 60px;
-            max-width: 1280px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 50px;
-            align-items: center;
-            width: 100%;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(255, 0, 85, 0.12);
-            border: 1px solid rgba(255, 0, 85, 0.3);
-            border-radius: 30px;
-            color: var(--primary);
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 24px;
-        }
-
-        .hero-title {
-            font-family: var(--font-display);
-            font-size: 3.5rem;
-            font-weight: 900;
-            line-height: 1.15;
-            margin-bottom: 20px;
-            letter-spacing: -1px;
-        }
-
-        .hero-title span {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-desc {
-            font-size: 1.15rem;
-            color: var(--text-sub);
-            margin-bottom: 35px;
-            max-width: 580px;
-        }
-
-        /* Download Action Buttons */
-        .download-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-
-        .download-btn {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px 28px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-        }
-
-        .download-btn:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--primary);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(255, 0, 85, 0.25);
-        }
-
-        .download-btn.primary-btn {
-            background: var(--gradient-primary);
-            border: none;
-            box-shadow: 0 8px 25px var(--primary-glow);
-        }
-
-        .download-btn.primary-btn:hover {
-            box-shadow: 0 14px 35px var(--primary-glow);
-        }
-
-        .download-btn i {
-            font-size: 2.2rem;
-        }
-
-        .download-btn .btn-text {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
-
-        .download-btn .btn-small-text {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.8;
-            font-weight: 600;
-        }
-
-        .download-btn .btn-large-text {
-            font-size: 1.15rem;
-            font-weight: 800;
-            line-height: 1.2;
-            font-family: var(--font-display);
-        }
-
-        .version-tag {
-            font-size: 0.85rem;
-            color: var(--text-sub);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .version-tag span {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Phone Preview Container */
-        .hero-mockup-wrapper {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .phone-frame {
-            width: 310px;
-            height: 630px;
-            background: #111;
-            border-radius: 48px;
-            padding: 12px;
-            border: 4px solid #2a2a3a;
-            box-shadow:
-                0 25px 60px rgba(0, 0, 0, 0.8),
-                0 0 40px rgba(255, 0, 85, 0.2);
-            position: relative;
-            overflow: hidden;
-            transform: rotate(-3deg);
-            transition: transform 0.5s ease;
-        }
-
-        .hero-mockup-wrapper:hover .phone-frame {
-            transform: rotate(0deg) scale(1.02);
-        }
-
-        .phone-screen {
-            width: 100%;
-            height: 100%;
-            border-radius: 36px;
-            overflow: hidden;
-            background: var(--bg-dark);
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .phone-screen img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .phone-notch {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 22px;
-            background: #000;
-            border-radius: 12px;
-            z-index: 10;
-        }
-
-        /* Features Grid */
-        .features-section {
-            padding: 80px 5%;
-            max-width: 1280px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 650px;
-            margin: 0 auto 50px;
-        }
-
-        .section-title {
-            font-family: var(--font-display);
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 15px;
-        }
-
-        .section-desc {
-            color: var(--text-sub);
-            font-size: 1.05rem;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .feature-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--gradient-card);
-            pointer-events: none;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(255, 0, 85, 0.4);
-            background: var(--bg-card-hover);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            background: rgba(255, 0, 85, 0.12);
-            border: 1px solid rgba(255, 0, 85, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-        }
-
-        .feature-title {
-            font-family: var(--font-display);
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .feature-desc {
-            color: var(--text-sub);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        /* Installation Guide */
-        .install-guide-section {
-            background: rgba(18, 18, 28, 0.4);
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-            padding: 80px 5%;
-            width: 100%;
-        }
-
-        .guide-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .step-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 25px;
-            position: relative;
-        }
-
-        .step-number {
-            font-family: var(--font-display);
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--primary);
-            opacity: 0.6;
-            margin-bottom: 10px;
-        }
-
-        .step-title {
-            font-family: var(--font-display);
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .step-desc {
-            color: var(--text-sub);
-            font-size: 0.9rem;
-        }
-
-        /* Footer */
-        .site-footer {
-            margin-top: auto;
-            border-top: 1px solid var(--border-color);
-            padding: 40px 5%;
-            text-align: center;
-            color: var(--text-sub);
-            font-size: 0.9rem;
-            background: #040407;
-        }
-
-        .footer-logo {
-            margin-bottom: 15px;
-            display: inline-block;
-        }
-
-        /* Responsive Layout */
-        @media (max-width: 992px) {
-            .hero-section {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 40px;
-            }
-
-            .hero-desc {
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .download-actions {
-                justify-content: center;
-            }
-
-            .version-tag {
-                justify-content: center;
-            }
-
-            .phone-frame {
-                transform: rotate(0deg);
-            }
-        }
-
-        @media (max-width: 576px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-
-            .download-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .nav-links {
-                display: none;
-            }
-        }
-    </style>
+  <style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #08080c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff506e;
+    }
+  </style>
 </head>
 
-<body>
-
-    <!-- ====== HEADER ====== -->
-    <header class="site-header">
-        <a href="index.html" class="brand-logo">
-            <i class="fas fa-infinity"></i>
-            <span>InfinX</span>
+<body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+  <!-- ====== STITCH FROSTED GLASS HEADER ====== -->
+  <header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)] border-b border-white/5">
+    <div class="h-16 xl:h-20 w-full px-3 sm:px-gutter flex items-center justify-between gap-space-sm sm:gap-space-md max-w-7xl mx-auto">
+      <div class="flex items-center gap-2 sm:gap-space-lg flex-shrink-0">
+        <button type="button" onclick="if(window.history.length > 1) { history.back(); } else { window.location.href='index.html'; }" class="xl:hidden w-9 h-9 rounded-full bg-surface-container-high/80 hover:bg-surface-container-highest flex items-center justify-center text-on-surface hover:text-primary transition-colors flex-shrink-0" aria-label="Go Back">
+          <span class="material-symbols-outlined text-[18px]">arrow_back_ios_new</span>
+        </button>
+        <a class="flex items-center gap-space-sm group" href="index.html">
+          <div class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z" fill="#00eefc"></path>
+              <circle cx="9.5" cy="13.5" fill="#ff506e" r="1.5"></circle>
+            </svg>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-headline-sm text-sm sm:text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span></span>
+            <span class="font-label-sm text-[9px] sm:text-label-sm tracking-widest uppercase text-outline">CINEMA LABS</span>
+          </div>
         </a>
-        <ul class="nav-links">
-            <li><a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
-            <li><a href="view.html#anime" class="nav-link"><i class="fas fa-play-circle"></i> Browse</a></li>
-            <li><a href="download.html" class="nav-link active"><i class="fas fa-mobile-alt"></i> Mobile App</a></li>
-        </ul>
-        <a href="#download-now" class="btn-header-download">
-            <i class="fas fa-download"></i> Get App
+
+        <nav class="hidden xl:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-lowest/60 backdrop-blur-md">
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="index.html">Home</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="anime.html">Catalog / Browse</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="view.html#watchlist">Watchlist &amp; Hub</a>
+          <a class="px-space-md py-space-xs font-label-lg text-label-lg transition-all duration-200 bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full font-bold" href="download.html">Get App</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="admin.html">Admin Studio</a>
+        </nav>
+      </div>
+
+      <!-- Auth & Actions Cluster -->
+      <div class="flex items-center gap-2 sm:gap-space-md flex-shrink-0">
+        <a class="relative inline-flex items-center gap-1 sm:gap-space-xs px-2.5 sm:px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary shadow-[0_0_14px_rgba(255,80,110,0.35)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group" href="profile.html">
+          <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span>
+          <span class="font-label-sm text-[10px] sm:text-label-sm tracking-wider uppercase font-bold">VIP PASS</span>
         </a>
-    </header>
 
-    <!-- ====== HERO SECTION ====== -->
-    <main>
-        <section class="hero-section">
-            <div class="hero-content">
-
-                <h1 class="hero-title">
-                    Stream Anime & Movies <span>Anywhere</span>
-                </h1>
-                <p class="hero-desc">
-                    Experience ultra-fast 4K HDR playback, multi-language dual audio tracks, offline catalog navigation,
-                    and zero-buffering HLS video streaming.
-                </p>
-
-                <!-- Download Buttons -->
-                <div class="download-actions" id="download-now">
-                    <a href="https://serverbuket-12.s3.ap-south-1.amazonaws.com/app+/infinx.apk"
-                        class="download-btn primary-btn" id="apkDownloadLink" download target="_blank">
-                        <i class="fab fa-android"></i>
-                        <div class="btn-text">
-                            <span class="btn-small-text">Download Official</span>
-                            <span class="btn-large-text">Android APK</span>
-                        </div>
-                    </a>
-
-                    <a href="javascript:void(0)"
-                        onclick="alert('iOS App Store release coming soon! You can add InfinX to your home screen using Safari.')"
-                        class="download-btn">
-                        <i class="fab fa-apple"></i>
-                        <div class="btn-text">
-                            <span class="btn-small-text">Soon Available on</span>
-                            <span class="btn-large-text">iOS App</span>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="version-tag">
-                    <span><i class="fas fa-check-circle" style="color:#00ff88;"></i> Version 1.0.0 (Latest)</span>
-                    <span><i class="fas fa-file-archive"></i> ~85 MB</span>
-                    <span><i class="fas fa-shield-alt" style="color:#00e5ff;"></i> 100% Virus Free</span>
-                </div>
-            </div>
-
-            <!-- Phone App Mockup -->
-            <div class="hero-mockup-wrapper">
-                <div class="phone-frame">
-                    <div class="phone-notch"></div>
-                    <div class="phone-screen">
-                        <img src="Postes/SPY_x_FAMILY_Season_3_Key_Visual.webp" alt="InfinX Mobile App Preview"
-                            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== FEATURES GRID ====== -->
-        <section class="features-section">
-            <div class="section-header">
-                <h2 class="section-title">Built for Ultimate Performance</h2>
-                <p class="section-desc">Designed with modern mobile native performance for the smoothest anime and movie
-                    watching experience.</p>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-tachometer-alt"></i></div>
-                    <h3 class="feature-title">0ms Offline App Load</h3>
-                    <p class="feature-desc">All UI pages and player assets load instantly from local device storage
-                        without waiting for page downloads.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-language"></i></div>
-                    <h3 class="feature-title">Multi-Audio & Subtitles</h3>
-                    <p class="feature-desc">Seamlessly switch audio tracks (Hindi, English, Japanese) and customize
-                        WebVTT subtitles on the fly.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-expand"></i></div>
-                    <h3 class="feature-title">Smart Fullscreen & Crop</h3>
-                    <p class="feature-desc">Supports Notch Cover Fill, Stretch Fill, and Original Aspect Ratio contain
-                        modes for edge-to-edge viewing.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-sync-alt"></i></div>
-                    <h3 class="feature-title">Watchlist & Resume Sync</h3>
-                    <p class="feature-desc">Your playback history and favorite anime sync automatically across desktop
-                        and mobile devices.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== INSTALLATION GUIDE ====== -->
-        <section class="install-guide-section">
-            <div class="guide-container">
-                <div class="section-header">
-                    <h2 class="section-title">How to Install Android APK</h2>
-                    <p class="section-desc">Follow these 3 simple steps to get InfinX running on your Android device in
-                        seconds.</p>
-                </div>
-
-                <div class="steps-grid">
-                    <div class="step-card">
-                        <div class="step-number">01</div>
-                        <h3 class="step-title">Download APK</h3>
-                        <p class="step-desc">Tap the "Android APK" button above to start downloading the official
-                            package file.</p>
-                    </div>
-
-                    <div class="step-card">
-                        <div class="step-number">02</div>
-                        <h3 class="step-title">Allow Installation</h3>
-                        <p class="step-desc">If prompted, enable "Install from Unknown Sources" in your browser or
-                            Android settings.</p>
-                    </div>
-
-                    <div class="step-card">
-                        <div class="step-number">03</div>
-                        <h3 class="step-title">Tap Install & Enjoy</h3>
-                        <p class="step-desc">Open the downloaded `.apk` file, tap Install, and launch InfinX for instant
-                            4K streaming!</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- ====== FOOTER ====== -->
-    <footer class="site-footer">
-        <div class="footer-logo">
-            <a href="index.html" class="brand-logo" style="font-size: 1.4rem;">
-                <i class="fas fa-infinity"></i>
-                <span>InfinX Stream</span>
-            </a>
+        <div id="authHeader" class="flex items-center gap-2">
+          <a href="index.html#login" class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm sm:font-label-md transition-all">Sign In</a>
         </div>
-        <p>&copy; 2026 InfinX Streaming Platform. All rights reserved.</p>
-    </footer>
+      </div>
+    </div>
+  </header>
 
-    <script>
-        // Dynamically point APK download link to backend server if needed
-        const SERVER_ORIGIN = (window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
-            ? (localStorage.getItem('infinx_server_url') || 'http://13.202.95.5:8000')
-            : '';
+  <main class="w-full pt-16 xl:pt-20 pb-24 xl:pb-12 bg-surface-container-lowest min-h-screen">
+    <div class="flex flex-col w-full">
+      <!-- Top Ambient Glow Field & Radial Lighting -->
+      <div class="relative w-full overflow-hidden">
+        <div class="absolute -top-32 left-1/4 w-96 h-96 bg-primary-container/20 rounded-full blur-[140px] pointer-events-none"></div>
+        <div class="absolute top-10 right-1/4 w-[30rem] h-[30rem] bg-secondary-container/15 rounded-full blur-[160px] pointer-events-none"></div>
+        <div class="absolute top-96 left-1/2 -translate-x-1/2 w-[42rem] h-64 bg-tertiary-container/15 rounded-full blur-[180px] pointer-events-none"></div>
 
-        const apkBtn = document.getElementById('apkDownloadLink');
-        if (apkBtn) {
-            apkBtn.href = 'https://serverbuket-12.s3.ap-south-1.amazonaws.com/app+/infinx.apk';
+        <!-- ==================== MOBILE DEDICATED LAYOUT (STITCH SPECIFICATION) ==================== -->
+        <div class="block md:hidden w-full px-3 pt-4 pb-8 space-y-6 text-left">
+          <!-- Mobile Hero Header -->
+          <div class="relative flex flex-col gap-2 z-10 pt-2">
+            <!-- Device Detection Chip -->
+            <div id="mobileDeviceChip" class="self-start inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high/90 backdrop-blur-md shadow-sm border border-white/5">
+              <span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span>
+              <span class="material-symbols-outlined text-secondary-fixed text-[16px]" id="mobileDeviceIcon">smartphone</span>
+              <span class="font-label-sm text-[11px] text-on-surface tracking-wider font-mono" id="mobileDeviceText">DETECTED: ANDROID (ARM64-v8a)</span>
+            </div>
+            <h1 class="font-headline-lg text-2xl font-black tracking-tight text-white mt-1 leading-tight">
+              Experience <span class="text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.4)]">Pure Uncompressed</span> Anime <span class="text-primary-fixed drop-shadow-[0_0_12px_rgba(255,80,110,0.4)]">Anywhere</span>.
+            </h1>
+            <p class="font-body-md text-xs text-on-surface-variant leading-relaxed">
+              Stream &amp; download 80Mbps studio masters offline directly to your device storage with zero transcoding artifacts.
+            </p>
+          </div>
+
+          <!-- Primary Direct Download Hero Card (Obsidian Glass) -->
+          <div class="relative flex flex-col p-4 rounded-2xl bg-surface-container/90 backdrop-blur-2xl shadow-xl overflow-hidden border border-white/5">
+            <div class="absolute -right-12 -top-12 w-32 h-32 bg-primary-container/25 rounded-full blur-2xl pointer-events-none"></div>
+            <!-- Header with Version Tag -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-secondary-container shadow-inner">
+                  <span class="material-symbols-outlined text-[24px]">android</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-lg text-sm font-bold text-white truncate">INFINX Mobile Client</span>
+                  <span class="font-label-sm text-[11px] text-secondary-fixed-dim">Official Master Channel</span>
+                </div>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-[10px] font-bold border border-primary-container/40 shadow-[0_0_10px_rgba(255,80,110,0.3)]">v4.2.0-STABLE</span>
+            </div>
+
+            <!-- Metadata Badges -->
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="px-2.5 py-1 rounded-md bg-surface-container-highest/90 text-on-surface font-label-sm text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px] text-secondary-container">inventory_2</span> 64.2 MB
+              </span>
+              <span class="px-2.5 py-1 rounded-md bg-surface-container-highest/90 text-on-surface font-label-sm text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px] text-primary-fixed">system_update</span> Android 10.0+
+              </span>
+              <span class="px-2.5 py-1 rounded-md bg-surface-container-highest/90 text-on-surface font-label-sm text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px] text-tertiary">memory</span> Vulkan / AV1 HW
+              </span>
+            </div>
+
+            <!-- Big Neon Crimson Action Button -->
+            <a class="relative group flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-full bg-primary-container text-white font-label-lg text-sm font-bold shadow-[0_0_24px_rgba(255,80,110,0.6)] active:scale-[0.98] transition-all" href="/download/infinx-anime-v4.2.0.apk" download id="download-trigger">
+              <span class="material-symbols-outlined text-[22px] animate-bounce">download</span>
+              <span>Download Android APK (v4.2.0)</span>
+            </a>
+
+            <!-- Checksum Verification Area -->
+            <div class="mt-4 p-3 rounded-xl bg-surface-container-lowest/80 flex flex-col gap-1.5 border border-white/5">
+              <div class="flex items-center justify-between text-on-surface-variant font-label-sm text-[11px]">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px] text-secondary-container">verified_user</span> SHA-256 Checksum
+                </span>
+                <span class="text-secondary-fixed transition-opacity opacity-0 font-label-sm text-[11px] font-semibold" id="copy-status">COPIED!</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 bg-surface-container-high/60 px-2.5 py-1.5 rounded-lg">
+                <code class="font-label-sm text-[11px] font-mono text-on-surface-variant truncate select-all" id="checksum-text">e9b04f7c1328ab9f906f3db1887e2b10a2f4c3986</code>
+                <button aria-label="Copy Checksum" class="p-1 rounded text-secondary-container hover:text-white active:scale-90 transition-transform flex-shrink-0" id="copy-btn" type="button">
+                  <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Step Sideload Quick Guide Stepper -->
+          <div class="flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <h2 class="font-headline-sm text-sm font-bold text-white flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-secondary-container text-[18px]">flash_on</span>
+                Quick Sideload Guide
+              </h2>
+              <span class="font-label-sm text-[11px] text-on-surface-variant">Takes ~30 sec</span>
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="w-6 h-6 rounded-full bg-secondary-container/20 text-secondary-container flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_0_8px_rgba(0,238,252,0.3)]">
+                  1
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-semibold text-white">Save APK File</span>
+                  <span class="font-body-sm text-[11px] text-on-surface-variant">Tap the crimson download button above and confirm download in your browser.</span>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="w-6 h-6 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_0_8px_rgba(255,80,110,0.3)]">
+                  2
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-semibold text-white">Allow Installation</span>
+                  <span class="font-body-sm text-[11px] text-on-surface-variant">If prompted by Android, toggle "Allow install from this source" in settings.</span>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="w-6 h-6 rounded-full bg-tertiary-container/30 text-tertiary-fixed flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_0_8px_rgba(160,120,255,0.4)]">
+                  3
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-semibold text-white">Launch &amp; Immerse</span>
+                  <span class="font-body-sm text-[11px] text-on-surface-variant">Open INFINX to initiate high-bitrate AV1 direct rendering on your screen.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Core Features 2x2 Bento Grid -->
+          <div class="flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <h2 class="font-headline-sm text-sm font-bold text-white flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-primary-container text-[18px]">stars</span>
+                Built for Pure Fidelity
+              </h2>
+              <span class="font-label-sm text-[11px] text-secondary-fixed">80 Mbps Bitstream</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="flex flex-col p-3 rounded-xl bg-surface-container-low justify-between h-32 border border-white/5">
+                <div class="w-7 h-7 rounded-lg bg-secondary-container/15 flex items-center justify-center text-secondary-container">
+                  <span class="material-symbols-outlined text-[16px]">download_for_offline</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-bold text-white truncate">Master Storage</span>
+                  <span class="font-body-sm text-[10px] text-on-surface-variant line-clamp-2">Offline uncompressed 1080p &amp; 4K video streams.</span>
+                </div>
+              </div>
+              <div class="flex flex-col p-3 rounded-xl bg-surface-container-low justify-between h-32 border border-white/5">
+                <div class="w-7 h-7 rounded-lg bg-primary-container/15 flex items-center justify-center text-primary-fixed">
+                  <span class="material-symbols-outlined text-[16px]">sync</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-bold text-white truncate">State Sync</span>
+                  <span class="font-body-sm text-[10px] text-on-surface-variant line-clamp-2">&lt;50ms position handoff across mobile &amp; TV screens.</span>
+                </div>
+              </div>
+              <div class="flex flex-col p-3 rounded-xl bg-surface-container-low justify-between h-32 border border-white/5">
+                <div class="w-7 h-7 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary-fixed">
+                  <span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-bold text-white truncate">Tokyo Edge CDN</span>
+                  <span class="font-body-sm text-[10px] text-on-surface-variant line-clamp-2">Zero-buffer raw multiplex routed from Akihabara nodes.</span>
+                </div>
+              </div>
+              <div class="flex flex-col p-3 rounded-xl bg-surface-container-low justify-between h-32 border border-white/5">
+                <div class="w-7 h-7 rounded-lg bg-secondary-container/15 flex items-center justify-center text-secondary-fixed">
+                  <span class="material-symbols-outlined text-[16px]">battery_charging_full</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-xs font-bold text-white truncate">True AMOLED 0-Floor</span>
+                  <span class="font-body-sm text-[10px] text-on-surface-variant line-clamp-2">Pure pixel-off pitch black reduces battery drain by 42%.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alternative Platforms Interactive Deck -->
+          <div class="flex flex-col gap-2.5">
+            <h2 class="font-headline-sm text-sm font-bold text-white flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-secondary-fixed text-[18px]">devices_other</span>
+              Other Devices &amp; Matrix Clients
+            </h2>
+            <div class="flex flex-col gap-2">
+              <!-- Android TV -->
+              <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">tv</span>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-label-md text-xs font-semibold text-white truncate">Android TV &amp; FireOS</span>
+                    <span class="font-body-sm text-[10px] text-on-surface-variant truncate">D-Pad HUD • 4K HDR Atmos</span>
+                  </div>
+                </div>
+                <a href="/download/infinx-tv-v4.2.0.apk" download class="px-3 py-1.5 rounded-full bg-surface-container-high text-secondary-fixed font-label-sm text-xs font-semibold shrink-0 active:scale-95 transition-transform">
+                  APK (TV)
+                </a>
+              </div>
+              <!-- Progressive Web App -->
+              <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary-container shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">captive_portal</span>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-label-md text-xs font-semibold text-white truncate">Instant Web PWA</span>
+                    <span class="font-body-sm text-[10px] text-on-surface-variant truncate">Zero install • WebAssembly AV1</span>
+                  </div>
+                </div>
+                <button class="px-3 py-1.5 rounded-full bg-secondary-container/20 text-secondary-container font-label-sm text-xs font-semibold shrink-0 active:scale-95 transition-transform" id="pwa-install-btn" type="button" onclick="if(window.deferredPrompt){window.deferredPrompt.prompt();}else{alert('To install, tap Share and then Add to Home Screen in your browser.');}">
+                  Install PWA
+                </button>
+              </div>
+              <!-- Apple iOS -->
+              <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-fixed shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">file_download</span>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-label-md text-xs font-semibold text-white truncate">Apple iOS &amp; iPadOS</span>
+                    <span class="font-body-sm text-[10px] text-on-surface-variant truncate">Safari Add-to-Home &amp; TestFlight</span>
+                  </div>
+                </div>
+                <button class="px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold shrink-0 active:scale-95 transition-transform" type="button" onclick="alert('iOS Guide: Open this page in Safari, tap the Share icon, then select Add to Home Screen.')">
+                  Guide
+                </button>
+              </div>
+              <!-- Desktop Matrix Client -->
+              <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-white/5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center text-tertiary-fixed shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">laptop_chromebook</span>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-label-md text-xs font-semibold text-white truncate">Desktop Matrix Client</span>
+                    <span class="font-body-sm text-[10px] text-on-surface-variant truncate">Windows, macOS &amp; Arch Linux</span>
+                  </div>
+                </div>
+                <button class="px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold shrink-0 active:scale-95 transition-transform" type="button" onclick="alert('Desktop Clients are available on Windows 64-bit and macOS Universal binaries.');">
+                  Get v4.2
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Guarantee Banner -->
+          <div class="p-3 rounded-xl bg-surface-container-highest/60 flex items-center gap-3 border border-white/5">
+            <span class="material-symbols-outlined text-secondary-container text-[24px] shrink-0">security</span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-md text-xs font-bold text-white">Cryptographically Signed Binaries</span>
+              <span class="font-body-sm text-[10px] text-on-surface-variant">Built on automated reproducible GitHub CI/CD pipelines with zero third-party telemetry.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== DESKTOP SHOWCASE STAGE (MD+ SCREENS) ==================== -->
+        <section class="hidden md:flex relative w-full px-3 sm:px-gutter pt-space-lg pb-space-xl max-w-7xl mx-auto flex-col items-center text-center">
+          <!-- Telemetry Chip -->
+          <div class="inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-high/90 shadow-[0_0_16px_rgba(0,238,252,0.3)] mb-space-md border border-white/5">
+            <span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_10px_#00eefc]"></span>
+            <span class="font-label-sm text-[10px] sm:text-xs uppercase tracking-widest text-secondary-container font-mono">Client Architecture Build v4.2.0 • Tokyo CDN Matrix</span>
+          </div>
+
+          <!-- Main Headline -->
+          <h1 class="font-display-hero text-2xl sm:text-3xl md:text-5xl lg:text-6xl text-on-surface font-extrabold tracking-tight max-w-5xl leading-tight">
+            Experience Pure Uncompressed <br class="hidden md:inline" />
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-secondary-container via-primary to-primary-container drop-shadow-[0_0_28px_rgba(255,80,110,0.4)]">
+              Anime Anywhere.
+            </span>
+            <span class="block text-on-surface-variant font-headline-lg text-base sm:text-lg md:text-2xl mt-space-xs font-normal">
+              Mobile, Tablet &amp; Android TV.
+            </span>
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="mt-space-md font-body-lg text-xs sm:text-sm md:text-base text-outline max-w-3xl leading-relaxed">
+            Stream 80Mbps studio masters offline, sync your watch progress seamlessly across devices, and experience low-latency Danmaku comments on the go.
+          </p>
+
+          <!-- Multi-Device Hardware Glass Mockup Stage -->
+          <div class="relative w-full mt-space-md sm:mt-space-xl pt-space-md flex items-center justify-center overflow-hidden">
+            <div class="relative w-full max-w-5xl h-[300px] sm:h-[380px] md:h-[480px] lg:h-[520px] flex items-center justify-center">
+              <!-- TV UI Mockup (Background Center / Layer 1) -->
+              <div class="absolute w-[94%] sm:w-[84%] md:w-[78%] h-[200px] sm:h-[260px] md:h-[360px] lg:h-[400px] rounded-2xl bg-surface-container-low shadow-[0_20px_60px_rgba(0,0,0,0.95)] overflow-hidden transform -translate-y-4 border border-white/10">
+                <div class="relative w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600');">
+                  <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/50 to-transparent"></div>
+                  <!-- TV Interface Overlays -->
+                  <div class="absolute top-4 left-6 flex items-center gap-space-md">
+                    <span class="font-headline-sm text-sm sm:text-lg font-extrabold text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.8)]">INFINX TV</span>
+                    <span class="px-2 py-0.5 rounded bg-surface-container-highest/90 text-primary-fixed font-label-sm text-[9px] sm:text-[10px] uppercase font-bold">Dolby Vision Active</span>
+                  </div>
+                  <div class="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 flex items-end justify-between">
+                    <div class="text-left">
+                      <span class="font-label-sm text-[9px] sm:text-[10px] text-secondary tracking-widest uppercase">Now Airing Tokyo Master</span>
+                      <div class="font-headline-md text-sm sm:text-lg md:text-xl text-on-surface font-bold">CYBER: NEO GENESIS 2026</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 sm:px-3 py-1 rounded-lg bg-primary-container text-on-primary-container font-label-sm text-[10px] sm:text-xs font-bold shadow-[0_0_12px_#ff506e]">CONTINUE S1:E12</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tablet Catalog Glass Pane (Midground Left / Layer 2) -->
+              <div class="absolute left-0 md:left-6 lg:left-12 bottom-2 w-[55%] sm:w-[52%] md:w-[42%] h-[170px] sm:h-[220px] md:h-[300px] rounded-2xl bg-surface-container-high/90 shadow-[0_24px_50px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden transform -rotate-3 hover:rotate-0 transition-transform duration-500 border border-white/10">
+                <div class="relative w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800');">
+                  <div class="absolute inset-0 bg-gradient-to-tr from-surface-container-lowest/90 via-surface-container-lowest/40 to-transparent"></div>
+                  <div class="p-3 sm:p-4 flex flex-col justify-between h-full relative z-10 text-left">
+                    <div class="flex items-center justify-between">
+                      <span class="font-label-sm text-[10px] sm:text-xs uppercase text-secondary-container tracking-wider font-bold">Tablet Catalog</span>
+                      <span class="material-symbols-outlined text-[16px] sm:text-[18px] text-outline">tablet_mac</span>
+                    </div>
+                    <div class="space-y-0.5 sm:space-y-1">
+                      <div class="px-1.5 sm:px-2 py-0.5 inline-block rounded bg-surface-container-low text-secondary font-label-sm text-[9px] sm:text-[10px]">18 Eps DL</div>
+                      <div class="font-headline-sm text-xs sm:text-sm text-on-surface font-semibold truncate">Blade of the Celestial</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Smartphone Mobile Player (Foreground Right / Layer 3) -->
+              <div class="absolute right-0 sm:right-2 md:right-8 lg:right-16 bottom-0 w-[38%] sm:w-[34%] md:w-[26%] h-[200px] sm:h-[260px] md:h-[350px] rounded-2xl bg-surface-container-lowest shadow-[0_28px_60px_rgba(0,238,252,0.25)] overflow-hidden transform rotate-6 hover:rotate-0 transition-transform duration-500 border border-cyan-500/30">
+                <div class="relative w-full h-full flex flex-col justify-between p-2.5 sm:p-3.5 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1563089145-599997674d42?w=600');">
+                  <div class="absolute inset-0 bg-gradient-to-b from-surface-container-lowest/80 via-transparent to-surface-container-lowest/90"></div>
+                  <!-- Danmaku Comments Micro-Track -->
+                  <div class="relative z-10 space-y-1.5 mt-2 pointer-events-none text-left">
+                    <div class="px-2 py-0.5 rounded-full bg-surface-container-low/80 backdrop-blur-md text-secondary-container font-label-sm text-[10px] inline-block shadow-[0_0_8px_rgba(0,238,252,0.4)]">
+                      ⚡ 80 Mbps zero-compression bitstream!
+                    </div>
+                    <div class="px-2 py-0.5 rounded-full bg-surface-container-low/80 backdrop-blur-md text-primary-fixed font-label-sm text-[10px] block ml-3 shadow-[0_0_8px_rgba(255,80,110,0.3)]">
+                      🔥🔥 0 Buffering on Tokyo edge!
+                    </div>
+                  </div>
+                  <!-- Mini Controls -->
+                  <div class="relative z-10 bg-surface-container-high/90 backdrop-blur-xl p-2 rounded-xl space-y-1 text-left">
+                    <div class="flex items-center justify-between text-outline font-label-sm text-[10px]">
+                      <span>14:20</span>
+                      <span class="text-secondary-container font-bold">4K OLED DIRECT</span>
+                      <span>24:00</span>
+                    </div>
+                    <div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+                      <div class="h-full bg-primary-container w-3/5 shadow-[0_0_8px_#ff506e]"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DIRECT DOWNLOAD CLUSTER (DESKTOP MD+ ONLY) -->
+        <section class="hidden md:block relative w-full px-gutter py-space-xl max-w-7xl mx-auto">
+          <div class="flex flex-col gap-space-lg">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
+              <div>
+                <span class="font-label-sm text-xs uppercase tracking-widest text-primary-container font-bold">RELEASE STAGING ARCHIVE</span>
+                <h2 class="font-headline-lg text-2xl md:text-3xl text-on-surface font-extrabold mt-1">Direct Download Cluster</h2>
+              </div>
+              <div class="flex items-center gap-space-sm text-outline font-body-sm text-xs">
+                <span class="material-symbols-outlined text-secondary-container text-[18px]">verified_user</span>
+                <span>All binaries signed with Tokyo Lab 4096-bit SHA-256 Certificates</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-stretch">
+              <!-- Card 1: Android Universal APK (7 Cols) -->
+              <div class="lg:col-span-7 rounded-2xl bg-surface-container p-space-lg flex flex-col justify-between shadow-[0_0_35px_rgba(255,80,110,0.18)] relative overflow-hidden group border border-white/5">
+                <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-primary-container/15 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-700"></div>
+                <div class="relative z-10 flex flex-col gap-space-md">
+                  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+                    <div class="flex items-center gap-space-sm">
+                      <div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary-container shadow-[0_0_16px_rgba(255,80,110,0.35)]">
+                        <span class="material-symbols-outlined text-[28px]">android</span>
+                      </div>
+                      <div>
+                        <h3 class="font-headline-md text-lg text-on-surface font-bold flex items-center gap-2">
+                          Android Universal APK
+                          <span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary font-label-sm text-[10px] font-semibold uppercase">Official</span>
+                        </h3>
+                        <p class="font-body-sm text-xs text-outline">Optimized for flagship Qualcomm Snapdragon, Google Tensor &amp; Dimensity SOCs</p>
+                      </div>
+                    </div>
+                    <span class="font-label-sm text-xs px-3 py-1 rounded-full bg-surface-container-lowest text-secondary-container font-mono">v4.2.0-release</span>
+                  </div>
+
+                  <!-- Metadata specs tags -->
+                  <div class="grid grid-cols-3 gap-space-sm py-space-sm bg-surface-container-low/70 rounded-xl px-space-md">
+                    <div>
+                      <span class="block font-label-sm text-[10px] text-outline uppercase">Package Size</span>
+                      <span class="font-label-lg text-sm text-on-surface font-bold">64.2 MB</span>
+                    </div>
+                    <div>
+                      <span class="block font-label-sm text-[10px] text-outline uppercase">Target OS</span>
+                      <span class="font-label-lg text-sm text-on-surface font-bold">Android 10.0+</span>
+                    </div>
+                    <div>
+                      <span class="block font-label-sm text-[10px] text-outline uppercase">AV Pipeline</span>
+                      <span class="font-label-lg text-sm text-secondary-container font-bold">Vulkan / AV1</span>
+                    </div>
+                  </div>
+
+                  <!-- MD5 Checksum interactive copy box -->
+                  <div class="flex flex-col gap-1">
+                    <span class="font-label-sm text-[10px] text-outline uppercase tracking-wider">MD5 Checksum Verification</span>
+                    <div class="flex items-center justify-between gap-space-sm bg-surface-container-lowest p-2.5 rounded-xl font-mono text-xs text-on-surface-variant">
+                      <span class="truncate" id="apk-md5">9e107d9d372bb6826bd81d3542a419d6</span>
+                      <button class="px-2.5 py-1 rounded bg-surface-container-high text-secondary hover:text-on-surface font-label-sm text-[10px] uppercase transition-colors shrink-0" onclick="navigator.clipboard.writeText('9e107d9d372bb6826bd81d3542a419d6'); this.innerText='COPIED!';">
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- CTA Button -->
+                  <div class="pt-2">
+                    <a href="/download/infinx-anime-v4.2.0.apk" download class="w-full py-3.5 px-space-md rounded-xl bg-primary-container text-on-primary-container font-label-lg text-sm uppercase tracking-wider font-extrabold shadow-[0_0_24px_rgba(255,80,110,0.55)] hover:shadow-[0_0_35px_rgba(255,80,110,0.85)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2">
+                      <span class="material-symbols-outlined text-[20px]">download</span>
+                      <span>Download Android Universal APK (v4.2.0)</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Secondary Cluster: Android TV & Progressive Web App (5 Cols) -->
+              <div class="lg:col-span-5 flex flex-col gap-space-lg">
+                <!-- Card 2: Android TV / FireTV APK -->
+                <div class="rounded-2xl bg-surface-container p-space-md flex flex-col justify-between shadow-xl border border-white/5">
+                  <div class="flex items-center gap-space-sm mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-secondary-container shadow-[0_0_12px_rgba(0,238,252,0.25)]">
+                      <span class="material-symbols-outlined text-[24px]">tv</span>
+                    </div>
+                    <div>
+                      <h4 class="font-headline-sm text-sm text-on-surface font-bold">Android TV &amp; FireTV Edition</h4>
+                      <p class="font-body-sm text-[11px] text-outline">D-Pad navigation with leanback cinema UI</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-outline mb-3">
+                    <span>Size: <strong>48.1 MB</strong></span>
+                    <span>Android TV 9.0+</span>
+                  </div>
+                  <a href="/download/infinx-tv-v4.2.0.apk" download class="w-full py-2.5 rounded-xl bg-surface-container-high hover:bg-secondary-container hover:text-on-secondary-container text-secondary font-label-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">tv</span>
+                    <span>Download TV APK</span>
+                  </a>
+                </div>
+
+                <!-- Card 3: PWA / Desktop App -->
+                <div class="rounded-2xl bg-surface-container p-space-md flex flex-col justify-between shadow-xl border border-white/5">
+                  <div class="flex items-center gap-space-sm mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-tertiary shadow-[0_0_12px_rgba(160,120,255,0.25)]">
+                      <span class="material-symbols-outlined text-[24px]">laptop_chromebook</span>
+                    </div>
+                    <div>
+                      <h4 class="font-headline-sm text-sm text-on-surface font-bold">Progressive Web App (PWA)</h4>
+                      <p class="font-body-sm text-[11px] text-outline">Zero install for iOS, iPadOS, macOS &amp; Windows</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-outline mb-3">
+                    <span>Size: <strong>Instant Cache</strong></span>
+                    <span>All Browsers</span>
+                  </div>
+                  <button onclick="if(window.deferredPrompt){window.deferredPrompt.prompt();}else{window.location.href='index.html';}" class="w-full py-2.5 rounded-xl bg-surface-container-high hover:bg-tertiary hover:text-black text-tertiary font-label-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">add_to_home_screen</span>
+                    <span>Install PWA to Desktop / Home</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3-STEP SIDELOAD PROTOCOL (DESKTOP MD+ ONLY) -->
+        <section class="hidden md:block relative w-full px-gutter py-space-xl max-w-7xl mx-auto border-t border-white/5">
+          <div class="flex flex-col gap-space-lg">
+            <div>
+              <span class="font-label-sm text-xs uppercase tracking-widest text-secondary-container font-bold">MANUAL SIDELOAD GUIDE</span>
+              <h2 class="font-headline-lg text-2xl font-extrabold text-on-surface mt-1">3-Step Direct Installation Protocol</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+              <div class="p-space-lg rounded-2xl bg-surface-container flex flex-col gap-3 border border-white/5">
+                <div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container font-bold flex items-center justify-center text-sm shadow-[0_0_10px_#ff506e]">01</div>
+                <h3 class="font-headline-sm text-sm font-bold text-white">Authorize Unknown Sources</h3>
+                <p class="text-outline text-xs leading-relaxed">Open Android <strong>Settings &gt; Security &gt; Install Unknown Apps</strong>, and enable installation permission for your browser.</p>
+              </div>
+
+              <div class="p-space-lg rounded-2xl bg-surface-container flex flex-col gap-3 border border-white/5">
+                <div class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container font-bold flex items-center justify-center text-sm shadow-[0_0_10px_#00eefc]">02</div>
+                <h3 class="font-headline-sm text-sm font-bold text-white">Install Package File</h3>
+                <p class="text-outline text-xs leading-relaxed">Tap on the downloaded <code>infinx-anime-v4.2.0.apk</code> file in your notification bar or file manager to initiate installation.</p>
+              </div>
+
+              <div class="p-space-lg rounded-2xl bg-surface-container flex flex-col gap-3 border border-white/5">
+                <div class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary-container font-bold flex items-center justify-center text-sm shadow-[0_0_10px_#a078ff]">03</div>
+                <h3 class="font-headline-sm text-sm font-bold text-white">Enter Cinema Gateway</h3>
+                <p class="text-outline text-xs leading-relaxed">Launch the app, sign in with your Otaku credentials to automatically synchronize your watch progress and VIP perks.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FAQ ACCORDION -->
+        <section class="relative w-full px-gutter py-space-xl max-w-7xl mx-auto border-t border-white/5">
+          <div class="flex flex-col gap-space-md max-w-3xl mx-auto">
+            <h2 class="font-headline-lg text-2xl font-extrabold text-on-surface text-center mb-4">Frequently Asked Questions</h2>
+
+            <div class="space-y-3">
+              <details class="group p-4 rounded-xl bg-surface-container border border-white/5 cursor-pointer">
+                <summary class="font-headline-sm text-sm font-bold text-white flex items-center justify-between list-none">
+                  <span>Is the Android APK safe and verified?</span>
+                  <span class="material-symbols-outlined group-open:rotate-180 transition-transform text-outline">expand_more</span>
+                </summary>
+                <p class="text-outline text-xs mt-3 leading-relaxed">
+                  Yes, 100%. Every build is digitally signed with Tokyo Lab 4096-bit SHA-256 certificates, compiled directly from clean source code, and strictly free of bloatware or 3rd-party tracking telemetry.
+                </p>
+              </details>
+
+              <details class="group p-4 rounded-xl bg-surface-container border border-white/5 cursor-pointer">
+                <summary class="font-headline-sm text-sm font-bold text-white flex items-center justify-between list-none">
+                  <span>Does the TV edition support standard remote controls?</span>
+                  <summary class="hidden"></summary>
+                  <span class="material-symbols-outlined group-open:rotate-180 transition-transform text-outline">expand_more</span>
+                </summary>
+                <p class="text-outline text-xs mt-3 leading-relaxed">
+                  Yes! The Android TV APK is built specifically for D-Pad Leanback navigation, including dedicated buttons for 10-second skip, subtitle switching, and server hopping with your remote control.
+                </p>
+              </details>
+
+              <details class="group p-4 rounded-xl bg-surface-container border border-white/5 cursor-pointer">
+                <summary class="font-headline-sm text-sm font-bold text-white flex items-center justify-between list-none">
+                  <span>Can I download anime episodes for offline viewing?</span>
+                  <span class="material-symbols-outlined group-open:rotate-180 transition-transform text-outline">expand_more</span>
+                </summary>
+                <p class="text-outline text-xs mt-3 leading-relaxed">
+                  Yes. The mobile app allows one-tap caching of full anime episodes in 1080p CinePure quality with dual-audio tracks for flights or offline commutes.
+                </p>
+              </details>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Stitch Frosted Glass Footer -->
+  <footer class="w-full bg-surface-container-lowest shadow-[0_-8px_32px_rgba(0,0,0,0.9)] border-t border-white/5">
+    <div class="w-full px-gutter py-space-xl max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl">
+        <div class="lg:col-span-2 flex flex-col gap-space-md">
+          <div class="flex items-center gap-space-sm">
+            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container shadow-[0_0_12px_rgba(0,238,252,0.3)]">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178z" fill="#00eefc"></path>
+              </svg>
+            </div>
+            <span class="font-headline-sm text-headline-sm font-extrabold tracking-wide text-secondary-container">INFINX<span class="text-primary-container ml-1">ANIME</span></span>
+          </div>
+          <p class="font-body-md text-body-md text-outline max-w-sm">Theatre Grade OLED Anime Streaming. Pure AMOLED zero-floor masterings, uncompressed audio bitrate, and simultaneous Tokyo transmissions.</p>
+        </div>
+
+        <div class="flex flex-col gap-space-sm">
+          <span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Browse</span>
+          <ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline">
+            <li class="hover:text-secondary-container transition-colors"><a href="anime.html">Top Airing Masterpieces</a></li>
+            <li class="hover:text-secondary-container transition-colors"><a href="anime.html">New Season Releases</a></li>
+          </ul>
+        </div>
+
+        <div class="flex flex-col gap-space-sm">
+          <span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Community</span>
+          <ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline">
+            <li class="hover:text-secondary-container transition-colors"><a href="view.html#watchlist">My Watchlist</a></li>
+            <li class="hover:text-secondary-container transition-colors"><a href="view.html#history">Watch History</a></li>
+            <li class="hover:text-secondary-container transition-colors"><a href="profile.html">Otaku Passport</a></li>
+          </ul>
+        </div>
+
+        <div class="flex flex-col gap-space-sm">
+          <span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">System</span>
+          <ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline">
+            <li class="hover:text-secondary-container transition-colors"><a href="download.html">Get App</a></li>
+            <li class="hover:text-secondary-container transition-colors"><a href="admin.html">Admin Studio</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-space-xl pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md border-t border-white/5">
+        <span class="font-body-sm text-body-sm text-outline">© 2026 INFINX ANIME BROADCAST CORP. ALL RIGHTS RESERVED.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Progressive Web App install prompt detection
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+    });
+
+    // Dynamic Device Detection for Mobile Download Hero
+    document.addEventListener('DOMContentLoaded', () => {
+      const ua = navigator.userAgent || '';
+      const chipText = document.getElementById('mobileDeviceText');
+      const chipIcon = document.getElementById('mobileDeviceIcon');
+
+      if (chipText && chipIcon) {
+        if (/Android/i.test(ua)) {
+          chipText.textContent = 'DETECTED: ANDROID (ARM64-v8a)';
+          chipIcon.textContent = 'smartphone';
+        } else if (/iPhone|iPad|iPod/i.test(ua)) {
+          chipText.textContent = 'DETECTED: APPLE iOS (A-Bionic)';
+          chipIcon.textContent = 'phone_iphone';
+        } else if (/Windows/i.test(ua)) {
+          chipText.textContent = 'DETECTED: WINDOWS (x86_64 DirectPlay)';
+          chipIcon.textContent = 'laptop_windows';
+        } else if (/Macintosh|Mac OS X/i.test(ua)) {
+          chipText.textContent = 'DETECTED: macOS (Apple Silicon)';
+          chipIcon.textContent = 'laptop_mac';
+        } else if (/Linux/i.test(ua)) {
+          chipText.textContent = 'DETECTED: LINUX (Vulkan AV1)';
+          chipIcon.textContent = 'terminal';
         }
-    </script>
+      }
+
+      // Checksum copy handler
+      const copyBtn = document.getElementById('copy-btn');
+      const checksumText = document.getElementById('checksum-text');
+      const copyStatus = document.getElementById('copy-status');
+
+      if (copyBtn && checksumText && copyStatus) {
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(checksumText.innerText.trim());
+            copyStatus.classList.remove('opacity-0');
+            setTimeout(() => {
+              copyStatus.classList.add('opacity-0');
+            }, 2000);
+          } catch (err) {
+            copyStatus.innerText = 'COPIED!';
+            copyStatus.classList.remove('opacity-0');
+            setTimeout(() => copyStatus.classList.add('opacity-0'), 2000);
+          }
+        });
+      }
+
+      // Download trigger simulated feedback
+      const downloadTrigger = document.getElementById('download-trigger');
+      if (downloadTrigger) {
+        downloadTrigger.addEventListener('click', () => {
+          const originalHTML = downloadTrigger.innerHTML;
+          downloadTrigger.innerHTML = `
+            <span class="material-symbols-outlined text-[20px] animate-spin">refresh</span>
+            <span>Initiating Secure Stream...</span>
+          `;
+          setTimeout(() => {
+            downloadTrigger.innerHTML = `
+              <span class="material-symbols-outlined text-[20px] text-secondary-container">check_circle</span>
+              <span>APK Transfer Started</span>
+            `;
+            setTimeout(() => {
+              downloadTrigger.innerHTML = originalHTML;
+            }, 3000);
+          }, 900);
+        });
+      }
+    });
+  </script>
+
+  <!-- Floating Glass Cyberpunk Bottom Navigation Bar (Stitch Specification) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none xl:hidden" aria-label="Mobile Navigation">
+    <div class="px-4 pb-3 pt-1 max-w-md mx-auto pointer-events-auto">
+      <div class="flex items-center justify-around h-16 rounded-full bg-[#08080c]/85 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] px-2 border border-white/10">
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="home" href="index.html">
+          <span class="material-symbols-outlined text-[20px]">home</span>
+          <span class="text-[10px] font-medium tracking-tight">Home</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="browse" href="anime.html">
+          <span class="material-symbols-outlined text-[20px]">explore</span>
+          <span class="text-[10px] font-medium tracking-tight">Browse</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="watchlist" href="view.html#watchlist">
+          <span class="material-symbols-outlined text-[20px]">bookmark</span>
+          <span class="text-[10px] font-medium tracking-tight">Watchlist</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-secondary-container bg-surface-variant/70 shadow-[0_0_16px_rgba(0,238,252,0.3)]" data-path="downloads" href="download.html">
+          <span class="material-symbols-outlined text-[20px]">download_for_offline</span>
+          <span class="text-[10px] font-medium tracking-tight">Downloads</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="profile" href="profile.html">
+          <span class="material-symbols-outlined text-[20px]">person</span>
+          <span class="text-[10px] font-medium tracking-tight">Profile</span>
+        </a>
+      </div>
+    </div>
+  </nav>
 </body>
 
 </html>

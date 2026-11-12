@@ -13,9 +13,16 @@ function getUploadsDir(customOverride) {
         console.warn('Could not create custom storage directory:', e.message);
       }
     }
-    return resolved;
+    if (fs.existsSync(resolved)) {
+      return resolved;
+    }
+    console.warn(`[Storage] Path "${resolved}" is not accessible. Falling back to default directory.`);
   }
-  return fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
+  const defaultDir = fs.existsSync('/app/uploads') ? '/app/uploads' : path.join(__dirname, '../uploads');
+  if (!fs.existsSync(defaultDir)) {
+    try { fs.mkdirSync(defaultDir, { recursive: true }); } catch (e) { }
+  }
+  return defaultDir;
 }
 
 const s3Client = new S3Client({

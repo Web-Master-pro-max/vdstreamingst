@@ -3,20 +3,24 @@
    ========================================================================== */
 
 :root {
-  --user-accent: #ff0055;
-  --user-accent-glow: rgba(255, 0, 85, 0.4);
-  --dark-bg: #06070d;
-  --card-bg: rgba(14, 16, 28, 0.75);
+  --user-accent: #ff506e;
+  --user-accent-glow: rgba(255, 80, 110, 0.55);
+  --dark-bg: #0e0e0e;
+  --card-bg: rgba(27, 27, 34, 0.75);
   --card-border: rgba(255, 255, 255, 0.08);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --gold-glow: #ffb700;
-  --cyan-neon: #00f0ff;
-  --purple-void: #b800ff;
+  --cyan-neon: #00eefc;
+  --purple-void: #a078ff;
 }
 
 body.profile-body {
-  background: radial-gradient(circle at 50% 0%, rgba(20, 24, 45, 0.9) 0%, #05060b 80%) !important;
+  background: #0e0e0e !important;
+  background-image: 
+    radial-gradient(ellipse at 25% 10%, rgba(255, 80, 110, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 25%, rgba(0, 238, 252, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(160, 120, 255, 0.06) 0%, transparent 60%) !important;
   color: var(--text-main);
   min-height: 100vh;
   overflow-x: hidden;
@@ -113,6 +117,45 @@ body.profile-body {
 
 /* ==========================================================================
    2. PROFILE HEADER CARD & AVATAR
+.banner-node-pill {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(14, 14, 14, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 238, 252, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan-neon);
+  z-index: 5;
+}
+
+.banner-node-pill .node-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan-neon);
+  box-shadow: 0 0 10px var(--cyan-neon);
+  animation: pulseCyanDot 1.8s infinite;
+}
+
+@keyframes pulseCyanDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ==========================================================================
+   2. PROFILE CARD & AVATAR
    ========================================================================== */
 .profile-card {
   position: relative;
@@ -127,6 +170,18 @@ body.profile-body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  overflow: hidden;
+}
+
+.profile-card-laser-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #00eefc 0%, #ff506e 50%, #a078ff 100%);
+  box-shadow: 0 0 14px rgba(0, 238, 252, 0.8), 0 0 24px rgba(255, 80, 110, 0.6);
+  z-index: 5;
 }
 
 .profile-header-top {
@@ -147,8 +202,8 @@ body.profile-body {
 /* Avatar Frame Container */
 .avatar-frame-container {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 126px;
+  height: 126px;
   flex-shrink: 0;
   border-radius: 50%;
   display: flex;
@@ -156,15 +211,69 @@ body.profile-body {
   justify-content: center;
 }
 
+.avatar-svg-progress {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  transform: rotate(-90deg);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.avatar-ring-fill {
+  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 0 6px var(--cyan-neon));
+}
+
+.avatar-hex-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -4px;
+  padding: 2.5px 8px;
+  border-radius: 999px;
+  background: #0e0e0e;
+  border: 1px solid rgba(0, 238, 252, 0.6);
+  box-shadow: 0 0 12px rgba(0, 238, 252, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 6;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--cyan-neon);
+  letter-spacing: 0.04em;
+}
+
+.vip-pass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3.5px 10px;
+  border-radius: 999px;
+  background: #ff506e;
+  color: #5b0018;
+  box-shadow: 0 0 16px rgba(255, 80, 110, 0.6);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+#profileAvatarImg,
 .profile-avatar-img {
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #141724;
-  z-index: 2;
-  position: relative;
-  border: 3px solid #0d0f1a;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  background: #131313 !important;
+  z-index: 10 !important;
+  position: relative !important;
+  border: 3px solid #0e0e0e !important;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.9) !important;
+  display: block !important;
 }
 
 /* --- ANIMATED AURA FRAMES --- */
@@ -549,6 +658,36 @@ body.profile-body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 4px;
+}
+
+.stat-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+
+.stat-telemetry.text-cyan {
+  color: var(--cyan-neon);
+  text-shadow: 0 0 8px rgba(0, 238, 252, 0.4);
+}
+
+.stat-telemetry.text-primary {
+  color: var(--user-accent);
+  text-shadow: 0 0 8px rgba(255, 80, 110, 0.4);
+}
+
+.stat-telemetry.text-tertiary {
+  color: var(--purple-void);
+  text-shadow: 0 0 8px rgba(160, 120, 255, 0.4);
+}
+
+.stat-telemetry.text-secondary {
+  color: #7df4ff;
+  text-shadow: 0 0 8px rgba(125, 244, 255, 0.4);
 }
 
 /* ==========================================================================

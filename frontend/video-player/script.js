@@ -5096,6 +5096,23 @@ document.addEventListener('DOMContentLoaded', async function () {
       const drawerCountEl = document.getElementById('drawer-episode-count');
       if (drawerCountEl) drawerCountEl.textContent = `(${totalEpisodes})`;
 
+      // Dynamic Mobile Binge Arc Progress Tracker Update
+      const bingePercentText = document.getElementById('bingePercentText');
+      const bingeProgressBar = document.getElementById('bingeProgressBar');
+      const bingeTotalText = document.getElementById('bingeTotalText');
+      const bingeCurrentText = document.getElementById('bingeCurrentText');
+      const bingeRemainingText = document.getElementById('bingeRemainingText');
+      if (bingeTotalText && totalEpisodes > 0) {
+        const curEp = currentEpisode.episodeNumber || 1;
+        const pct = Math.min(100, Math.round((curEp / totalEpisodes) * 100));
+        const rem = Math.max(0, totalEpisodes - curEp);
+        if (bingePercentText) bingePercentText.textContent = `${pct}% Done`;
+        if (bingeProgressBar) bingeProgressBar.style.width = `${pct}%`;
+        bingeTotalText.textContent = `${totalEpisodes} Eps`;
+        if (bingeCurrentText) bingeCurrentText.textContent = `Ep ${curEp}`;
+        if (bingeRemainingText) bingeRemainingText.textContent = `${rem} Eps`;
+      }
+
       // Load progress data from local storage
       let showProgData = { episodes: {}, lastWatched: null };
       try {
@@ -5161,7 +5178,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         let progressTrackHtml = '';
 
         if (isCurrentActive) {
-          badgeHtml = '<div class="item-status"><span class="item-watched"><i class="fas fa-play-circle"></i> Watching</span></div>';
+          badgeHtml = '<div class="item-status"><span class="item-watched live-neon-tag"><span class="live-pulse-dot"></span> NOW PLAYING</span></div>';
           if (epProg && epProg.progressPercent > 0) {
             const fillBg = isCompleted ? '#00ff88' : 'var(--primary)';
             progressTrackHtml = `<div class="item-progress-track"><div class="item-progress-fill" style="width: ${epProg.progressPercent}%; background: ${fillBg};"></div></div>`;
@@ -5174,17 +5191,21 @@ document.addEventListener('DOMContentLoaded', async function () {
           progressTrackHtml = `<div class="item-progress-track"><div class="item-progress-fill" style="width: ${epProg.progressPercent}%; background: var(--primary);"></div></div>`;
         }
 
+        const overlayContent = isCurrentActive
+          ? '<div class="audio-eq-bars" style="height:14px;"><span class="eq-bar-1"></span><span class="eq-bar-2"></span><span class="eq-bar-3"></span><span class="eq-bar-4"></span></div>'
+          : '<i class="fas fa-play"></i>';
+
         const buildItemHtml = () => `
           <div class="item-thumbnail" style="position: relative; overflow: hidden;">
             <img class="playlist-item-img" src="${fallbackPoster}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';">
-            <div class="item-overlay"><i class="fas fa-play"></i></div>
+            <div class="item-overlay">${overlayContent}</div>
             <div class="item-duration">Ep ${ep.episodeNumber || ep.number}</div>
             ${progressTrackHtml}
           </div>
           <div class="item-info">
             <h4 class="item-title">Episode ${ep.episodeNumber || ep.number}: ${ep.title}</h4>
             <div class="item-meta">
-              <span class="item-duration">${ep.duration || '24m'} • HD Streaming</span>
+              <span class="item-meta-duration">${ep.duration || '24m'} • HD Streaming</span>
             </div>
             ${badgeHtml}
           </div>

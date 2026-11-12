@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"error-container":"#93000a","primary-fixed":"#ffdadb","outline":"#ae8789","on-tertiary-container":"#340080","primary-fixed-dim":"#ffb2b8","tertiary-container":"#a078ff","secondary":"#d3fbff","on-surface":"#e2e2e2","on-background":"#e2e2e2","tertiary-fixed-dim":"#d0bcff","on-primary":"#67001d","primary-container":"#ff506e","background":"#131313","on-secondary":"#00363a","on-tertiary-fixed":"#23005c","surface":"#131313","on-primary-fixed-variant":"#91002d","surface-tint":"#ffb2b8","surface-container-lowest":"#0e0e0e","on-secondary-container":"#00686f","on-primary-fixed":"#40000f","secondary-fixed-dim":"#00dbe9","inverse-on-surface":"#303030","inverse-primary":"#be003d","on-error":"#690005","surface-dim":"#131313","on-surface-variant":"#e8bcbe","tertiary-fixed":"#e9ddff","error":"#ffb4ab","surface-variant":"#353535","primary":"#ffb2b8","secondary-container":"#00eefc","surface-container-high":"#2a2a2a","on-tertiary":"#3c0091","surface-container-low":"#1b1b1b","inverse-surface":"#e2e2e2","outline-variant":"#5e3e41","surface-container-highest":"#353535","on-error-container":"#ffdad6","surface-container":"#1f1f1f","on-primary-container":"#5b0018","on-secondary-fixed-variant":"#004f54","surface-bright":"#393939","tertiary":"#d0bcff","on-secondary-fixed":"#002022","secondary-fixed":"#7df4ff","on-tertiary-fixed-variant":"#5516be"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xl":"2.5rem","space-md":"1rem","margin-mobile":"1rem","margin":"3rem","gutter":"1.5rem","space-lg":"1.5rem","gutter-mobile":"0.75rem","space-xs":"0.25rem","space-sm":"0.5rem"},fontFamily:{"label-md":["Inter"],"body-md":["Inter"],"headline-lg":["Outfit"],"headline-sm":["Outfit"],"label-sm":["Inter"],"label-lg":["Inter"],"display-hero":["Outfit"],"display-hero-mobile":["Outfit"],"body-sm":["Inter"],"headline-lg-mobile":["Outfit"],"body-lg":["Inter"],"headline-md":["Outfit"]},fontSize:{"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.015em","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"600"}],"display-hero":["64px",{"lineHeight":"72px","letterSpacing":"-0.02em","fontWeight":"800"}],"display-hero-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.01em","fontWeight":"800"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"26px","fontWeight":"400"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]"><div class="h-20 w-full px-gutter flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg flex-shrink-0"><a class="flex items-center gap-space-sm group" data-path="home" href="#"><div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300"><svg class="w-6 h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z" fill="#00eefc"></path><circle cx="9.5" cy="13.5" fill="#ff506e" r="1.5"></circle></svg></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span></span><span class="font-label-sm text-label-sm tracking-widest uppercase text-outline">CINEMA LABS</span></div></a><nav class="hidden xl:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-lowest/60 backdrop-blur-md" data-active-classes="bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full"><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="home" href="#">Home</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="catalog-browse" href="#">Catalog / Browse</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="watchlist-hub" href="#">Watchlist &amp; Hub</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="get-app" href="#">Get App</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="admin-studio" href="#">Admin Studio</a></nav></div><div class="flex-1 max-w-md mx-space-md hidden md:block"><div class="relative flex items-center w-full"><span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span><input class="w-full pl-11 pr-14 py-2 bg-surface-container-low/90 backdrop-blur-xl rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container focus:shadow-[0_0_20px_rgba(0,238,252,0.3)] transition-all" placeholder="Search anime, studios, 4K releases..." type="text"/><div class="absolute right-3 px-2 py-0.5 rounded bg-surface-container-highest/80 font-label-sm text-label-sm text-on-surface-variant shadow-inner pointer-events-none">⌘K</div></div></div><div class="flex items-center gap-space-md flex-shrink-0"><a class="relative inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary shadow-[0_0_14px_rgba(255,80,110,0.35)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group" data-path="vip-membership" href="#"><span class="material-symbols-outlined text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span><span class="font-label-sm text-label-sm tracking-wider uppercase font-bold">VIP PASS</span></a><button class="relative p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ff506e]"></span></button><a class="relative p-0.5 rounded-full shadow-[0_0_12px_rgba(0,238,252,0.5)] bg-secondary-container hover:scale-105 transition-transform" data-path="user-profile" href="#"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></a></div></div></header><main class="w-full pt-20 bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Ambient Glow Field (Contained) -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-32 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-[128px] pointer-events-none"></div>
+<div class="absolute -top-24 right-1/4 w-[420px] h-96 bg-secondary-container/10 rounded-full blur-[140px] pointer-events-none"></div>
+<!-- Hero / Hub Header Banner -->
+<div class="w-full px-gutter pt-space-lg pb-space-md flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_10px_#00eefc]"></span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Vault Telemetry • Neural Sync Online</span>
+</div>
+<div class="flex items-baseline gap-space-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-extrabold">WATCHLIST &amp; ARCHIVE HUB</h1>
+<span class="font-label-md text-label-md text-outline font-normal">v4.8 Ultra-Pure AMOLED</span>
+</div>
+</div>
+<!-- Right Sync Telemetry Badge & MAL Hook -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<div class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-high/90 shadow-md">
+<span class="material-symbols-outlined text-secondary-container text-[16px] animate-spin" style="animation-duration: 6s;">sync</span>
+<span class="font-label-sm text-label-sm text-on-surface">MAL &amp; AniList Synced</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container shadow-[0_0_6px_#00eefc]"></span>
+</div>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md transition-all shadow-sm flex items-center gap-space-xs" id="btn-batch-edit">
+<span class="material-symbols-outlined text-[16px] text-outline">tune</span>
+<span>Batch Edit</span>
+</button>
+<button class="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md shadow-[0_0_20px_rgba(255,80,110,0.4)] hover:shadow-[0_0_28px_rgba(255,80,110,0.65)] hover:scale-[1.02] transition-all flex items-center gap-space-xs font-bold">
+<span class="material-symbols-outlined text-[16px]">file_download</span>
+<span>Export Matrix</span>
+</button>
+</div>
+</div>
+<!-- Hub Segmented Master Switcher Tabs -->
+<div class="w-full px-gutter mb-space-lg">
+<div class="flex items-center gap-space-xs p-1.5 rounded-2xl bg-surface-container-low max-w-2xl shadow-xl">
+<button class="flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold" id="tab-watchlist" onclick="switchHubTab('watchlist')">
+<span class="material-symbols-outlined text-[18px] text-primary-container">bookmark_manager</span>
+<span>My Watchlist</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm">14</span>
+</button>
+<button class="flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high" id="tab-history" onclick="switchHubTab('history')">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>Watch History &amp; Sync</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-outline font-label-sm text-label-sm">48</span>
+</button>
+<button class="flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high" id="tab-matrix" onclick="switchHubTab('matrix')">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+<span>Genre Matrix</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/15 text-secondary font-label-sm text-label-sm">32</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Primary Section View: My Watchlist View -->
+<div class="w-full px-gutter flex flex-col gap-space-xl pb-space-xl" id="view-watchlist">
+<!-- Filter Chips & Sort Subheader -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md p-space-md rounded-2xl bg-surface-container-low shadow-lg">
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+<button class="filter-chip px-space-md py-1.5 rounded-full bg-secondary-container/15 text-secondary-container font-label-md text-label-md font-bold shadow-[0_0_14px_rgba(0,238,252,0.3)] flex items-center gap-1.5 transition-all">
+<span>All Targets</span>
+<span class="text-secondary font-mono text-[11px]">(14)</span>
+</button>
+<button class="filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest font-label-md text-label-md flex items-center gap-1.5 transition-all">
+<span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#ff506e]"></span>
+<span>Currently Watching</span>
+<span class="text-outline font-mono text-[11px]">(5)</span>
+</button>
+<button class="filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest font-label-md text-label-md flex items-center gap-1.5 transition-all">
+<span class="w-2 h-2 rounded-full bg-tertiary-container shadow-[0_0_6px_#a078ff]"></span>
+<span>Plan to Watch</span>
+<span class="text-outline font-mono text-[11px]">(6)</span>
+</button>
+<button class="filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest font-label-md text-label-md flex items-center gap-1.5 transition-all">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_#d3fbff]"></span>
+<span>Completed</span>
+<span class="text-outline font-mono text-[11px]">(3)</span>
+</button>
+</div>
+<div class="flex items-center gap-space-md self-end md:self-auto flex-shrink-0">
+<div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm">
+<span>SORT BY:</span>
+<div class="relative inline-block">
+<select class="bg-surface-container-highest text-on-surface font-label-md text-label-md rounded-xl px-3 py-1.5 pr-8 appearance-none focus:outline-none cursor-pointer shadow-inner">
+<option>Recently Updated</option>
+<option>Highest Rating</option>
+<option>Progress %</option>
+<option>Air Date: Earliest</option>
+</select>
+<span class="material-symbols-outlined text-[16px] text-outline absolute right-2 top-2 pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-highest p-1 rounded-xl">
+<button class="p-1.5 rounded-lg bg-surface-container text-secondary-container shadow-sm"><span class="material-symbols-outlined text-[18px]">view_agenda</span></button>
+<button class="p-1.5 rounded-lg text-outline hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">grid_view</span></button>
+</div>
+</div>
+</div>
+<!-- Active Section: "CURRENTLY WATCHING" 16:9 Detailed Progress Rail -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-primary-container shadow-[0_0_12px_#ff506e] animate-pulse"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-wide font-extrabold uppercase">Currently Watching • Active Streams</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm uppercase font-bold">Live Progress</span>
+</div>
+<span class="font-label-md text-label-md text-secondary-container cursor-pointer hover:underline flex items-center gap-0.5">
+<span>Filter active stream queues</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</span>
+</div>
+<!-- Horizontal Cards Grid (16:9 Thumbnail + Progress Matrix) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-space-md">
+<!-- Stream Card 1: Chainsaw Man S2 -->
+<div class="group flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(255,80,110,0.25)] transition-all duration-300">
+<div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Chainsaw Man Season 2 dynamic cyberpunk keyframe, fiery neon crimson hues, molten sparks, high speed anime action cinematics in 4k OLED contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-BG0Rh_uiVybcc-kLINrgPzSv7f9vQhrpkhUcf4LZnkN8ItIYtHlTDhdJNFA6jPYE4cwRPvl8Sd0GhmxKwPtSeqZvmasuGg4a1y7HBXHzik7Z838nNsIbQ4In_MvVPLzJ7nmy6Ycpcq7fUt9R9MPMPr8bPqp5QB_GoK2AqQusnFmE4rbvvAHFhk2lp87n14QmnCL7K5INUHge-8vss0IupSl_ekwp4hvif1jt7A3qTsH1ZemojP0-Nw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-sm text-label-sm font-bold shadow-sm">4K OLED</span>
+<span class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold shadow-[0_0_8px_#ff506e]">SUB/DUB</span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-outline font-label-sm text-label-sm font-mono">
+              14m left
+            </div>
+<!-- Video Scrubber Ribbon Bottom -->
+<div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
+<div class="h-full bg-primary-container shadow-[0_0_10px_#ff506e]" style="width: 68%;"></div>
+</div>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm text-secondary-container font-semibold uppercase tracking-wider">MAPPA • S2 EP 08</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">68%</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-primary transition-colors">Chainsaw Man: Reze Arc</h3>
+<p class="font-body-sm text-body-sm text-outline line-clamp-1 mt-0.5">Episode 8: The Taste of Gunpowder</p>
+</div>
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Next Airing:</span>
+<span class="text-secondary font-mono">Thu, 23:00 JST</span>
+</div>
+<button class="w-full py-2 px-space-sm rounded-xl bg-primary-container text-on-primary-container font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(255,80,110,0.3)] hover:shadow-[0_0_22px_rgba(255,80,110,0.6)] hover:bg-primary-container/90 transition-all">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Resume Ep 8</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Stream Card 2: Solo Leveling -->
+<div class="group flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(0,238,252,0.25)] transition-all duration-300">
+<div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Solo Leveling Arise shadow monarch glow, cold electric cyan shadows, ethereal necromancer daggers and glowing blue pupils in pristine anime artstyle." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9c2-6RXxHsjDuHRBy8PDE9_0lfcyqeDnbTnU-R6U0-jhAVAFAUbGfVHSk7rU5VSnHdROY8YVk2TR7acqFoTfL5NUGvmZFN0HfPQ7HznlIKIlOYMH-eVx6tTHA7roID5NUc3yK_QHsectyRdBHGDDQjc1exJVZjaOeImxTVq-RzDBBB5xtdxGO41Q5Bqn9MfcMadHkw_m2YOKA-zLScWnG4rm2WCEBLsbIKRiTpbvaxs8tlgwoJyQf3g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-sm text-label-sm font-bold shadow-sm">HDR10+</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary font-label-sm text-label-sm font-bold shadow-[0_0_8px_#00eefc]">SIMULCAST</span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-outline font-label-sm text-label-sm font-mono">
+              6m left
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
+<div class="h-full bg-secondary-container shadow-[0_0_10px_#00eefc]" style="width: 82%;"></div>
+</div>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm text-secondary-container font-semibold uppercase tracking-wider">A-1 PICTURES • EP 11</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">82%</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-secondary-fixed transition-colors">Solo Leveling: Arise from Shadow</h3>
+<p class="font-body-sm text-body-sm text-outline line-clamp-1 mt-0.5">Episode 11: A Knight Who Defends the Throne</p>
+</div>
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Next Airing:</span>
+<span class="text-secondary font-mono">Sat, 24:00 JST</span>
+</div>
+<button class="w-full py-2 px-space-sm rounded-xl bg-surface-container-highest text-secondary-container hover:bg-secondary-container hover:text-on-secondary font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Resume Ep 11</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Stream Card 3: Cyberpunk Edgerunners -->
+<div class="group flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(160,120,255,0.25)] transition-all duration-300">
+<div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cyberpunk Edgerunners anime scene, neon synth city nightscape in Night City, glowing yellow and purple cyberware implants with intense atmospheric high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmyMzFoaBxaRquoQSktCsbOGRxriEiMS-12Zx-acm0LgBcAAV17yqvjEpT6FsB32jn6KTq2ROVpCrhVIHa6mtAt815vPxTRG-JOI5Jl6ZMXaXXP1SxvLYETKj0nJQKxMg4sTltSoIUuDGsbMhwOxWbVQJcPa8qmv7YwkvZW_Iee9XmRWHhthsYxaZbgp3MFK4EekHSh06B2deyiqS-u5Tmr5PxmYBaiDFStHBtM0120Vsd4YyOPQ0tgA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-tertiary font-label-sm text-label-sm font-bold shadow-sm">STUDIO TRIGGER</span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-outline font-label-sm text-label-sm font-mono">
+              21m left
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
+<div class="h-full bg-tertiary-container shadow-[0_0_10px_#a078ff]" style="width: 35%;"></div>
+</div>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider">TRIGGER • EP 06</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">35%</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-tertiary-fixed transition-colors">Cyberpunk: Edgerunners</h3>
+<p class="font-body-sm text-body-sm text-outline line-clamp-1 mt-0.5">Episode 6: Girl on Fire</p>
+</div>
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Status:</span>
+<span class="text-tertiary font-mono">Batch Complete</span>
+</div>
+<button class="w-full py-2 px-space-sm rounded-xl bg-surface-container-highest text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Resume Ep 6</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Stream Card 4: Bleach TYBW -->
+<div class="group flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(255,80,110,0.25)] transition-all duration-300">
+<div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Bleach Thousand Year Blood War dramatic spiritual battle, black and crimson Getsuga tensho slash cutting through shadows with cinematic anime theatrical lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApZfzRpV0jBU5t7XNfAWzxMd9BrAfQZ6WTqG4bPXIe_i3doAPK4sjiwYYjonCcJ0ZK4DSUeTox55R5ZbaHh5CETPHCsjiCwgAIYaMsd37n0UjlKhpBcsw3cZcqkoEvCFRXCmKzhyAqlXnC_2eih2L0RDfZtutnzWka6R9P4GCFLPV0mQ8sswif-SZFgMYa-KTFN0im75dOxKVlXsB7ZkNHElGf4aVFGrmxUUmc4C8DYlXiXZVatz3XRQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-primary font-label-sm text-label-sm font-bold shadow-sm">4K DOLBY</span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-outline font-label-sm text-label-sm font-mono">
+              2m left
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
+<div class="h-full bg-primary-container shadow-[0_0_10px_#ff506e]" style="width: 92%;"></div>
+</div>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm text-primary font-semibold uppercase tracking-wider">PIERROT • PART 3 EP 26</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">92%</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-primary transition-colors">Bleach: Thousand-Year Blood War</h3>
+<p class="font-body-sm text-body-sm text-outline line-clamp-1 mt-0.5">Episode 26: Black Sun Ascending</p>
+</div>
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Next Airing:</span>
+<span class="text-secondary font-mono">Sat, 23:30 JST</span>
+</div>
+<button class="w-full py-2 px-space-sm rounded-xl bg-primary-container text-on-primary-container font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(255,80,110,0.3)] hover:shadow-[0_0_22px_rgba(255,80,110,0.6)] transition-all">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Resume Ep 26</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Stream Card 5: Kaiju No. 8 -->
+<div class="group flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(0,238,252,0.25)] transition-all duration-300">
+<div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Kaiju No. 8 monstrous cyber beast bursting with neon cyan plasma energy, shattered concrete and high tech defense force visor UI displays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRKEjKWTwH_959mxhv1bHkBpTil3-pTRgcdU3Q7-agFam7yPZzzzDXYtyOqwKEo3e2rQU5KtuxUaegOh28zzOfvlmhAal1Jf_Lx3t9WvrDR2tm0D6Xwerppf4X1XpjQIRNkM-Na9Xx6z1xDUGrcg5pH3YzgFrJJoM7JFuiLyCX-Y01cD842jBUjV4Gbpb8F60JC2ctr2Jqu6O_5JBLHXZheXTZlYMgScxlQ5GYLRg9GRiI3ydaQGgu6w"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-sm text-label-sm font-bold shadow-sm">PRODUCTION I.G</span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-outline font-label-sm text-label-sm font-mono">
+              18m left
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
+<div class="h-full bg-secondary-container shadow-[0_0_10px_#00eefc]" style="width: 44%;"></div>
+</div>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm text-secondary-container font-semibold uppercase tracking-wider">IG STUDIO • EP 09</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">44%</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-secondary transition-colors">Kaiju No. 8</h3>
+<p class="font-body-sm text-body-sm text-outline line-clamp-1 mt-0.5">Episode 9: Tachikawa Base Assault</p>
+</div>
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Next Airing:</span>
+<span class="text-secondary font-mono">Sun, 23:00 JST</span>
+</div>
+<button class="w-full py-2 px-space-sm rounded-xl bg-surface-container-highest text-secondary-container hover:bg-secondary-container hover:text-on-secondary font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Resume Ep 9</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Dual Section Layout: "Plan to Watch" & "Completed" Vertical Posters Grid + History Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+<!-- Left Column: Master Posters Matrix (8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- Sub-block A: Plan to Watch (6 items) -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container shadow-[0_0_8px_#a078ff]"></span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold uppercase tracking-wide">Plan To Watch Vault (6)</h3>
+</div>
+<span class="font-label-sm text-label-sm text-outline font-mono">QUEUED PRIORITIES</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-space-sm">
+<!-- Poster 1: Dandadan -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-md hover:shadow-[0_8px_24px_rgba(0,238,252,0.3)] transition-all">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Dandadan anime key visual poster, neon spiritual aliens and supernatural curse turbo granny in hyper stylized retro pop artwork." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4eFCQz9pCcfJQVSIbCExUwCYdiRWDVlvOv5P2Qo7XcUw_qdCOKylG8T3-Fkh0BpoJhMQBYO9XrOLsld9MQeCRY77ehRtbI3UEcCFD3d5VE_rxXrUYqNNN--QB-t61pZU8o4-FnRrEFuWJCazslgV6vnI8X12rQiI4Qd95ImjAqThe74ZSx15rszn_oyu5BzWbnaVUUcs3MRnRStXqiHsOX9U3JYwralqhB7G_O4b7lCRApATol0nrBw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
+<!-- Quick Action Overlays on Hover -->
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 p-2 transition-opacity duration-200">
+<button class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center hover:scale-110 shadow-[0_0_12px_#00eefc] transition-transform" title="Move to Watching">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center hover:scale-110 transition-transform" title="Mark Completed">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-outline hover:text-error flex items-center justify-center hover:scale-110 transition-transform" title="Remove from list">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary font-mono">
+                  9.1
+                </div>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold truncate">Dandadan</span>
+<span class="font-body-sm text-body-sm text-outline truncate text-[11px]">Science SARU</span>
+</div>
+</div>
+<!-- Poster 2: Frieren -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-md hover:shadow-[0_8px_24px_rgba(160,120,255,0.3)] transition-all">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Frieren Beyond Journey's End anime art, silver haired elf mage holding a mystical staff under starry night sky with gentle ambient starlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9uGmGuZGsoUy34cClJSpVg11tJ0r1znmo2FO_zr6YxCiBSx9_Q3jxA5oidBDl6ZthCgyX_mMeVSecMtZ_UhnGyDjk8Jrf6jLTXxiQrzQKkWLZZKJUTk1MDVpJbOSo1Z_AnUAin3cYnJQd5806-JHOBwzAB3VzbAEmyS_WOZzdqX_IsH2olnP-hvfvrv3hdz65HUUWeiKvLfzwTOmbr8bILyD1udkCiI17qZvdOAsOhOWT4HFSKnarWg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 p-2 transition-opacity duration-200">
+<button class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center hover:scale-110 shadow-[0_0_12px_#00eefc] transition-transform" title="Move to Watching">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center hover:scale-110 transition-transform" title="Mark Completed">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-outline hover:text-error flex items-center justify-center hover:scale-110 transition-transform" title="Remove from list">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary font-mono">
+                  9.4
+                </div>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold truncate">Frieren S1</span>
+<span class="font-body-sm text-body-sm text-outline truncate text-[11px]">Madhouse</span>
+</div>
+</div>
+<!-- Poster 3: Demon Slayer Infinity Castle -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-md hover:shadow-[0_8px_24px_rgba(255,80,110,0.3)] transition-all">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Demon Slayer Infinity Castle movie teaser art, shifting wooden shoji doors in gravity defying space with glowing crimson blood demon art slashes." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiM_TgPFQvLMZ4Gy5-mxKpBi-rFNfQGU4e7aK7oLEAYySBowlg2n6_Z2G2zOi0oU43ARLRF0HYgin9qrQNDH_WZ03mQ4KXMlf5d6ug4s4j1ZpZ5ujZ6DvZi7qavyrn_bpFIzi8SGUS36nm8IZNnoGTYC46WTz9uGLuxNoeGj4ZjYL9ehpGk_DXXZzVGCkBofgMGIy82ya0TJ60CiLp1P0XOKHIHvF44kqKPpAF8e2kG-ap0AvbJqx1tw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 p-2 transition-opacity duration-200">
+<button class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center hover:scale-110 shadow-[0_0_12px_#00eefc] transition-transform" title="Move to Watching">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center hover:scale-110 transition-transform" title="Mark Completed">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-outline hover:text-error flex items-center justify-center hover:scale-110 transition-transform" title="Remove from list">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-primary font-mono">
+                  THEATRE
+                </div>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold truncate">Demon Slayer: Castle</span>
+<span class="font-body-sm text-body-sm text-outline truncate text-[11px]">Ufotable</span>
+</div>
+</div>
+<!-- Poster 4: Vinland Saga S2 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-md hover:shadow-[0_8px_24px_rgba(0,238,252,0.3)] transition-all">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Vinland Saga Season 2 Thorfinn wheat field portrait, golden hour dusk lighting, meditative historical anime art aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbGjV38wxJaHbENUgjkQw5i_WPcLsJ8fzGHwgOr7abd4o--5yxDAqbAXh_YVYiCmdtQ_TCEzK_E7fIWZYUTZ9s46aAl242etsyHV5hE_HikJtkpdHJ17YUJyy4wzvo8rWc3XXSHodqzQ76U-xVHWU4wnc-j5zkkuwuetQWIO_w7JK1uxbjSrtsw270apQJbWIX_neqG9UBwqhaLombxKhbdsqJtJ29mjmiklFqC3WUoRtyYIMJ6bUz9w"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 p-2 transition-opacity duration-200">
+<button class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center hover:scale-110 shadow-[0_0_12px_#00eefc] transition-transform" title="Move to Watching">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center hover:scale-110 transition-transform" title="Mark Completed">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-outline hover:text-error flex items-center justify-center hover:scale-110 transition-transform" title="Remove from list">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary font-mono">
+                  8.8
+                </div>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold truncate">Vinland Saga S2</span>
+<span class="font-body-sm text-body-sm text-outline truncate text-[11px]">MAPPA</span>
+</div>
+</div>
+<!-- Poster 5: Jujutsu Kaisen Culling Game -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-md hover:shadow-[0_8px_24px_rgba(255,80,110,0.3)] transition-all">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Jujutsu Kaisen Culling Game poster featuring Yuji Itadori and Maki Zenin amidst dark urban ruins with cursed neon dark purple aura." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChrOGQ2fOUbd5L_nvTNoIEGKfTvK305ET0-Ho2jK_lj4yWQIRW7Dy6M8czuFD0qZpqrbbf40VNC4cmqV_EPiu4rBSwbf9sVXo7pIJHy2GYNefU1kSWmRAPfzNnYRwi-_6r8t-pogV4F-bAZ4JizzRX3Dg38elvCoGm8mcCtt4Q4zNpXHG5USnEoGsm54u6nAAjZ4_sLMSmUr7iEaf47YIANlCR5fWFHt_6VOoZHh-KWTr5QkGg0I7NUA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 p-2 transition-opacity duration-200">
+<button class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center hover:scale-110 shadow-[0_0_12px_#00eefc] transition-transform" title="Move to Watching">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center hover:scale-110 transition-transform" title="Mark Completed">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-outline hover:text-error flex items-center justify-center hover:scale-110 transition-transform" title="Remove from list">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-primary font-mono">
+                  S3 PRE
+                </div>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold truncate">Jujutsu Kaisen S3</span>
+<span class="font-body-sm text-body-sm text-outline truncate text-[11px]">MAPPA</span>
+</div>
+</div>
+<!-- Poster 6: Re:Zero S3 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-md hover:shadow-[0_8px_24px_rgba(0,238,252,0.3)] transition-all">
+<div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Re Zero Starting Life in Another World Season 3 key art, Emilia ice crystals floating over water city of Priestella with brilliant crystalline reflections." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9i0gmoPW8F7OGlMy2v6hLerwl7GwgC5_I5_aokhps-AZblk9i8z82q9X90pdaq-Zx9AQhxWPNQHlCvQIi17PLyrx0lJmsi0DMYTIGC2T8ZAs1I5XdGttsVrlCFuK89cLLzdsrMhtjYuP0IRatxrrZBgctoft9ANKO9kuhnUJ5OEebWnqp8XVmrlnwHvOuerK8WDUdT961mkZlKvsZM3p4T6AuT7uXo3jwIrfy8Aqw0DkZ_00AesI66A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 p-2 transition-opacity duration-200">
+<button class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center hover:scale-110 shadow-[0_0_12px_#00eefc] transition-transform" title="Move to Watching">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center hover:scale-110 transition-transform" title="Mark Completed">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest text-outline hover:text-error flex items-center justify-center hover:scale-110 transition-transform" title="Remove from list">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary font-mono">
+                  8.7
+                </div>
+</div>
+<div class="p-2 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold truncate">Re:Zero S3</span>
+<span class="font-body-sm text-body-sm text-outline truncate text-[11px]">White Fox</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sub-block B: Completed Archive (3 items) -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_#d3fbff]"></span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold uppercase tracking-wide">Completed Masterpieces (3)</h3>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-mono">ARCHIVED BITRATES 100%</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+<!-- Completed 1: Neon Genesis Evangelion -->
+<div class="flex gap-space-md p-space-md rounded-2xl bg-surface-container-low shadow-lg items-center">
+<div class="w-20 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest relative">
+<img class="w-full h-full object-cover" data-alt="Neon Genesis Evangelion Evangelion Unit 01 awakening purple biomechanical mech head with glowing green eyes in pure cinematic dark frame." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCE-T1wJR-rHHRK9LDroRlwtLXmiAsoiJ9rNlJtj9h-ayw-wnf4BOGuYFpL9dXM27oNKzAErtiw1EkPuELMHwRrl_024XArFuhnmOokV9q-77PdqQX1tsRXTwdyutaW2tGG3fW9fn892tUdmOtHQlD5-Fg50pHeogCcYk_gq-mgi7L_hIw_iy_ICGIBd1fukQvH1ruA9a5397NgWls3OfH05c9yS0AzUzMC_Tsyqs6m7fVGLeX6u7CQxg"/>
+<div class="absolute bottom-1 right-1 px-1 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary-container">10/10</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">MASTERED 4K</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">Evangelion: 3.0+1.0</h4>
+<p class="font-body-sm text-body-sm text-outline truncate">Completed Dec 14 • 2h 35m</p>
+<div class="flex items-center gap-2 mt-2">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-[12px] font-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">replay</span>
+<span>Rewatch</span>
+</button>
+<button class="p-1 rounded-lg text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Completed 2: Ghost in the Shell -->
+<div class="flex gap-space-md p-space-md rounded-2xl bg-surface-container-low shadow-lg items-center">
+<div class="w-20 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest relative">
+<img class="w-full h-full object-cover" data-alt="Ghost in the Shell Motoko Kusanagi classic anime shot, cybernetic cables plugged into neck port with dark green phosphorescent CRT monitor backlighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA833u9BoeYxkZp1M5Luw-T158CxzFTkPaRdh2mS-jYsj9Wlkrp7yUs7GtXF54_DqgzCMDEORBiQI6Y1fP29f7W3Ssv1I2sKDAkwOcODos2jLS_LcQlNe6MaXlAY-wglFVvmV4ogqEiuivgo0je3bIen-vgS6KPSkbrTJveqs30UPJC1wpytXsjPkvn6j-nOysILaFi-JVw72L96i3ZeXt_q-3xR4N--I4rNg1DhrmEO4_qxZZZ7eyiSg"/>
+<div class="absolute bottom-1 right-1 px-1 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary-container">10/10</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">ATMOS ZERO LOSS</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">Ghost in the Shell (1995)</h4>
+<p class="font-body-sm text-body-sm text-outline truncate">Completed Nov 28 • 1h 23m</p>
+<div class="flex items-center gap-2 mt-2">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-[12px] font-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">replay</span>
+<span>Rewatch</span>
+</button>
+<button class="p-1 rounded-lg text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Completed 3: Akira 4K Remaster -->
+<div class="flex gap-space-md p-space-md rounded-2xl bg-surface-container-low shadow-lg items-center">
+<div class="w-20 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest relative">
+<img class="w-full h-full object-cover" data-alt="Akira Kaneda standing by the iconic red motorcycle against asphalt with Tokyo night sky in hyper saturated cyberpunk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM8RdigMtjyB24hXX25OvinKSh2BgCDSSF49PjanAU3err3ZKJMLYPZRU_kAU2WvuoZnF0byYsNs1JA9BmAZuutCOVwduYL6eoUTlWgG9KQB6omYrlxLaA-hp_5AvJCKgZFQjq5G5FuYK0F5GNixqiIbtbtOgZ8yIIiLLl7NRal60NcazPtY8PP8YGBJ-xJu2MKH5tR2ySLmaapRWCPRloBfJos2wRsxqjPGxpC2I2PKy00G0ol1whEA"/>
+<div class="absolute bottom-1 right-1 px-1 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-secondary-container">9.8/10</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">HDR10+ MASTER</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">AKIRA: Tokyo 2019 Remaster</h4>
+<p class="font-body-sm text-body-sm text-outline truncate">Completed Nov 12 • 2h 04m</p>
+<div class="flex items-center gap-2 mt-2">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-[12px] font-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">replay</span>
+<span>Rewatch</span>
+</button>
+<button class="p-1 rounded-lg text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Watch History Log & Quick Explore (4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Live Bitrate & Watch History Log Card -->
+<div class="flex flex-col rounded-2xl bg-surface-container-low p-space-md shadow-xl">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">history</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Watch History</span>
+</div>
+<button class="font-label-sm text-label-sm text-outline hover:text-error transition-colors flex items-center gap-1" onclick="confirmClearHistory()">
+<span class="material-symbols-outlined text-[14px]">delete_sweep</span>
+<span>Clear Log</span>
+</button>
+</div>
+<!-- History Timeline Elements -->
+<div class="flex flex-col gap-space-sm">
+<!-- Log Entry 1 -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container transition-colors">
+<div class="w-16 h-11 rounded-lg overflow-hidden bg-surface-container-highest flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Chainsaw Man episode screenshot showing close up of Denji ripping chainsaw ripcord." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDz2iVGdi8lMILxYQR9Z5RYO0qGcQpJ3_sMB1ZWmZAXs86eOXk8mRt2dYKTVr9i89iXl0R64xOoWPFxy8d7QatzqdYzrnNglmPm9tH4P83mhVF0RqqoxF1IFtca6uo74FyVYxc4b5fdDor3ftlsJDuGTyM7JCArB2bGEzhAdou7cu8kMkEewJsSY8UY5IMllzcVeTcV2-Gzd2MMsV5qclTDcOND2MT6wj2xAdYe2kGgIle_iCbFSc2HA"/>
+<div class="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-surface-container-lowest text-[9px] text-secondary font-mono">100%</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between text-[11px] text-outline font-mono">
+<span>Today, 14:20 JST</span>
+<span class="text-secondary-container">78 Mbps OLED</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Chainsaw Man S2 - Ep 7</p>
+<span class="font-body-sm text-body-sm text-outline text-[12px]">Tokyo Broadcast Direct</span>
+</div>
+</div>
+<!-- Log Entry 2 -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container transition-colors">
+<div class="w-16 h-11 rounded-lg overflow-hidden bg-surface-container-highest flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Solo Leveling anime episode thumbnail showing shadow monarch battle in icy dungeon." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnTkstYg1aOcC80IACf98MToSBMoXlgdrBCfW1RNSgfdIqVSkgpszBEqqFG-OoZqkjBVddgmpk80UkK0QKQT8hZrXH_UHSlMd2s64ApTL4in2Ku00-uGFinEazDOIvmchfguDya9E_6AFqwo4d0D6Qn-IL8EAgbzraNv6hk3AQwXjjYpxWLV2y5kFtrOsUJdnmLYACQtXvUIjm4Kb4rri0rgU6tWtsu-4Yb2-saPSwmpTDwMIykbLnmQ"/>
+<div class="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-surface-container-lowest text-[9px] text-secondary font-mono">100%</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between text-[11px] text-outline font-mono">
+<span>Yesterday, 22:45 JST</span>
+<span class="text-secondary-container">64 Mbps HDR</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Solo Leveling - Ep 10</p>
+<span class="font-body-sm text-body-sm text-outline text-[12px]">Subbed • 24m streamed</span>
+</div>
+</div>
+<!-- Log Entry 3 -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container transition-colors">
+<div class="w-16 h-11 rounded-lg overflow-hidden bg-surface-container-highest flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Cyberpunk Edgerunners episode thumbnail showing David Martinez with glowing sandevistan spine booster." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-xstseZZF4__Xt4YHlrDe1s4CUcSJn8z9hRN_toM00-NEpuyJB21E58X4HRJXcXaOFSey7oDzqtUPvTnkazvkxY5HdI9CLY0dDKuH9-tlqpUmXckbvajzUfm3aidc7ZWOyo36mIRS1r9loQaBEjhsqj7l--XYxemv1XVkpGKSangc-BLbs63JQTkn8pgT2wuN3LdXJAOZ1Qo0pJmnSmh2bq5Vu6jnlqddXbe7hSCW8Ahyl98y0ul5Cw"/>
+<div class="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-surface-container-lowest text-[9px] text-primary font-mono">45%</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between text-[11px] text-outline font-mono">
+<span>May 18, 19:10 JST</span>
+<span class="text-primary">Partial Stream</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Cyberpunk: Edgerunners - Ep 5</p>
+<span class="font-body-sm text-body-sm text-outline text-[12px]">Rewatch • 11m played</span>
+</div>
+</div>
+<!-- Log Entry 4 -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container transition-colors">
+<div class="w-16 h-11 rounded-lg overflow-hidden bg-surface-container-highest flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Kaiju No 8 anime action scene with kafka hibino transformation smoke." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVRV31yoArFGnqDG81ELhvjTcZyLd0rzudDUuYaimG3JkoU_tvaOdgXJY4UVknRPq7zCmG_EbRYhaqSLl6earyFjdZC3GBsSxQXdfQs6SWW8y82K7JPw8Bh01AihI7wzTSHyTtjFPnh8EpXkVqPlI1Ufa5UfVv6MhwO-vify4OH6p8tFVbPXsEdZMeNIEdxOzblM-yfNP9fKlprp5ZEvUhU6oVWOzMKxC1IxBuxRrVsNwbH4NB0IfI9w"/>
+<div class="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-surface-container-lowest text-[9px] text-secondary font-mono">100%</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between text-[11px] text-outline font-mono">
+<span>May 16, 21:05 JST</span>
+<span class="text-secondary-container">82 Mbps UHD</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Kaiju No. 8 - Ep 8</p>
+<span class="font-body-sm text-body-sm text-outline text-[12px]">Dual-Audio Dubbed</span>
+</div>
+</div>
+</div>
+<!-- History Storage Metric Sparkline Bar -->
+<div class="mt-space-md pt-space-sm flex flex-col gap-space-xs bg-surface-container-lowest/60 p-space-sm rounded-xl">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-outline">OFFLINE VAULT STORAGE</span>
+<span class="text-secondary font-mono">38.4 GB / 128 GB</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary-container shadow-[0_0_8px_#00eefc]" style="width: 30%;"></div>
+</div>
+</div>
+</div>
+<!-- Quick Category Matrix Exploration Chips -->
+<div class="flex flex-col rounded-2xl bg-surface-container-low p-space-md shadow-xl gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">category</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Category Matrix</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary-container hover:underline cursor-pointer">Explore All</span>
+</div>
+<div class="flex flex-wrap gap-space-xs">
+<a class="px-3 py-2 rounded-xl bg-surface-container-high hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all" href="#">
+<span class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_6px_#00eefc]"></span>
+<span>Cyberpunk Dystopia</span>
+<span class="text-outline font-mono text-[11px]">84</span>
+</a>
+<a class="px-3 py-2 rounded-xl bg-surface-container-high hover:bg-primary-container/20 hover:text-primary-fixed text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all" href="#">
+<span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#ff506e]"></span>
+<span>Supernatural Shonen</span>
+<span class="text-outline font-mono text-[11px]">142</span>
+</a>
+<a class="px-3 py-2 rounded-xl bg-surface-container-high hover:bg-tertiary-container/20 hover:text-tertiary-fixed text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all" href="#">
+<span class="w-2 h-2 rounded-full bg-tertiary-container shadow-[0_0_6px_#a078ff]"></span>
+<span>Psychological Thrillers</span>
+<span class="text-outline font-mono text-[11px]">67</span>
+</a>
+<a class="px-3 py-2 rounded-xl bg-surface-container-high hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all" href="#">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed shadow-[0_0_6px_#7df4ff]"></span>
+<span>Mecha &amp; Warfare</span>
+<span class="text-outline font-mono text-[11px]">53</span>
+</a>
+<a class="px-3 py-2 rounded-xl bg-surface-container-high hover:bg-primary-container/20 hover:text-primary-fixed text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all" href="#">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_#ffb2b8]"></span>
+<span>Retro 90s Remasters</span>
+<span class="text-outline font-mono text-[11px]">39</span>
+</a>
+<a class="px-3 py-2 rounded-xl bg-surface-container-high hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all" href="#">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span>Seinen Noir</span>
+<span class="text-outline font-mono text-[11px]">28</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Clear History Modal Overlay (Hidden initially, triggered via vanilla JS) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-container-lowest/80 backdrop-blur-xl hidden" id="clear-history-modal">
+<div class="relative w-full max-w-md p-space-lg rounded-2xl bg-surface-container shadow-2xl flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm text-error">
+<div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-error text-[24px]">warning</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold">Wipe Telemetry History?</h4>
+<span class="font-label-sm text-label-sm text-outline">Action is irreversible across all synchronized clients.</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-outline">
+        Clearing your watch history will reset resume timecodes, offline cached index keys, and active recommendations for your current OLED viewing session.
+      </p>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-2 rounded-xl bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md transition-all" onclick="closeClearModal()">
+          Cancel
+        </button>
+<button class="px-space-md py-2 rounded-xl bg-error-container text-on-error font-label-md text-label-md font-bold shadow-[0_0_16px_rgba(255,80,110,0.4)] hover:shadow-[0_0_24px_rgba(255,80,110,0.7)] transition-all" onclick="executeClearHistory()">
+          Purge History
+        </button>
+</div>
+</div>
+</div>
+<script>
+    function switchHubTab(tabName) {
+      const tabWatchlist = document.getElementById('tab-watchlist');
+      const tabHistory = document.getElementById('tab-history');
+      const tabMatrix = document.getElementById('tab-matrix');
+      const viewWatchlist = document.getElementById('view-watchlist');
+
+      // Reset tabs styling
+      [tabWatchlist, tabHistory, tabMatrix].forEach(tab => {
+        tab.className = "flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high";
+      });
+
+      if (tabName === 'watchlist') {
+        tabWatchlist.className = "flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold";
+        viewWatchlist.classList.remove('hidden');
+      } else if (tabName === 'history') {
+        tabHistory.className = "flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.35)] font-bold";
+      } else if (tabName === 'matrix') {
+        tabMatrix.className = "flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-tertiary-fixed shadow-[0_0_20px_rgba(160,120,255,0.35)] font-bold";
+      }
+    }
+
+    function confirmClearHistory() {
+      document.getElementById('clear-history-modal').classList.remove('hidden');
+    }
+
+    function closeClearModal() {
+      document.getElementById('clear-history-modal').classList.add('hidden');
+    }
+
+    function executeClearHistory() {
+      closeClearModal();
+      const notification = document.createElement('div');
+      notification.className = "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-surface-container-high text-secondary-container shadow-[0_0_24px_rgba(0,238,252,0.4)] font-label-md text-label-md";
+      notification.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> Watch history purged successfully.';
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3500);
+    }
+
+    // Filter Chips interactive toggles
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-chip').forEach(b => {
+          b.className = "filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest font-label-md text-label-md flex items-center gap-1.5 transition-all";
+        });
+        this.className = "filter-chip px-space-md py-1.5 rounded-full bg-secondary-container/15 text-secondary-container font-label-md text-label-md font-bold shadow-[0_0_14px_rgba(0,238,252,0.3)] flex items-center gap-1.5 transition-all";
+      });
+    });
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-8px_32px_rgba(0,0,0,0.9)]"><div class="w-full px-gutter py-space-xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-md"><div class="flex items-center gap-space-sm"><div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container shadow-[0_0_12px_rgba(0,238,252,0.3)]"><svg class="w-5 h-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178z" fill="#00eefc"></path></svg></div><span class="font-headline-sm text-headline-sm font-extrabold tracking-wide text-secondary-container">INFINX<span class="text-primary-container ml-1">ANIME</span></span></div><p class="font-body-md text-body-md text-outline max-w-sm">Theatre Grade OLED Anime Streaming. Pure AMOLED zero-floor masterings, uncompressed audio bitrate, and simultaneous Tokyo transmissions.</p><div class="flex items-center gap-space-xs mt-space-xs"><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-secondary tracking-widest uppercase shadow-[0_0_8px_rgba(0,238,252,0.2)]">4K UHD</div><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-primary-fixed tracking-widest uppercase shadow-[0_0_8px_rgba(255,80,110,0.2)]">HDR10+</div><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-tertiary tracking-widest uppercase shadow-[0_0_8px_rgba(160,120,255,0.2)]">ATMOS</div></div></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Browse</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Top Airing Masterpieces</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">New Spring Releases</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Dual-Audio Dubbed</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Dolby Vision Features</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="catalog-browse" href="#">Classic Remasters</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Community</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Infinx Discord Core</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Watch Parties</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Soundtrack Lounge</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="watchlist-hub" href="#">Fan Art Matrix</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Legal &amp; System</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">License Agreements</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">Privacy Protocols</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="get-app" href="#">Device Compatibility</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="admin-studio" href="#">DRM Calibration</a></li></ul></div></div><div class="mt-space-xl pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-lowest"><span class="font-body-sm text-body-sm text-outline">© 2025 INFINX ANIME BROADCAST CORP. ALL RIGHTS RESERVED. ZERO RE-COMPRESSION STANDARD.</span><div class="flex items-center gap-space-md"><span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Tokyo Ingestion Telemetry: 100% Operational (9.8ms)</span></div></div></div></footer></body></html>

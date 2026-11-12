@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-surface-variant":"#e8bcbe","on-tertiary":"#3c0091","on-surface":"#e2e2e2","tertiary-fixed-dim":"#d0bcff","surface-dim":"#131313","secondary-fixed":"#7df4ff","secondary":"#d3fbff","secondary-container":"#00eefc","primary-fixed":"#ffdadb","tertiary":"#d0bcff","tertiary-fixed":"#e9ddff","on-tertiary-fixed-variant":"#5516be","error-container":"#93000a","secondary-fixed-dim":"#00dbe9","on-tertiary-container":"#340080","surface-container-lowest":"#0e0e0e","tertiary-container":"#a078ff","error":"#ffb4ab","primary-container":"#ff506e","inverse-primary":"#be003d","surface-tint":"#ffb2b8","on-secondary-container":"#00686f","surface-container-low":"#1b1b1b","surface-bright":"#393939","background":"#131313","on-tertiary-fixed":"#23005c","inverse-surface":"#e2e2e2","surface-variant":"#353535","on-primary-fixed":"#40000f","primary-fixed-dim":"#ffb2b8","on-primary-container":"#5b0018","on-secondary-fixed-variant":"#004f54","on-background":"#e2e2e2","primary":"#ffb2b8","on-error-container":"#ffdad6","surface-container-high":"#2a2a2a","surface-container":"#1f1f1f","surface-container-highest":"#353535","inverse-on-surface":"#303030","on-primary-fixed-variant":"#91002d","on-secondary-fixed":"#002022","on-primary":"#67001d","outline-variant":"#5e3e41","on-secondary":"#00363a","outline":"#ae8789","surface":"#131313","on-error":"#690005"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-lg":"1.5rem","margin":"3rem","space-xs":"0.25rem","space-xl":"2.5rem","space-md":"1rem","margin-mobile":"1rem","gutter-mobile":"0.75rem","space-sm":"0.5rem","gutter":"1.5rem"},fontFamily:{"label-md":["Inter"],"body-md":["Inter"],"headline-lg":["Outfit"],"display-hero-mobile":["Outfit"],"display-hero":["Outfit"],"body-sm":["Inter"],"label-sm":["Inter"],"headline-lg-mobile":["Outfit"],"label-lg":["Inter"],"body-lg":["Inter"],"headline-md":["Outfit"],"headline-sm":["Outfit"]},fontSize:{"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.015em","fontWeight":"700"}],"display-hero-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.01em","fontWeight":"800"}],"display-hero":["64px",{"lineHeight":"72px","letterSpacing":"-0.02em","fontWeight":"800"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"26px","fontWeight":"400"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.8)]"><div class="h-20 w-full px-gutter flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg flex-shrink-0"><a class="flex items-center gap-space-sm group" data-path="home" href="#"><div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_16px_rgba(0,238,252,0.35)]"><svg class="w-6 h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z" fill="#00eefc"></path><circle cx="9.5" cy="13.5" fill="#ff506e" r="1.5"></circle></svg></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span></span><span class="font-label-sm text-label-sm tracking-widest uppercase text-outline">CINEMA LABS</span></div></a><nav class="hidden xl:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-lowest/60 backdrop-blur-md" data-active-classes="bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full"><a aria-current="page" class="px-space-md py-space-xs font-label-lg transition-all duration-200 bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full" data-path="home" href="#">Home</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="browse" href="#">Browse</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="simulcasts" href="#">Simulcasts</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="movies" href="#">Movies</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="schedule" href="#">Schedule</a><a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" data-path="community" href="#">Community</a></nav></div><div class="flex-1 max-w-md mx-space-md hidden md:block"><div class="relative flex items-center w-full"><span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span><input class="w-full pl-11 pr-14 py-2 bg-surface-container-low/90 backdrop-blur-xl rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container focus:shadow-[0_0_20px_rgba(0,238,252,0.3)] transition-all" placeholder="Search anime, studios, 4K releases..." type="text"/><div class="absolute right-3 px-2 py-0.5 rounded bg-surface-container-highest/80 font-label-sm text-label-sm text-on-surface-variant shadow-inner pointer-events-none">⌘K</div></div></div><div class="flex items-center gap-space-md flex-shrink-0"><a class="relative inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary shadow-[0_0_14px_rgba(255,80,110,0.35)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group" data-path="vip-membership" href="#"><span class="material-symbols-outlined text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span><span class="font-label-sm text-label-sm tracking-wider uppercase font-bold">VIP PASS</span></a><button class="relative p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ff506e]"></span></button><div class="relative p-0.5 rounded-full shadow-[0_0_12px_rgba(0,238,252,0.5)] bg-secondary-container"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-20 bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full text-on-surface select-none pb-space-xl">
+<!-- HERO SPOTLIGHT CAROUSEL (Cinematic 21:9 Widescreen) -->
+<section class="relative w-full -mt-20 overflow-hidden bg-surface-container-lowest">
+<!-- Visual Stage Background Image -->
+<div class="relative w-full h-[760px] lg:h-[840px] bg-cover bg-center transition-all duration-700" data-alt="High-fidelity anime cinematic screenshot from a futuristic cyberpunk series. A cybernetically augmented protagonist with glowing cyan ocular optics stands on a skyscraper gantry overlooking a rain-drenched neo-Tokyo skyline illuminated by blinding neon crimson and ultraviolet holograms. Volumetric fog, anamorphic lens flare, sharp dynamic contrast, and cinematic dark photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFyb8e7F-GCyBquoWhpy19-Gq8g_B1ViXOGlCeigjTP7MYtSLl7wxAleJjdtzAvGA5c2qU0ddnlsUCqACPgbVthLDHUzJv5pYo2i1Uc0MWxoENHzgY7qG3Dbzf5wBDC0cy9oTryEKgaF7hK4fhjW86hHagXexUVHey0K00JTYHAduPxnJDcvTd-TDdhvRTt81QgwffGYWzSsEt0OeutWvzHi5R0DvSzLGQbtSq4-ftyUVQQWLb68AB5w')">
+<!-- Deep Multistage Scrim Overlays for Pure AMOLED Blend -->
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/80 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-surface-container-lowest/90 via-transparent to-transparent h-48"></div>
+<!-- Hero Content Plate -->
+<div class="relative z-10 w-full h-full max-w-7xl mx-auto px-gutter flex flex-col justify-end pb-24 pt-32">
+<div class="flex flex-col max-w-2xl gap-space-md">
+<!-- Metatags / Master Badges -->
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.35)] font-label-sm text-label-sm uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container animate-ping"></span>
+              #1 Trending Finale
+            </span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high/90 text-on-surface font-label-sm text-label-sm tracking-widest uppercase">
+              Simulcast
+            </span>
+<span class="px-2 py-1 rounded bg-surface-container-high/90 text-primary font-label-sm text-label-sm tracking-widest uppercase font-bold">
+              4K HDR
+            </span>
+<span class="px-2 py-1 rounded bg-surface-container-high/90 text-tertiary font-label-sm text-label-sm tracking-widest uppercase font-bold">
+              Dolby Vision • Atmos
+            </span>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high/90 text-secondary">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold">9.87</span>
+</div>
+</div>
+<!-- Title Presentation with Editorial Drop Shadow -->
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary-container tracking-[0.3em] uppercase">Tokyo Broadcast Master • 60 FPS</span>
+<h1 class="font-display-hero text-display-hero text-on-surface drop-shadow-[0_8px_32px_rgba(0,0,0,0.9)] tracking-tight">
+              NEO: CYBER <span class="text-primary-container drop-shadow-[0_0_24px_rgba(255,80,110,0.6)]">ZERO</span>
+</h1>
+</div>
+<!-- Series Metadata line -->
+<div class="flex items-center gap-space-sm font-label-lg text-label-lg text-outline">
+<span class="text-secondary-fixed font-bold">EPISODE 12 FINALE</span>
+<span>•</span>
+<span>Studio MAVIS Lab</span>
+<span>•</span>
+<span>Cyberpunk / Psychological Sci-Fi</span>
+<span>•</span>
+<span class="text-primary-fixed">TV-MA</span>
+</div>
+<!-- Synopsis snippet -->
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl line-clamp-3 leading-relaxed">
+            In the submerged labyrinth of Sector 9, unit Zero disconnects from the omni-grid to confront the sentient phantom orchestrating the Shibuya blackout. The zero-hour convergence begins now.
+          </p>
+<!-- Dual Primary CTAs & Transport Action -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs">
+<!-- Neon Primary Button -->
+<button class="relative inline-flex items-center gap-space-sm px-7 py-3.5 rounded-full bg-primary-container text-on-primary-container font-label-lg text-label-lg shadow-[0_0_28px_rgba(255,80,110,0.5)] hover:shadow-[0_0_40px_rgba(255,80,110,0.8)] hover:scale-105 transition-all duration-300 group cursor-pointer">
+<span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span class="tracking-wider uppercase font-bold">Watch Episode 12</span>
+</button>
+<!-- Frosted Glass Secondary -->
+<button class="inline-flex items-center gap-space-sm px-6 py-3.5 rounded-full bg-surface-container-high/80 text-on-surface hover:text-secondary-container hover:bg-surface-container-highest transition-all duration-300 font-label-lg text-label-lg backdrop-blur-xl shadow-lg cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+<span class="tracking-wide">Add to Watchlist</span>
+</button>
+<!-- Trailer Trigger -->
+<button class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-container-low/90 text-on-surface hover:text-secondary hover:bg-surface-container-high transition-all duration-200 cursor-pointer shadow-md group">
+<span class="material-symbols-outlined text-[22px] group-hover:rotate-12 transition-transform">theaters</span>
+</button>
+</div>
+</div>
+<!-- Spotlight Indicators & Horizontal Deck Controls -->
+<div class="flex items-center justify-between w-full pt-space-xl mt-space-md">
+<div class="flex items-center gap-space-xs">
+<!-- Active Indicator with Cyan glow -->
+<div class="w-10 h-1.5 rounded-full bg-secondary-container shadow-[0_0_12px_rgba(0,238,252,0.8)]"></div>
+<div class="w-2.5 h-1.5 rounded-full bg-surface-variant hover:bg-surface-bright transition-colors cursor-pointer"></div>
+<div class="w-2.5 h-1.5 rounded-full bg-surface-variant hover:bg-surface-bright transition-colors cursor-pointer"></div>
+<div class="w-2.5 h-1.5 rounded-full bg-surface-variant hover:bg-surface-bright transition-colors cursor-pointer"></div>
+<div class="w-2.5 h-1.5 rounded-full bg-surface-variant hover:bg-surface-bright transition-colors cursor-pointer"></div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="w-10 h-10 rounded-full bg-surface-container-high/80 flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-bright transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-high/80 flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-bright transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- QUICK FILTER CATEGORY PILLS (Floating Glass Ribbon) -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-md">
+<div class="flex items-center gap-space-xs overflow-x-auto pb-space-xs scrollbar-none">
+<button class="px-4 py-2 rounded-full bg-secondary-container text-on-secondary-fixed font-label-md text-label-md uppercase tracking-wider shadow-[0_0_16px_rgba(0,238,252,0.35)] shrink-0 cursor-pointer">
+        All Master Catalog
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        Simulcasts
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        Action & Sci-Fi
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        Studio MAPPA & Trigger
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        Dark Fantasy
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        Cyberpunk
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        OLED Master Remasters
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md uppercase tracking-wider shrink-0 transition-all cursor-pointer">
+        Dolby Atmos Movies
+      </button>
+</div>
+</section>
+<!-- CONTINUE WATCHING ROW (16:9 Desktop Cards) -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-1 h-5 rounded-full bg-primary-container shadow-[0_0_10px_#ff506e]"></div>
+<h2 class="font-headline-md text-headline-md tracking-tight font-bold text-on-surface">Continue Watching</h2>
+<span class="font-label-sm text-label-sm text-outline px-2 py-0.5 rounded bg-surface-container-low">4 In-Flight</span>
+</div>
+<a class="font-label-md text-label-md text-secondary-container hover:text-secondary flex items-center gap-0.5 transition-colors" href="#">
+<span>History Hub</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+<!-- 16:9 Grid Layout -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Card 1: Chainsaw Man -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Intense high contrast anime combat keyframe showing a gritty demon hunter revving a chainsaw blade amidst swirling blood-red embers and smoke in an industrial Tokyo alleyway at midnight. Pure dark shadows and vivid red accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdDC2-kXQJHY0k58L2SGnu_nvkvsIE1vdXj8hxf27A0LHmxx3ZuQsAdyDOEiIxwhpIuRQ0QCdDhMuqLJLrAi8jprYw7n8YMBFmoBH3-4ZZgfkQK1dZZdBOub0BID3uxD9kPX6tjpL7LFs2QNmza6XHj5Zt8SxUW_i1tAMYj2rp4edw4VQWAb14GT8nO5haJ_O2En8rvaObpsZ4X1mQAWPPaI8g3pOkz2T0RH-e2yG8AzWRkY--YZaNSw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/20 to-transparent"></div>
+<!-- Hover Play Overlay -->
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface-container-lowest/50 backdrop-blur-xs">
+<div class="w-12 h-12 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-[0_0_20px_#ff506e] transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Time Remaining Tag -->
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-surface-container-lowest/80 text-outline font-label-sm text-label-sm backdrop-blur-md">
+            14m left
+          </span>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-label-sm text-label-sm uppercase font-bold">
+            4K 60
+          </span>
+</div>
+<!-- Progress Ribbon -->
+<div class="w-full h-1 bg-surface-variant relative overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary-container shadow-[0_0_8px_#ff506e]" style="width: 68%;"></div>
+</div>
+<!-- Info Interior -->
+<div class="p-space-md flex flex-col gap-0.5">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Chainsaw Man</span>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm mt-0.5">
+<span class="text-on-surface-variant">S1 • Ep 8 "Gun Devil"</span>
+<span>68% Seen</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Cyberpunk: Edgerunners -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Hyper-stylized anime aesthetic with neon cyan and radioactive yellow color palette. A street kid with cybernetic spinal implants dashes across the neon-lit rooftops of Night City under the moon. Volumetric speed lines and chromatic aberration." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXCrf-muBE5EZDDSrN44rb3-3ugl_tZDK5_r6RiLXM2WUEj9pnM8Y1cO7WquhCmTZkdrv4WA0qzXEBdS7PZNVMkoZy_Ml-n65W7d3T9HzO3uO9J0BW5WNORYRfF8y78l3BGJOqGIg0pzK9fCpeCPQCYkwWS94IZkzMztz__ZAf0AsqSHy43dkB2eQEvmODJjto1KEWDEgcBdooxMOVw0ui_DJmYAVLGrHYNnDPzpPH2eJH3OgswtCYkw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/20 to-transparent"></div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface-container-lowest/50 backdrop-blur-xs">
+<div class="w-12 h-12 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-[0_0_20px_#ff506e] transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-surface-container-lowest/80 text-outline font-label-sm text-label-sm backdrop-blur-md">
+            8m left
+          </span>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-label-sm text-label-sm uppercase font-bold">
+            HDR10
+          </span>
+</div>
+<div class="w-full h-1 bg-surface-variant relative overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary-container shadow-[0_0_8px_#ff506e]" style="width: 82%;"></div>
+</div>
+<div class="p-space-md flex flex-col gap-0.5">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Edgerunners</span>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm mt-0.5">
+<span class="text-on-surface-variant">Ep 4 "Lucky You"</span>
+<span>82% Seen</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Solo Leveling -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Anime hero with piercing glowing blue eyes and dual daggers standing in front of towering shadowy monarch creatures inside a massive purple crystalline dungeon gate. Sharp lighting, dark fantasy mood, cinematic contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1TwEIlhIrsPQa1YB5CPBXykmA2w672jgqmA4yTRJjHK_ZFYvPPbZK0jcNWhi60zUClf-LD_S3nk_1ZY2qN44PaPwX4Ci8XyPk7T7z4lkSPOJwNi-XunCRG5gZ7AnUWGzHp3-oqf0GEL92UmyqJ9h9wTo8SdVgV-88po8LJ5HGc0eOr15EzP2rm0zyCBcHQFwGVDERvSuKObMDZAnMbXT4EWZtHNGpBna1YNUypOCyFTI1NF51hL5Srg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/20 to-transparent"></div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface-container-lowest/50 backdrop-blur-xs">
+<div class="w-12 h-12 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-[0_0_20px_#ff506e] transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-surface-container-lowest/80 text-outline font-label-sm text-label-sm backdrop-blur-md">
+            19m left
+          </span>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-label-sm text-label-sm uppercase font-bold">
+            DOLBY
+          </span>
+</div>
+<div class="w-full h-1 bg-surface-variant relative overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary-container shadow-[0_0_8px_#ff506e]" style="width: 28%;"></div>
+</div>
+<div class="p-space-md flex flex-col gap-0.5">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Solo Leveling</span>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm mt-0.5">
+<span class="text-on-surface-variant">S1 • Ep 11 "The Knight"</span>
+<span>28% Seen</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Kaiju No. 8 -->
+<div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+<div class="relative w-full aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Massive organic monster with biomechanical electric blue plating roaring while releasing powerful plasma lightning bolts into a destroyed metropolitan street at dusk. Dramatic scale, dust clouds, dynamic manga aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-ts7ooF1h9EYDGtg2xc7OmzvVJ8SJOoHcLxbir8nCiCDLv4rQWOUDYyV1m0Ay6wJP25pgJaPMa_Q56SGTHH6J7Fuu1nCulMDwiTQP3sWj20doXJn8hFGLAJIOb8MRJeFOhsOjg-tqSh-mss4ZqEiucSZTWOYbzuuCUS_5xCRiQvWa4QuYTbl9bGWTff3VTuxnS3ZVP6vYCUnR46poG6rYzHnAbOjrlfQIlAn_PH6H3lvBsRFW4oBEbg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/20 to-transparent"></div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface-container-lowest/50 backdrop-blur-xs">
+<div class="w-12 h-12 rounded-full bg-primary-container/90 text-on-primary-container flex items-center justify-center shadow-[0_0_20px_#ff506e] transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-surface-container-lowest/80 text-outline font-label-sm text-label-sm backdrop-blur-md">
+            4m left
+          </span>
+<span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-label-sm text-label-sm uppercase font-bold">
+            4K UHD
+          </span>
+</div>
+<div class="w-full h-1 bg-surface-variant relative overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary-container shadow-[0_0_8px_#ff506e]" style="width: 90%;"></div>
+</div>
+<div class="p-space-md flex flex-col gap-0.5">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors">Kaiju No. 8</span>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm mt-0.5">
+<span class="text-on-surface-variant">S1 • Ep 10 "Rebellion"</span>
+<span>90% Seen</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- TOP 10 RANKED SIGNATURE ROW (Massive Numerals + 2:3 Posters) -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-xl">
+<div class="flex items-end justify-between mb-space-lg">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-secondary-container uppercase tracking-widest font-bold">
+<span class="material-symbols-outlined text-[16px]">equalizer</span>
+<span>Tokyo & Global Metrics</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg tracking-tight font-extrabold text-on-surface mt-1">
+          Top 10 Masterpieces Today
+        </h2>
+</div>
+<div class="hidden sm:flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Live Bitrate Feed</span>
+<span class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_8px_#00eefc]"></span>
+</div>
+</div>
+<!-- Horizontal Deck with Giant Typography Numerals Behind Posters -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-space-md">
+<!-- Rank 1: Solo Leveling: Ragnarok -->
+<div class="relative flex items-end group cursor-pointer pt-12">
+<!-- Giant Translucent Backing Numeral -->
+<span class="absolute -left-6 -top-2 font-display-hero text-[140px] leading-none font-black text-surface-container-highest/40 select-none pointer-events-none group-hover:text-secondary-container/20 transition-colors">
+          1
+        </span>
+<div class="relative z-10 w-full flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_12px_30px_rgba(0,238,252,0.25)]">
+<div class="relative aspect-[2/3] w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Dark vertical anime movie poster for Solo Leveling Ragnarok. A young shadow monarch crowned with dark purple energy, black mist cloaking his shoulders, holding obsidian daggers, surrounded by glowing blue ice crystals. Intense hyper-detailed digital art." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3jO3XlNq1WvOt2r3bYShsisWXGRPX_miaenUdaiySxkVGN53I56j2hBWtkq7kyOa1qvxkpaBwJVx32xh5tqVOkUKT3WK_1KzQ-ZeNiTca7mJBYw6Yvnqgqh4BTStuScWU9JUJhfwGdWy8PuHfoVRivs4Cre37tE-p00qy9fvuD5dPb09OtY3EL41w25dy_7NfU8zRB9qOzS5_lRmVKi4rwjGtS7xvS6LxI42k8FGSErrjkrf7LNLb7w"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-extrabold shadow-md">
+              NEW EP 24
+            </span>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/80 text-secondary font-label-sm text-label-sm font-bold backdrop-blur-md">
+                ★ 9.94
+              </span>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface font-label-sm text-label-sm font-bold">SUB</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface-variant font-label-sm text-label-sm font-bold">DUB</span>
+</div>
+</div>
+</div>
+<div class="p-3 bg-surface-container-low flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold truncate group-hover:text-secondary-container transition-colors">SL: Ragnarok</span>
+<span class="font-body-sm text-body-sm text-outline truncate">Studio A-1 Pictures • 4K</span>
+</div>
+</div>
+</div>
+<!-- Rank 2: Demon Slayer: Infinity Castle -->
+<div class="relative flex items-end group cursor-pointer pt-12">
+<span class="absolute -left-6 -top-2 font-display-hero text-[140px] leading-none font-black text-surface-container-highest/40 select-none pointer-events-none group-hover:text-primary-container/20 transition-colors">
+          2
+        </span>
+<div class="relative z-10 w-full flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_12px_30px_rgba(255,80,110,0.25)]">
+<div class="relative aspect-[2/3] w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Anime cinema poster for Demon Slayer Infinity Castle Arc. Flame Hashira surrounded by majestic swirling golden fire vortex inside an infinite multidimensional wooden sliding fortress. Intense crimson highlights and deep obsidian black backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl6EP_2QWD3zTkJrmJQU1WrXHW24i-xHQjFwfpdy5_G9MZOYmYjKRP1q4STsLg397I8gABo_XNl_LKigXEoBwjRNsUe_5vq4GqvelxXfEwBPr040Si_IAshZKviXpI8c8RYqhCKvzLR_XHppqYmciWgZIGtGFEJLlsY7e_HYpG-S4k-ML3afogCGlhBHkIkTMsOv0_B9tIelXC1dzhOBBdD7Je6GcJ_hcsBAYc1-HPOcoB4r3_FZTTaw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-label-sm text-label-sm font-bold">
+              CINEMA CUT
+            </span>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/80 text-secondary font-label-sm text-label-sm font-bold backdrop-blur-md">
+                ★ 9.91
+              </span>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface font-label-sm text-label-sm font-bold">SUB</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface-variant font-label-sm text-label-sm font-bold">DUB</span>
+</div>
+</div>
+</div>
+<div class="p-3 bg-surface-container-low flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold truncate group-hover:text-primary-container transition-colors">Infinity Castle Arc</span>
+<span class="font-body-sm text-body-sm text-outline truncate">ufotable • Dolby Vision</span>
+</div>
+</div>
+</div>
+<!-- Rank 3: Jujutsu Kaisen -->
+<div class="relative flex items-end group cursor-pointer pt-12">
+<span class="absolute -left-6 -top-2 font-display-hero text-[140px] leading-none font-black text-surface-container-highest/40 select-none pointer-events-none group-hover:text-tertiary-container/20 transition-colors">
+          3
+        </span>
+<div class="relative z-10 w-full flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_12px_30px_rgba(160,120,255,0.25)]">
+<div class="relative aspect-[2/3] w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Anime poster depicting a dark sorcerer expanding his domain with infinite hands floating in purple cosmic void and electric crimson cursed energy lightning. Masterful composition, pitch AMOLED black background, electric color accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQaukTd9A0wJCdAW_C3z9o5ipkjWfb4Ty4AZGnnQUgkCrYnNY_gudO98Ar_xEAul8XwPamNjxcu-C7W6WhlhtVYks-Go7FZAwLNirGlHw1-epfzsP6mx2Zugp5WIzwX-IIWQSATDQLkxBBlFb9SmqZchpVVGzTPpRW-658WNaQUUz3Wzd83XiHaJNf7cAlBnIdkopIpGDn9ettHBXksxa-fOrMGcN0cnTJW9cFqiPZX-VGnH9fHHF96w"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-tertiary font-label-sm text-label-sm font-bold">
+              DOLBY ATMOS
+            </span>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/80 text-secondary font-label-sm text-label-sm font-bold backdrop-blur-md">
+                ★ 9.89
+              </span>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface font-label-sm text-label-sm font-bold">SUB</span>
+</div>
+</div>
+</div>
+<div class="p-3 bg-surface-container-low flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold truncate group-hover:text-tertiary transition-colors">Jujutsu Kaisen</span>
+<span class="font-body-sm text-body-sm text-outline truncate">MAPPA • Pure OLED Cut</span>
+</div>
+</div>
+</div>
+<!-- Rank 4: Bleach TYBW -->
+<div class="relative flex items-end group cursor-pointer pt-12">
+<span class="absolute -left-6 -top-2 font-display-hero text-[140px] leading-none font-black text-surface-container-highest/40 select-none pointer-events-none group-hover:text-secondary-container/20 transition-colors">
+          4
+        </span>
+<div class="relative z-10 w-full flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_12px_30px_rgba(0,238,252,0.25)]">
+<div class="relative aspect-[2/3] w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Anime key art of a soul reaper warrior holding a pure white bankai blade that emits holy cyan light against an endless night sky with falling spiritual petals. High contrast minimalist styling with deep dark shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuDZZgjxekR1oYktbjb5LxTY74Ysf9vlmzKLbu0Porf7vt5pkS1sCpJwTrpsXslLVAqZqRjoEuLag6RDwCCWRtCFDY3QhATH_jmJy1V58d9KYqrLfEhqeZRMhfmRt7g07K9ezQ8lSLMtJ0njuhrfIi2MHKFKDdBDaw0qtya8w4v-foml5xVzkgF9pigjnU25KCmbBxKmVu27KBvPuO7tam10kfJvL2m5_DSx4iANtdhvWuj44zMPMCzw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-label-sm text-label-sm font-bold">
+              PART 3
+            </span>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/80 text-secondary font-label-sm text-label-sm font-bold backdrop-blur-md">
+                ★ 9.85
+              </span>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface font-label-sm text-label-sm font-bold">SUB</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface-variant font-label-sm text-label-sm font-bold">DUB</span>
+</div>
+</div>
+</div>
+<div class="p-3 bg-surface-container-low flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold truncate group-hover:text-secondary-container transition-colors">Bleach: TYBW</span>
+<span class="font-body-sm text-body-sm text-outline truncate">Studio Pierrot • HDR10+</span>
+</div>
+</div>
+</div>
+<!-- Rank 5: Attack on Titan: Remaster -->
+<div class="relative flex items-end group cursor-pointer pt-12">
+<span class="absolute -left-6 -top-2 font-display-hero text-[140px] leading-none font-black text-surface-container-highest/40 select-none pointer-events-none group-hover:text-primary-container/20 transition-colors">
+          5
+        </span>
+<div class="relative z-10 w-full flex flex-col rounded-xl overflow-hidden bg-surface-container-low shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_12px_30px_rgba(255,80,110,0.25)]">
+<div class="relative aspect-[2/3] w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Monolithic colossal titan silhouette looming over high ancient city walls at twilight, steam bursting violently from its cracked lava skin glowing with molten orange and crimson lines. Dramatic cinematic perspective." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBio-uZXlmsqu2R2SfQ0dLIr9Nxg2RJLRWhqekmwDrT05JDSbABV5VshFdJgpSodyozz-XyfAK-dC-5EL3vY_tiI9CrqTj4q6bTrGhbIWZaqOdhIYwjWQgIw_D3lEV6yxlbNPv4HeU3HlCYKOywSo2KRYVwo8x_MX15AEtjt2N7CY2furJyAKzOMvxH2wfSY4qrf7TszrLQMBsUm1wKcHFONAlJxKbZtRBXh3cJDa7Dq7LggrH08nOLyA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-primary-fixed font-label-sm text-label-sm font-bold">
+              REMASTER
+            </span>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/80 text-secondary font-label-sm text-label-sm font-bold backdrop-blur-md">
+                ★ 9.83
+              </span>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface font-label-sm text-label-sm font-bold">SUB</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high/90 text-on-surface-variant font-label-sm text-label-sm font-bold">DUB</span>
+</div>
+</div>
+</div>
+<div class="p-3 bg-surface-container-low flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold truncate group-hover:text-primary-container transition-colors">Attack on Titan</span>
+<span class="font-body-sm text-body-sm text-outline truncate">WIT / MAPPA Final Master</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SEASONAL SIMULCASTS GRID (Airing Schedules & Direct Calendar Triggers) -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-lg gap-space-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-primary-container uppercase tracking-widest font-bold">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span>Tokyo Simultaneous Broadcasts</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg tracking-tight font-extrabold text-on-surface mt-1">
+          Weekly Simulcast Schedule
+        </h2>
+</div>
+<!-- Schedule Day Selector -->
+<div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-full overflow-x-auto scrollbar-none">
+<button class="px-3 py-1 rounded-full bg-surface-container-highest text-secondary-container font-label-md text-label-md cursor-pointer">Today</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md cursor-pointer transition-colors">Fri</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md cursor-pointer transition-colors">Sat</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md cursor-pointer transition-colors">Sun</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md cursor-pointer transition-colors">Mon</button>
+</div>
+</div>
+<!-- Simulcast Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Show 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-space-sm group cursor-pointer shadow-lg">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Anime mecha launch bay with massive humanoid robot having glowing blue optical visor and vernier thrusters firing orange flames during a countdown launch. Dark industrial aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQD2j_VNPYTYv3l6K7Xtlai9nODQ-svZQkRVeB4gsrvmwYuAxTI9EL7gc4OFEwKGbJeUqzqEKepvf0WR-j4iDPQW27anZsVBOZldAd_sa6abVKtLHIUseSQBiDQgdyg5EdLMCVTx8LDuwoisQiWdbLatxWawxkAJceN4VAuZMlxg_7PVHBXc47wOmQPnuXyimim1U5AovxOzftKW4YtI92BlIxxjXIihrXtd1FqAsRJdCTSJcEkyBl9Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary-container font-label-sm text-label-sm font-bold">
+            23:30 JST
+          </span>
+<span class="absolute bottom-2 left-2 font-label-sm text-label-sm text-on-surface font-bold">
+            Episode 9 Airing
+          </span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider font-bold">Every Friday</span>
+<button class="text-outline hover:text-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">alarm_add</span>
+</button>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors mt-0.5">Armored Core: V-Genesis</span>
+<span class="font-body-sm text-body-sm text-outline mt-0.5">Mecha • Military Action • 4K</span>
+</div>
+</div>
+<!-- Show 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-space-sm group cursor-pointer shadow-lg">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Anime hacker operative sitting in a dark room surrounded by dozens of curved floating holographic terminal screens displaying cryptic green and cyan matrix code streams. Cyberpunk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUGbJM7qDuzVh0m3SKAN7fnjGsDAUHPaQIQ-2Ms9XseDK5dZrryw2aCnrdd71E7QNOWNrMPmaTk-RX1OB5SBNwSmenIsSqjVIZM4YAafgM-TCu8KVpWcrSyT1prKH28AfH95BicQMHew2GJBe75U7j9i09_H0VIa4FWA1x2IQbhi66NL68RpZcRmhB7w1eKPdZflonilHJbEyF7gpEPoCGYJf76UmDBSwQq2X49t5S44nXf9tSRFHiOg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary-container font-label-sm text-label-sm font-bold">
+            01:00 JST
+          </span>
+<span class="absolute bottom-2 left-2 font-label-sm text-label-sm text-on-surface font-bold">
+            Episode 6 Airing
+          </span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider font-bold">Every Friday</span>
+<button class="text-outline hover:text-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">alarm_add</span>
+</button>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors mt-0.5">Tokyo Hex Code</span>
+<span class="font-body-sm text-body-sm text-outline mt-0.5">Thriller • Cyber Espionage</span>
+</div>
+</div>
+<!-- Show 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-space-sm group cursor-pointer shadow-lg">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Anime covert operative clad in black tactical stealth suit leaping across neon billboards in a rain drenched futuristic city with purple glowing visor and twin suppressed submachine guns." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGN6K-wlhg_8sIv2PQVsAkZOdJwZLYGSGqcLVpQxJtnaprcFHMqvmTi8dfpyNnPZBw8P7i4f5Po7BO_3tX17wAkpx46cxBdDWj6MOPt_dnwDKQJLak_ZdEllGm2TVAXCFmKmmKIpuk6xnK2LqcLn9i2vw47yP6G7-R4x1CLDVDZi8B6pmYR_SysVa0KR5OnRar3x7L63V7I-iq6ahd-Tdtpt8ax-lKmEFpZVjfegmqMlyUjsAP7fFz-A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary-container font-label-sm text-label-sm font-bold">
+            Tomorrow 21:00
+          </span>
+<span class="absolute bottom-2 left-2 font-label-sm text-label-sm text-on-surface font-bold">
+            Episode 8 Premiere
+          </span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider font-bold">Every Saturday</span>
+<button class="text-outline hover:text-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">alarm_add</span>
+</button>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors mt-0.5">Ghost Protocol 2099</span>
+<span class="font-body-sm text-body-sm text-outline mt-0.5">Sci-Fi • Stealth Action • Atmos</span>
+</div>
+</div>
+<!-- Show 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-space-sm group cursor-pointer shadow-lg">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Anime magical girl warrior in black and crimson armor wielding an electric rapier facing towering shadowy eldritch titans beneath a shattered blood moon in space. Vivid optical contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn7NQJTYhTZWUYhP6uOlbVHUCxneysiVHw8EbUSmgw6h91V68dNQjQzoMDqIG0OWPYMhwHp3-DFfAsLvsG2bVdldiF4P2RpfTPI63f08g6P8tCx1KrRshBJ1savDkdqmWeqIPNwUbQ_sVNfH77P3hr6FibcT4RZ9CuBvsEH4LwJ8tRq1yTZtLy05K4ppRwJa4v0Rp1obHfrJs9fSvE0iX5p3QbI3TZrPvekkiphmbVFiOWV-QzmrXj9Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 via-transparent to-transparent"></div>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary-container font-label-sm text-label-sm font-bold">
+            Sunday 18:30
+          </span>
+<span class="absolute bottom-2 left-2 font-label-sm text-label-sm text-on-surface font-bold">
+            Episode 11 Airing
+          </span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider font-bold">Every Sunday</span>
+<button class="text-outline hover:text-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">alarm_add</span>
+</button>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate group-hover:text-secondary-container transition-colors mt-0.5">Neon Tokyo: Eclipse</span>
+<span class="font-body-sm text-body-sm text-outline mt-0.5">Dark Fantasy • Superpower</span>
+</div>
+</div>
+</div>
+</section>
+<!-- COMMUNITY & VIP CINEMA PROMO (Asymmetric Split Panel) -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-xl">
+<div class="relative w-full rounded-2xl overflow-hidden bg-gradient-to-r from-surface-container to-surface-container-low p-space-lg lg:p-space-xl flex flex-col lg:flex-row items-center justify-between gap-space-xl shadow-2xl">
+<!-- Ambient Glow Behind Panel -->
+<div class="absolute -right-20 -top-20 w-96 h-96 rounded-full bg-secondary-container/10 filter blur-3xl pointer-events-none"></div>
+<div class="absolute -left-20 -bottom-20 w-96 h-96 rounded-full bg-primary-container/10 filter blur-3xl pointer-events-none"></div>
+<!-- Left Text Content -->
+<div class="relative z-10 flex flex-col max-w-xl gap-space-sm">
+<div class="inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-primary-container/15 text-primary font-label-sm text-label-sm uppercase tracking-widest w-fit">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>Zero-Compression Theatre Guild</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg font-extrabold text-on-surface tracking-tight">
+          Unlock Pure Bitrate Mastery with <span class="text-secondary-container">INFINX VIP</span>
+</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+          Experience uncompressed 80 Mbps master streams directly from studio render pipelines in Tokyo. Zero artifacting, Dolby Atmos true surround, and early 1-hour premiere access.
+        </p>
+<!-- Feature List Metrics -->
+<div class="grid grid-cols-3 gap-space-md pt-space-sm">
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-secondary-container">80 Mbps</span>
+<span class="font-label-sm text-label-sm text-outline">Raw Master Feed</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-primary">0 ms</span>
+<span class="font-label-sm text-label-sm text-outline">Stream Buffer Lag</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-tertiary">24/7</span>
+<span class="font-label-sm text-label-sm text-outline">Watch Party Lounge</span>
+</div>
+</div>
+</div>
+<!-- Right Interactive VIP Card Deck -->
+<div class="relative z-10 flex flex-col sm:flex-row items-center gap-space-md w-full lg:w-auto shrink-0">
+<!-- VIP Pass Card -->
+<div class="p-space-lg rounded-xl bg-surface-container-highest/60 backdrop-blur-xl flex flex-col gap-space-md w-full sm:w-72 shadow-xl">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[22px]">workspace_premium</span>
+<span class="font-label-md text-label-md font-bold uppercase tracking-wider">VIP PASS</span>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">$12.99<span class="font-body-sm text-body-sm text-outline">/mo</span></span>
+</div>
+<ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[16px]">check_circle</span>
+<span>4K Ultra-HD + Dolby Vision</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[16px]">check_circle</span>
+<span>Synchronized Tokyo Watch Parties</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[16px]">check_circle</span>
+<span>Offline Offline Master Downloads</span>
+</li>
+</ul>
+<button class="w-full py-2.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_20px_rgba(255,80,110,0.5)] hover:shadow-[0_0_28px_rgba(255,80,110,0.8)] transition-all cursor-pointer">
+            Activate VIP Pass
+          </button>
+</div>
+<!-- Discord Lounge Card -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md w-full sm:w-64 shadow-xl">
+<div class="flex items-center gap-space-xs text-secondary-container">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+<span class="font-label-md text-label-md font-bold uppercase tracking-wider">Discord Core</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">148,200+</span>
+<span class="font-body-sm text-body-sm text-outline">Active Cinephiles & Critics</span>
+</div>
+<a class="inline-flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-surface-container-high text-on-surface hover:text-secondary-container transition-colors font-label-md text-label-md" href="#">
+<span>Join Broadcast Core</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-8px_32px_rgba(0,0,0,0.9)]"><div class="w-full px-gutter py-space-xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-md"><div class="flex items-center gap-space-sm"><div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container shadow-[0_0_12px_rgba(0,238,252,0.3)]"><svg class="w-5 h-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178z" fill="#00eefc"></path></svg></div><span class="font-headline-sm text-headline-sm font-extrabold tracking-wide text-secondary-container">INFINX<span class="text-primary-container ml-1">ANIME</span></span></div><p class="font-body-md text-body-md text-outline max-w-sm">Theatre Grade OLED Anime Streaming. Pure AMOLED zero-floor masterings, uncompressed audio bitrate, and simultaneous Tokyo transmissions.</p><div class="flex items-center gap-space-xs mt-space-xs"><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-secondary tracking-widest uppercase shadow-[0_0_8px_rgba(0,238,252,0.2)]">4K UHD</div><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-primary-fixed tracking-widest uppercase shadow-[0_0_8px_rgba(255,80,110,0.2)]">HDR10+</div><div class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-label-sm text-tertiary tracking-widest uppercase shadow-[0_0_8px_rgba(160,120,255,0.2)]">ATMOS</div></div></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Browse</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="browse" href="#">Top Airing Masterpieces</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="simulcasts" href="#">New Spring Releases</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="browse" href="#">Dual-Audio Dubbed</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="movies" href="#">Dolby Vision Features</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="browse" href="#">Classic Remasters</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Community</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="community" href="#">Infinx Discord Core</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="community" href="#">Watch Parties</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="community" href="#">Soundtrack Lounge</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="community" href="#">Fan Art Matrix</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Legal & System</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline"><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">License Agreements</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">Privacy Protocols</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">Device Compatibility</a></li><li class="hover:text-secondary-container transition-colors"><a data-path="terms-of-service" href="#">DRM Calibration</a></li></ul></div></div><div class="mt-space-xl pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-lowest"><span class="font-body-sm text-body-sm text-outline">© 2025 INFINX ANIME BROADCAST CORP. ALL RIGHTS RESERVED. ZERO RE-COMPRESSION STANDARD.</span><div class="flex items-center gap-space-md"><span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">All Tokyo Feeds Nominal</span></div></div></div></footer></body></html>

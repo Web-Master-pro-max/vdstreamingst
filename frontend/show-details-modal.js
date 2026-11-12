@@ -896,7 +896,7 @@
     const rawBanner = show.banner || show.poster;
     const bannerUrl = (typeof window.formatMediaUrl === 'function')
       ? window.formatMediaUrl(rawBanner)
-      : (rawBanner || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800');
+      : (rawBanner || 'Postes/spyfamS3p.jpg');
     if (backdropEl) backdropEl.src = bannerUrl;
 
     // Genres
@@ -971,7 +971,7 @@
         seasonsCarousel.innerHTML = seasonsList.map((s, idx) => {
           const isCurrent = s.isCurrent || (s.anilistId && parseInt(s.anilistId) === parseInt(show.anilistId));
           const seasonNum = s.seasonNumber || idx + 1;
-          const posterImg = s.poster || s.banner || show.poster || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+          const posterImg = s.poster || s.banner || show.poster || 'Postes/spyfamS3p.jpg';
           const typeLabel = s.type || 'TV';
           const yearLabel = s.year ? ` • ${s.year}` : '';
           const epLabel = s.episodes ? ` • ${s.episodes} Ep` : '';
@@ -985,7 +985,7 @@
                  title="${displayTitle}"
                  onclick="window.switchShowSeason('${s.anilistId || s.id}')">
               <div class="season-poster-wrapper">
-                <img src="${posterImg}" alt="${displayTitle}" class="season-poster-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400'">
+                <img src="${posterImg}" alt="${displayTitle}" class="season-poster-img" loading="lazy" onerror="this.src='Postes/spyfamS3p.jpg'">
                 <span class="season-badge-pill">${badgeText}</span>
                 ${s.rating ? `<span class="season-rating-pill"><i class="fas fa-star"></i> ${s.rating}</span>` : ''}
               </div>

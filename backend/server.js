@@ -227,9 +227,13 @@ app.post('/api/settings', authenticate, requireAdmin, (req, res) => {
 const frontendPath = fs.existsSync('/app/frontend') ? '/app/frontend' : path.join(__dirname, '../frontend');
 const videoPlayerPath = path.join(frontendPath, 'video-player');
 
-// Ensure uploads directory exists
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath, { recursive: true });
+// Ensure uploads directory exists safely without crashing
+try {
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+} catch (e) {
+  console.warn(`[Storage] Could not create uploadsPath (${uploadsPath}):`, e.message);
 }
 
 // Serve uploads folder for videos, posters, banners, and HLS streams

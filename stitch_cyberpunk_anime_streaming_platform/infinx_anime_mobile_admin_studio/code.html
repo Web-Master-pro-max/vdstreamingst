@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#131313;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#23005c", "on-tertiary-container": "#340080", "primary-fixed-dim": "#ffb2b8", "primary-fixed": "#ffdadb", "inverse-on-surface": "#303030", "background": "#131313", "on-background": "#e2e2e2", "on-error": "#690005", "secondary": "#d3fbff", "tertiary": "#d0bcff", "primary-container": "#ff506e", "on-primary-fixed-variant": "#91002d", "secondary-container": "#00eefc", "outline-variant": "#5e3e41", "surface-container-lowest": "#0e0e0e", "tertiary-fixed-dim": "#d0bcff", "inverse-surface": "#e2e2e2", "tertiary-fixed": "#e9ddff", "surface-container-highest": "#353535", "on-secondary-fixed": "#002022", "surface-container-low": "#1b1b1b", "secondary-fixed": "#7df4ff", "surface-dim": "#131313", "surface-variant": "#353535", "on-error-container": "#ffdad6", "outline": "#ae8789", "on-primary-container": "#5b0018", "secondary-fixed-dim": "#00dbe9", "on-primary": "#67001d", "error-container": "#93000a", "on-secondary": "#00363a", "surface-container": "#1f1f1f", "surface-bright": "#393939", "primary": "#ffb2b8", "on-surface-variant": "#e8bcbe", "error": "#ffb4ab", "on-surface": "#e2e2e2", "tertiary-container": "#a078ff", "on-secondary-fixed-variant": "#004f54", "on-secondary-container": "#00686f", "inverse-primary": "#be003d", "on-primary-fixed": "#40000f", "surface": "#131313", "surface-container-high": "#2a2a2a", "on-tertiary-fixed-variant": "#5516be", "on-tertiary": "#3c0091", "surface-tint": "#ffb2b8" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "gutter-mobile": "0.75rem", "margin": "3rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, "fontFamily": { "headline-sm": ["Outfit"], "headline-md": ["Outfit"], "display-hero": ["Outfit"], "label-md": ["Inter"], "display-hero-mobile": ["Outfit"], "body-sm": ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], "headline-lg-mobile": ["Outfit"], "label-lg": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Outfit"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "display-hero": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }], "display-hero-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "800" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.6)]"><div class="h-16 px-gutter-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-secondary-fixed transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm font-bold text-on-surface truncate">Studio Admin</h1></div><div class="flex items-center gap-space-xs"><button class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[22px]">share</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs shadow-[0_0_12px_rgba(255,178,184,0.4)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface">
+<!-- Cluster Telemetry Banner & Live Sync Status -->
+<section class="px-gutter-mobile py-space-sm bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary-container"></span>
+</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary-fixed">Tokyo CDN: 99.98% Up</span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">sensors</span>
+<span class="font-label-sm text-label-sm text-on-surface">Sync: 1.2s ago</span>
+</div>
+</div>
+<!-- Quick Ops Actions -->
+<div class="grid grid-cols-2 gap-space-xs pt-space-xs">
+<button class="flex items-center justify-center gap-space-xs bg-primary-container text-on-primary-container py-2.5 px-3 rounded-lg font-label-lg text-label-lg active:scale-95 transition-transform shadow-[0_0_16px_rgba(255,80,110,0.35)]" onclick="toggleIngestDrawer(true)">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ New Release</span>
+</button>
+<button class="flex items-center justify-center gap-space-xs bg-surface-container-high text-secondary-fixed py-2.5 px-3 rounded-lg font-label-lg text-label-lg active:scale-95 transition-transform" onclick="toggleIngestDrawer(true)">
+<span class="material-symbols-outlined text-[18px]">stream</span>
+<span>Ingest Stream</span>
+</button>
+</div>
+</section>
+<!-- 2x2 KPI Metrics Grid -->
+<section class="p-gutter-mobile flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Live Cluster Telemetry</span>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">24H CYCLE</span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs">
+<!-- Metric 1: Total Views -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase font-semibold">Total Views</span>
+<span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
+</div>
+<div class="my-space-xs">
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface leading-none">4.28M</div>
+<span class="font-label-sm text-label-sm text-secondary-fixed flex items-center gap-0.5 mt-0.5 font-bold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>+14.2%
+          </span>
+</div>
+<!-- Sparkline chart SVG -->
+<div class="w-full h-7 mt-1">
+<svg class="w-full h-full text-primary" preserveaspectratio="none" viewbox="0 0 100 24">
+<path d="M 0 20 Q 15 18, 30 14 T 60 16 T 85 4 T 100 2" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.5"></path>
+<path d="M 0 20 Q 15 18, 30 14 T 60 16 T 85 4 T 100 2 L 100 24 L 0 24 Z" fill="currentColor" fill-opacity="0.12"></path>
+</svg>
+</div>
+</div>
+<!-- Metric 2: Live Streamers -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm relative">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase font-semibold">Active Streams</span>
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-80"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary-fixed-dim"></span>
+</span>
+</div>
+<div class="my-space-xs">
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-secondary-fixed leading-none">184,209</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5 block">Live Edge Concurrents</span>
+</div>
+<!-- Peak mini-bar meter -->
+<div class="flex items-center gap-1 mt-1">
+<div class="h-1.5 flex-1 bg-secondary-container rounded-full"></div>
+<div class="h-1.5 flex-1 bg-secondary-container rounded-full"></div>
+<div class="h-1.5 flex-1 bg-secondary-container rounded-full"></div>
+<div class="h-1.5 flex-1 bg-secondary-container/40 rounded-full"></div>
+<div class="h-1.5 flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+</div>
+<!-- Metric 3: Master Titles -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase font-semibold">Catalog Masters</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary">movie</span>
+</div>
+<div class="my-space-xs">
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface leading-none">1,428</div>
+<span class="font-label-sm text-label-sm text-tertiary-fixed font-semibold mt-0.5 block">42 In Simulcast</span>
+</div>
+<div class="flex gap-1 items-center font-label-sm text-label-sm text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>99.2% Sub/Dub sync</span>
+</div>
+</div>
+<!-- Metric 4: Bandwidth Quota -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase font-semibold">Edge CDN Quota</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">cloud_sync</span>
+</div>
+<div class="my-space-xs">
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface leading-none">182.4 <span class="text-xs font-normal">TB</span></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5 block">Of 250 TB Pool (73%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 73%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Content Management Operations Shelf -->
+<section class="px-gutter-mobile pb-space-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Simulcast Titles</span>
+<span class="bg-primary/20 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full font-bold">3 ACTIVE NODES</span>
+</div>
+<button class="text-secondary-fixed font-label-sm text-label-sm font-semibold flex items-center">
+        Filter <span class="material-symbols-outlined text-[16px] ml-0.5">filter_list</span>
+</button>
+</div>
+<!-- Title Card 1: Solo Leveling (Expanded State) -->
+<article class="bg-surface-container rounded-xl overflow-hidden shadow-lg transition-all duration-200">
+<div class="p-space-sm flex gap-space-sm cursor-pointer" onclick="toggleDetails('solo-leveling')">
+<div class="w-20 h-28 rounded-lg overflow-hidden shrink-0 relative bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="High contrast anime cyber poster of Solo Leveling hunter wielding glowing neon violet daggers in dark cyberpunk Seoul with electric blue runes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPtPhsDoCPGWrcRekEQcGkqK1UwOjh5R4FnR65qsPwF_DmP1N4jWoyuYPSxlYsryEOfEpGfmJHI6PAJ-oT3b_Gi2icGoKUaDsfgh3jSfZ1RKyJEQ2kGSlum7zhKOsMgvRVCVdFrTOmv3YeX1ou9OEwWM7cKJNN8NB_Dalo9Bdl0kTSKYL0Hrb_nJXd8TizZnI1xT0Pj6NwXYbwkIERv5I5MqMhl5azr0VbP1IZ-4F3BWkim3uNE_ezKA"/>
+<span class="absolute bottom-1 left-1 bg-surface-container-lowest/80 text-secondary-fixed text-[9px] font-bold px-1 rounded">4K DOLBY</span>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div>
+<div class="flex items-center justify-between gap-1">
+<span class="bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm px-1.5 py-0.5 rounded uppercase font-bold">Simulcast Airing</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] transition-transform" id="arrow-solo-leveling">expand_less</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate mt-1">Solo Leveling: Ragnarok</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">A-1 Pictures • S1 Ep 12/24</p>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-1">
+<span class="font-label-sm text-label-sm flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">local_fire_department</span> 942k views
+            </span>
+<span class="font-label-sm text-label-sm text-secondary-fixed">Stream: 100% OK</span>
+</div>
+</div>
+</div>
+<!-- Expandable Controls Drawer -->
+<div class="px-space-sm pb-space-sm flex flex-col gap-space-xs bg-surface-container-low pt-space-xs" id="details-solo-leveling">
+<div class="grid grid-cols-3 gap-space-xs">
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed">edit_note</span>
+<span>Metadata</span>
+</button>
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-all" onclick="triggerQuickAdd('Solo Leveling: Ragnarok', 1, 13)">
+<span class="material-symbols-outlined text-[18px] text-primary">video_call</span>
+<span>+ Ep 13</span>
+</button>
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-all" onclick="showHealthStatus('Solo Leveling Ep 12', '99.99%', '4K @ 60fps', '0 Dropped Frames')">
+<span class="material-symbols-outlined text-[18px] text-tertiary">monitor_heart</span>
+<span>Health</span>
+</button>
+</div>
+<div class="flex items-center justify-between bg-surface-container px-2.5 py-1.5 rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tokyo Transcode Engine</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed font-semibold">AV1 • HEVC • H.264 Ready</span>
+</div>
+</div>
+</article>
+<!-- Title Card 2: Cyberpunk Edgerunners -->
+<article class="bg-surface-container rounded-xl overflow-hidden shadow-md transition-all">
+<div class="p-space-sm flex gap-space-sm cursor-pointer" onclick="toggleDetails('edgerunners')">
+<div class="w-20 h-28 rounded-lg overflow-hidden shrink-0 relative bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="Cyberpunk night neon cityscape anime poster with glowing yellow tech jacket and cybernetic eye implants radiating electric blue hues" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGcG-_Zhmn4LnNeopRaenAIglV_iWz7EzMS8FvyQFwsD6gXqzkASS3cgaRD4q5GEkEhL6DpxaEWIfMHZ9S-hStfaMMy3EnPsb_KjhBpBnXEuMXaAZvgZCEN-Dv_qSBFJ_MFIARCFIpTCTrWpVtpU-TlfoaoNwZGwkvib3UbUSHWdOBRoOtFRjV6vN1y4jg-deaVXlR9SHDULU2cKAP5MfUbK92OXP0UWMeYUbFMNlJz2qd-4G0W8TKmg"/>
+<span class="absolute bottom-1 left-1 bg-surface-container-lowest/80 text-secondary-fixed text-[9px] font-bold px-1 rounded">HDR10+</span>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div>
+<div class="flex items-center justify-between gap-1">
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-1.5 py-0.5 rounded uppercase font-semibold">Completed Vault</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] transition-transform" id="arrow-edgerunners">expand_more</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate mt-1">Cyberpunk: Edgerunners</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Studio Trigger • S1 Ep 10/10</p>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-1">
+<span class="font-label-sm text-label-sm flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[14px]">play_circle</span> 681k views
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Archived Master</span>
+</div>
+</div>
+</div>
+<div class="hidden px-space-sm pb-space-sm flex flex-col gap-space-xs bg-surface-container-low pt-space-xs" id="details-edgerunners">
+<div class="grid grid-cols-3 gap-space-xs">
+<button class="bg-surface-container-high text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed">edit_note</span>
+<span>Metadata</span>
+</button>
+<button class="bg-surface-container-high text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95">
+<span class="material-symbols-outlined text-[18px] text-primary">download</span>
+<span>Archive</span>
+</button>
+<button class="bg-surface-container-high text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95" onclick="showHealthStatus('Edgerunners Vault', '100%', 'Bitrate 48 Mbps', 'Zero Error Flags')">
+<span class="material-symbols-outlined text-[18px] text-tertiary">monitor_heart</span>
+<span>Health</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Title Card 3: Bleach TYBW -->
+<article class="bg-surface-container rounded-xl overflow-hidden shadow-md transition-all">
+<div class="p-space-sm flex gap-space-sm cursor-pointer" onclick="toggleDetails('bleach')">
+<div class="w-20 h-28 rounded-lg overflow-hidden shrink-0 relative bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="Stylized anime sword blade shining with white spiritual energy against deep midnight indigo skies with crimson calligraphy accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5oqY7P9gOhY5VVemHkzAVTlNRuqs_2YA-pvP8_3doMlaAV5O_Nctmv9F38UwRTvwQKIFrLacFwAky1VJaqJA4tYMyw0x64Kt3x18hFFjYY7H6lD29-3riTniCggIRa2Z02DWZWpIXnzzxdV7szkgg3ihIT7n1H6zKFCMj-88ityClSFJneR6Hy9HLssbc_9MUnDURYamKmvP8J-MQAVx_N0xJAqBUfssd9h7XTKQsJlRESoyLeWRxrw"/>
+<span class="absolute bottom-1 left-1 bg-surface-container-lowest/80 text-secondary-fixed text-[9px] font-bold px-1 rounded">5.1 SURROUND</span>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div>
+<div class="flex items-center justify-between gap-1">
+<span class="bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm px-1.5 py-0.5 rounded uppercase font-bold">Simulcast Airing</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] transition-transform" id="arrow-bleach">expand_more</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate mt-1">Bleach: TYBW Part 3</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Pierrot • S3 Ep 11/13</p>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-1">
+<span class="font-label-sm text-label-sm flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">local_fire_department</span> 512k views
+            </span>
+<span class="font-label-sm text-label-sm text-secondary-fixed">Broadcast Rail Active</span>
+</div>
+</div>
+</div>
+<div class="hidden px-space-sm pb-space-sm flex flex-col gap-space-xs bg-surface-container-low pt-space-xs" id="details-bleach">
+<div class="grid grid-cols-3 gap-space-xs">
+<button class="bg-surface-container-high text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed">edit_note</span>
+<span>Metadata</span>
+</button>
+<button class="bg-surface-container-high text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95" onclick="triggerQuickAdd('Bleach: TYBW Part 3', 3, 12)">
+<span class="material-symbols-outlined text-[18px] text-primary">video_call</span>
+<span>+ Ep 12</span>
+</button>
+<button class="bg-surface-container-high text-on-surface py-2 rounded-lg font-label-sm text-label-sm flex flex-col items-center justify-center gap-0.5 active:scale-95" onclick="showHealthStatus('Bleach TYBW Part 3 Ep 11', '99.95%', 'HLS Stream Sync 24ms', 'Healthy CDN Cache')">
+<span class="material-symbols-outlined text-[18px] text-tertiary">monitor_heart</span>
+<span>Health</span>
+</button>
+</div>
+</div>
+</article>
+</section>
+<!-- Node Telemetry Diagnostics Footer Panel -->
+<footer class="mt-auto bg-surface-container-lowest p-space-sm flex flex-col gap-space-xs border-none">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Global Distribution Latency</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span> Optimal Routing
+      </span>
+</div>
+<!-- Latency Chips Row -->
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex-1 bg-surface-container px-2 py-1.5 rounded-lg flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">JP-East</span>
+<span class="font-label-md text-label-md text-secondary-fixed font-bold">3.2 ms</span>
+</div>
+<div class="flex-1 bg-surface-container px-2 py-1.5 rounded-lg flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">US-West</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">42.1 ms</span>
+</div>
+<div class="flex-1 bg-surface-container px-2 py-1.5 rounded-lg flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">EU-Central</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">89.4 ms</span>
+</div>
+</div>
+</footer>
+<!-- Stream Ingest Drawer / Slide-Over Modal -->
+<div class="fixed inset-0 z-50 bg-surface-container-lowest/80 backdrop-blur-md hidden flex-col justify-end transition-opacity" id="ingest-drawer">
+<div class="bg-surface-container-high w-full max-h-[751px] rounded-t-2xl p-space-md flex flex-col gap-space-sm overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+<!-- Drawer Header -->
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded-full bg-primary-container animate-pulse"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Mobile Stream Ingest</h2>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:text-primary transition-colors" onclick="toggleIngestDrawer(false)">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Target Anime Selector -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Series Target</label>
+<select class="w-full bg-surface-container text-on-surface font-body-md text-body-md p-2.5 rounded-lg focus:outline-none" id="series-target">
+<option value="solo">Solo Leveling: Ragnarok (A-1 Pictures)</option>
+<option value="bleach">Bleach: TYBW Part 3 (Pierrot)</option>
+<option value="edgerunners">Cyberpunk: Edgerunners (Trigger)</option>
+<option value="custom">+ Register Brand New Master</option>
+</select>
+</div>
+<!-- Season & Episode Grid -->
+<div class="grid grid-cols-2 gap-space-xs">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Season Number</label>
+<input class="w-full bg-surface-container text-on-surface font-body-md text-body-md p-2.5 rounded-lg focus:outline-none" id="season-num" type="number" value="1"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Episode Number</label>
+<input class="w-full bg-surface-container text-on-surface font-body-md text-body-md p-2.5 rounded-lg focus:outline-none" id="episode-num" type="number" value="13"/>
+</div>
+</div>
+<!-- HLS Stream URL & Validator -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">HLS Stream Endpoint (.m3u8)</label>
+<span class="font-label-sm text-label-sm text-secondary-fixed hidden" id="endpoint-status">Validated OK</span>
+</div>
+<div class="flex gap-space-xs">
+<input class="flex-1 bg-surface-container text-on-surface font-body-sm text-body-sm p-2.5 rounded-lg focus:outline-none" id="stream-url" placeholder="https://ingest.tokyo.mesh/live/master.m3u8" type="text"/>
+<button class="bg-surface-bright text-secondary-fixed font-label-md text-label-md px-3 rounded-lg active:scale-95 shrink-0 flex items-center gap-1" onclick="validateEndpoint()" type="button">
+<span class="material-symbols-outlined text-[16px]">speed</span> Test
+          </button>
+</div>
+</div>
+<!-- Subtitle Manifest Selector -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Subtitle Manifest File (.ass / .vtt)</label>
+<div class="bg-surface-container p-2.5 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-tertiary text-[20px]">subtitles</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate" id="sub-filename">master_ep13_multitrack.ass</span>
+</div>
+<button class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2.5 py-1 rounded">Change</button>
+</div>
+</div>
+<!-- Publish Action CTA -->
+<div class="pt-space-xs pb-space-sm flex flex-col gap-2">
+<button class="w-full bg-primary-container text-on-primary-container py-3 rounded-full font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs active:scale-95 shadow-[0_0_24px_rgba(255,80,110,0.5)] transition-all" id="publish-btn" onclick="dispatchPublish()">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+<span>Publish to Tokyo Simulcast Rail</span>
+</button>
+<span class="font-label-sm text-label-sm text-center text-on-surface-variant">Live transcoding shards will deploy to 142 edge regions instantly.</span>
+</div>
+</div>
+</div>
+<!-- Interactive Feedback Toast / Modal for Health Checks -->
+<div class="fixed top-20 left-4 right-4 bg-surface-container-highest text-on-surface p-space-sm rounded-xl shadow-2xl flex items-center justify-between hidden z-50" id="toast">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]" id="toast-icon">check_circle</span>
+<span class="font-body-sm text-body-sm" id="toast-msg">Operation finished.</span>
+</div>
+<button class="text-on-surface-variant" onclick="hideToast()">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<script>
+  function toggleDetails(id) {
+    const el = document.getElementById('details-' + id);
+    const arrow = document.getElementById('arrow-' + id);
+    if (!el) return;
+    const isHidden = el.classList.contains('hidden');
+    if (isHidden) {
+      el.classList.remove('hidden');
+      if (arrow) arrow.innerText = 'expand_less';
+    } else {
+      el.classList.add('hidden');
+      if (arrow) arrow.innerText = 'expand_more';
+    }
+  }
+
+  function toggleIngestDrawer(show) {
+    const drawer = document.getElementById('ingest-drawer');
+    if (show) {
+      drawer.classList.remove('hidden');
+      drawer.classList.add('flex');
+    } else {
+      drawer.classList.add('hidden');
+      drawer.classList.remove('flex');
+    }
+  }
+
+  function triggerQuickAdd(title, season, episode) {
+    toggleIngestDrawer(true);
+    const sInput = document.getElementById('season-num');
+    const eInput = document.getElementById('episode-num');
+    if (sInput) sInput.value = season;
+    if (eInput) eInput.value = episode;
+    showToast(`Quick Ingest initialized for ${title}`);
+  }
+
+  function validateEndpoint() {
+    const status = document.getElementById('endpoint-status');
+    const urlInput = document.getElementById('stream-url');
+    if (!urlInput.value) {
+      urlInput.value = "https://ingest.tokyo.mesh/hls/ragnarok-live.m3u8";
+    }
+    if (status) {
+      status.innerText = "Latency: 14ms (Pass)";
+      status.classList.remove('hidden');
+    }
+    showToast("HLS Manifest verified across JP-East edges!");
+  }
+
+  function dispatchPublish() {
+    const btn = document.getElementById('publish-btn');
+    btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[20px]">sync</span> Publishing to Rail...`;
+    setTimeout(() => {
+      btn.innerHTML = `<span class="material-symbols-outlined text-[20px]">done_all</span> Live on 142 Nodes!`;
+      showToast("Master successfully distributed to Tokyo Simulcast Rail!");
+      setTimeout(() => {
+        toggleIngestDrawer(false);
+        btn.innerHTML = `<span class="material-symbols-outlined text-[20px]">rocket_launch</span> Publish to Tokyo Simulcast Rail`;
+      }, 1400);
+    }, 1200);
+  }
+
+  function showHealthStatus(title, uptime, bitrate, packetLoss) {
+    showToast(`${title} Health: ${uptime} up | ${bitrate} | ${packetLoss}`);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+    if (toast && toastMsg) {
+      toastMsg.innerText = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3500);
+    }
+  }
+
+  function hideToast() {
+    const toast = document.getElementById('toast');
+    if (toast) toast.classList.add('hidden');
+  }
+</script></main></body></html>

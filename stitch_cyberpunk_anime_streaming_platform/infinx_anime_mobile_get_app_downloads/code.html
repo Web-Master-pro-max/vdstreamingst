@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#131313;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#23005c", "on-tertiary-container": "#340080", "primary-fixed-dim": "#ffb2b8", "primary-fixed": "#ffdadb", "inverse-on-surface": "#303030", "background": "#131313", "on-background": "#e2e2e2", "on-error": "#690005", "secondary": "#d3fbff", "tertiary": "#d0bcff", "primary-container": "#ff506e", "on-primary-fixed-variant": "#91002d", "secondary-container": "#00eefc", "outline-variant": "#5e3e41", "surface-container-lowest": "#0e0e0e", "tertiary-fixed-dim": "#d0bcff", "inverse-surface": "#e2e2e2", "tertiary-fixed": "#e9ddff", "surface-container-highest": "#353535", "on-secondary-fixed": "#002022", "surface-container-low": "#1b1b1b", "secondary-fixed": "#7df4ff", "surface-dim": "#131313", "surface-variant": "#353535", "on-error-container": "#ffdad6", "outline": "#ae8789", "on-primary-container": "#5b0018", "secondary-fixed-dim": "#00dbe9", "on-primary": "#67001d", "error-container": "#93000a", "on-secondary": "#00363a", "surface-container": "#1f1f1f", "surface-bright": "#393939", "primary": "#ffb2b8", "on-surface-variant": "#e8bcbe", "error": "#ffb4ab", "on-surface": "#e2e2e2", "tertiary-container": "#a078ff", "on-secondary-fixed-variant": "#004f54", "on-secondary-container": "#00686f", "inverse-primary": "#be003d", "on-primary-fixed": "#40000f", "surface": "#131313", "surface-container-high": "#2a2a2a", "on-tertiary-fixed-variant": "#5516be", "on-tertiary": "#3c0091", "surface-tint": "#ffb2b8" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "gutter-mobile": "0.75rem", "margin": "3rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, "fontFamily": { "headline-sm": ["Outfit"], "headline-md": ["Outfit"], "display-hero": ["Outfit"], "label-md": ["Inter"], "display-hero-mobile": ["Outfit"], "body-sm": ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], "headline-lg-mobile": ["Outfit"], "label-lg": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Outfit"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "display-hero": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }], "display-hero-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "800" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.6)]"><div class="h-16 px-gutter-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="flex items-center justify-center w-11 h-11 text-secondary-container"><span class="material-symbols-outlined text-[28px] drop-shadow-[0_0_8px_rgba(0,238,252,0.7)]">all_inclusive</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">INFINX</span><span class="px-1.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm border border-primary-container/40 shadow-[0_0_8px_rgba(255,80,110,0.3)]">VIP</span></div><span class="font-label-sm text-label-sm text-secondary-fixed-dim tracking-wider uppercase truncate">More Hub</span></div></div><div class="flex items-center gap-space-xs"><a class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-secondary-fixed transition-colors" data-path="search-explore" href="#"><span class="material-symbols-outlined text-[22px]">search</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs shadow-[0_0_12px_rgba(255,178,184,0.4)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter-mobile gap-space-lg">
+<!-- Subtle Ambient Glow Orbs -->
+<div class="relative w-full pt-space-md">
+<div class="absolute -top-10 -left-6 w-44 h-44 bg-secondary-container/15 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute top-16 -right-6 w-52 h-52 bg-primary-container/20 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Mobile Hero Header -->
+<div class="relative flex flex-col gap-space-sm z-10">
+<!-- Device Detection Chip -->
+<div class="self-start inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container-high/90 backdrop-blur-md shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span>
+<span class="material-symbols-outlined text-secondary-fixed text-[16px]">smartphone</span>
+<span class="font-label-sm text-label-sm text-on-surface tracking-wider">DETECTED: ANDROID (ARM64-v8a)</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-extrabold tracking-tight text-white mt-space-xs leading-tight">
+        Experience <span class="text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.4)]">Pure Uncompressed</span> Anime <span class="text-primary-fixed drop-shadow-[0_0_12px_rgba(255,80,110,0.4)]">Anywhere</span>.
+      </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        Stream &amp; download 80Mbps studio masters offline directly to your storage with zero transcoding artifacts.
+      </p>
+</div>
+</div>
+<!-- Primary Direct Download Hero Card (Obsidian Glass) -->
+<div class="relative flex flex-col p-space-md rounded-xl bg-surface-container/90 backdrop-blur-2xl shadow-xl overflow-hidden">
+<div class="absolute -right-12 -top-12 w-32 h-32 bg-primary-container/25 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Header with Version Tag -->
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary-container shadow-inner">
+<span class="material-symbols-outlined text-[24px]">android</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg font-bold text-white truncate">INFINX Mobile Client</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed-dim">Official Master Channel</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-label-sm font-bold shadow-[0_0_10px_rgba(255,80,110,0.3)]">v4.2.0-STABLE</span>
+</div>
+<!-- Metadata Badges -->
+<div class="flex flex-wrap gap-space-xs mb-space-md">
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-secondary-container">inventory_2</span> 64.2 MB
+      </span>
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary-fixed">system_update</span> Android 10.0+
+      </span>
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-tertiary">memory</span> Vulkan / AV1 HW
+      </span>
+</div>
+<!-- Big Neon Crimson Action Button -->
+<a class="relative group flex items-center justify-center gap-space-sm w-full py-3.5 px-space-md rounded-full bg-primary-container text-white font-label-lg text-label-lg font-bold shadow-[0_0_24px_rgba(255,80,110,0.6)] active:scale-[0.98] transition-all" href="#" id="download-trigger">
+<span class="material-symbols-outlined text-[22px] animate-bounce">download</span>
+<span>Download Android APK (v4.2.0)</span>
+</a>
+<!-- Checksum Verification Area -->
+<div class="mt-space-md p-space-sm rounded-lg bg-surface-container-lowest/80 flex flex-col gap-1.5">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary-container">verified_user</span> SHA-256 Checksum
+        </span>
+<span class="text-secondary-fixed transition-opacity opacity-0 font-label-sm text-label-sm font-semibold" id="copy-status">COPIED!</span>
+</div>
+<div class="flex items-center justify-between gap-space-xs bg-surface-container-high/60 px-2.5 py-1.5 rounded">
+<code class="font-label-sm text-label-sm text-on-surface-variant truncate select-all" id="checksum-text">e9b04f7c1328ab9f906f3db1887e2b10a2f4c3986</code>
+<button aria-label="Copy Checksum" class="p-1 rounded text-secondary-container hover:text-white active:scale-90 transition-transform" id="copy-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 3-Step Sideload Quick Guide Carousel / Stepper -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm font-bold text-white flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">flash_on</span>
+        Quick Sideload Guide
+      </h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Takes ~30 sec</span>
+</div>
+<div class="grid grid-cols-1 gap-space-sm">
+<!-- Step 1 -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<div class="w-7 h-7 rounded-full bg-secondary-container/20 text-secondary-container flex items-center justify-center font-label-md text-label-md font-bold shrink-0 shadow-[0_0_8px_rgba(0,238,252,0.3)]">
+          1
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white">Save APK File</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Tap the crimson download button above and confirm download in your browser.</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<div class="w-7 h-7 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center font-label-md text-label-md font-bold shrink-0 shadow-[0_0_8px_rgba(255,80,110,0.3)]">
+          2
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white">Allow Installation</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">If prompted by Android, toggle "Allow install from this source" in settings.</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<div class="w-7 h-7 rounded-full bg-tertiary-container/30 text-tertiary-fixed flex items-center justify-center font-label-md text-label-md font-bold shrink-0 shadow-[0_0_8px_rgba(160,120,255,0.4)]">
+          3
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white">Launch &amp; Immerse</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Open INFINX to initiate high-bitrate AV1 direct rendering on your screen.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Core Features Bento Grid -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm font-bold text-white flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">stars</span>
+        Built for Pure Fidelity
+      </h2>
+<span class="font-label-sm text-label-sm text-secondary-fixed">80 Mbps</span>
+</div>
+<!-- Feature Bento Cards (2x2 Compact Mobile Grid) -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Feature 1 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container-low justify-between h-36">
+<div class="w-8 h-8 rounded-lg bg-secondary-container/15 flex items-center justify-center text-secondary-container">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-bold text-white truncate">Master Storage</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Offline uncompressed 1080p &amp; 4K video streams.</span>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container-low justify-between h-36">
+<div class="w-8 h-8 rounded-lg bg-primary-container/15 flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-bold text-white truncate">State Sync</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">&lt;50ms position handoff across all mobile &amp; TV screens.</span>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container-low justify-between h-36">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary-fixed">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-bold text-white truncate">Tokyo Edge CDN</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Zero-buffer raw multiplex routed from Akihabara nodes.</span>
+</div>
+</div>
+<!-- Feature 4 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container-low justify-between h-36">
+<div class="w-8 h-8 rounded-lg bg-secondary-container/15 flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">battery_charging_full</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-bold text-white truncate">True AMOLED 0-Floor</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Pure pixel-off pitch black reduces battery drain by 42%.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Alternative Platforms Interactive Deck -->
+<div class="flex flex-col gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm font-bold text-white flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]">devices_other</span>
+      Other Devices &amp; Matrix Clients
+    </h2>
+<div class="flex flex-col gap-space-xs">
+<!-- Android TV & FireTV -->
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low active:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface shrink-0">
+<span class="material-symbols-outlined text-[20px]">tv</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white truncate">Android TV &amp; FireOS</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">D-Pad HUD • 4K HDR Atmos</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-secondary-fixed font-label-sm text-label-sm font-semibold shrink-0 active:scale-95 transition-transform" type="button">
+          APK (TV)
+        </button>
+</div>
+<!-- Progressive Web App (PWA) -->
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low active:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary-container shrink-0">
+<span class="material-symbols-outlined text-[20px]">captive_portal</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white truncate">Instant Web PWA</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Zero install • WebAssembly AV1</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-secondary-container/20 text-secondary-container font-label-sm text-label-sm font-semibold shrink-0 active:scale-95 transition-transform" id="pwa-install-btn" type="button">
+          Install PWA
+        </button>
+</div>
+<!-- iOS / iPadOS Guide -->
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low active:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-fixed shrink-0">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white truncate">Apple iOS &amp; iPadOS</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Safari Add-to-Home &amp; TestFlight</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold shrink-0 active:scale-95 transition-transform" type="button">
+          Guide
+        </button>
+</div>
+<!-- Desktop Matrix Client -->
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low active:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-tertiary-fixed shrink-0">
+<span class="material-symbols-outlined text-[20px]">laptop_chromebook</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-white truncate">Desktop Matrix Client</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Windows, macOS &amp; Arch Linux</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold shrink-0 active:scale-95 transition-transform" type="button">
+          Get v4.2
+        </button>
+</div>
+</div>
+</div>
+<!-- Security Guarantee Banner -->
+<div class="p-space-sm rounded-xl bg-surface-container-highest/60 flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary-container text-[24px] shrink-0">security</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-bold text-white">Cryptographically Signed Binaries</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Built on automated reproducible GitHub CI/CD pipelines with zero third-party telemetry trackings.</span>
+</div>
+</div>
+</div>
+<script>
+  // MD5 / Checksum 1-tap copy handler
+  const copyBtn = document.getElementById('copy-btn');
+  const checksumText = document.getElementById('checksum-text');
+  const copyStatus = document.getElementById('copy-status');
+
+  if (copyBtn && checksumText && copyStatus) {
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(checksumText.innerText.trim());
+        copyStatus.classList.remove('opacity-0');
+        setTimeout(() => {
+          copyStatus.classList.add('opacity-0');
+        }, 1800);
+      } catch (err) {
+        copyStatus.innerText = 'SELECT TO COPY';
+        copyStatus.classList.remove('opacity-0');
+      }
+    });
+  }
+
+  // Interactive feedback on Download click
+  const downloadBtn = document.getElementById('download-trigger');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = `
+        <span class="material-symbols-outlined text-[20px] animate-spin">refresh</span>
+        <span>Initiating Secure Stream...</span>
+      `;
+      setTimeout(() => {
+        downloadBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[20px] text-secondary-container">check_circle</span>
+          <span>APK Transfer Started</span>
+        `;
+        setTimeout(() => {
+          downloadBtn.innerHTML = originalText;
+        }, 3000);
+      }, 1000);
+    });
+  }
+
+  // PWA trigger feedback
+  const pwaBtn = document.getElementById('pwa-install-btn');
+  if (pwaBtn) {
+    pwaBtn.addEventListener('click', () => {
+      pwaBtn.innerText = 'Added to Launchpad';
+      pwaBtn.classList.replace('text-secondary-container', 'text-white');
+      setTimeout(() => {
+        pwaBtn.innerText = 'Install PWA';
+        pwaBtn.classList.replace('text-white', 'text-secondary-container');
+      }, 2500);
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.8)]" data-active-classes="text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.6)]"><div class="flex justify-around items-center h-16 px-gutter-mobile"><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm font-medium">Home</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="browse-catalog" href="#"><span class="material-symbols-outlined text-[22px]">explore</span><span class="font-label-sm text-label-sm font-medium">Browse</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="watchlist" href="#"><span class="material-symbols-outlined text-[22px]">bookmarks</span><span class="font-label-sm text-label-sm font-medium">Watchlist</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 text-on-surface-variant transition-colors" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-sm text-label-sm font-medium">Profile</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 w-14 h-12 transition-colors text-secondary-container drop-shadow-[0_0_8px_rgba(0,238,252,0.6)]" data-path="more-hub" href="#"><span class="material-symbols-outlined text-[22px]">dashboard_customize</span><span class="font-label-sm text-label-sm font-medium">More</span></a></div></nav></body></html>
