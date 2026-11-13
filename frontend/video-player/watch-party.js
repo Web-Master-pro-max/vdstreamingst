@@ -26,11 +26,11 @@
       if (AudioContextClass) {
         try {
           audioCtx = new AudioContextClass();
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
+      audioCtx.resume().catch(() => { });
     }
   }
 
@@ -44,11 +44,11 @@
       if (AudioContextClass) {
         try {
           audioCtx = new AudioContextClass();
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
+      audioCtx.resume().catch(() => { });
     }
     return audioCtx;
   }
@@ -205,7 +205,7 @@
           currentUser = rawName.charAt(0).toUpperCase() + rawName.slice(1);
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 1. Inject Watch Party Button in Control Bar
     const fullscreenBtn = controlsButtons.querySelector('.fullscreen-btn');
@@ -216,8 +216,8 @@
     partyBtn.setAttribute('title', 'Watch Party (Watch with Friends)');
     partyBtn.innerHTML = '<i class="fas fa-users"></i>';
 
-    if (fullscreenBtn && fullscreenBtn.parentNode) {
-      fullscreenBtn.parentNode.insertBefore(partyBtn, fullscreenBtn);
+    if (fullscreenBtn) {
+      controlsButtons.insertBefore(partyBtn, fullscreenBtn);
     } else {
       controlsButtons.appendChild(partyBtn);
     }
@@ -541,24 +541,6 @@
 
     document.getElementById('partyCloseDrawer').addEventListener('click', closePartyDrawer);
     backdrop.addEventListener('click', closePartyDrawer);
-
-    const lobbyInviteBtn = document.getElementById('playerPartyInviteBtn');
-    if (lobbyInviteBtn) {
-      lobbyInviteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openPartyDrawer();
-      });
-    }
-
-    ['btnOpenWatchParty', 'btnOpenWatchPartyMobile'].forEach(btnId => {
-      const b = document.getElementById(btnId);
-      if (b) {
-        b.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openPartyDrawer();
-        });
-      }
-    });
 
     // 6. Drawer Tab Switching
     drawer.querySelectorAll('.party-tab-nav-btn').forEach(tabBtn => {
@@ -992,7 +974,7 @@
           }
 
           if (action === 'play') {
-            video.play().catch(() => {});
+            video.play().catch(() => { });
             showToast(`${sender} played ▶`);
           } else if (action === 'pause') {
             video.pause();
@@ -1016,7 +998,7 @@
             video.currentTime = time;
           }
           if (action === 'play') {
-            video.play().catch(() => {});
+            video.play().catch(() => { });
           } else {
             video.pause();
           }
@@ -1057,7 +1039,7 @@
           }
 
           if (isPlaying && video.paused) {
-            video.play().catch(() => {});
+            video.play().catch(() => { });
           } else if (!isPlaying && !video.paused) {
             video.pause();
           }
@@ -1138,7 +1120,7 @@
             video.currentTime = info.currentTime;
             lastSyncedTime = info.currentTime;
             if (info.isPlaying) {
-              video.play().catch(() => {});
+              video.play().catch(() => { });
             }
           }
         });
@@ -1323,7 +1305,7 @@
       if (!isRemoteSync && socket && currentPartyId) {
         if (currentControlMode === 'host_only' && !isHost && !hasGrantedTemporaryControl) {
           isRevertingAction = true;
-          video.play().catch(() => {}); // Revert local unauthorized pause
+          video.play().catch(() => { }); // Revert local unauthorized pause
           showToast(`Controls locked by Host (${hostUserName}) 🔒`);
           setTimeout(() => { isRevertingAction = false; }, 200);
           return;

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       : (isLocalFrontendPort
         ? (savedServer || 'http://localhost:8000')
         : ((window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
-          ? (savedServer || 'http://16.179.30.197:8000')
+          ? (savedServer || 'http://13.202.95.5:8000')
           : ''));
     const API_BASE = `${SERVER_ORIGIN}/api`;
 
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           return url.replace(/^http:\/\/[^/]+(\/.*)$/i, `${window.location.origin}$1`);
         }
         // Rewrite direct EC2 / localhost backend references to current HTTPS origin
-        if (url.startsWith('http://16.179.30.197') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+        if (url.startsWith('http://13.202.95.5') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
           return url.replace(/^http:\/\/[^/]+/i, window.location.origin);
         }
       }
@@ -841,7 +841,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     showPlayerToast('English Dub not available on this server. Playing Japanese Sub.');
                   }
                 }
-              } catch (fbErr) {}
+              } catch (fbErr) { }
             }
           } catch (e) {
             console.warn('Switch lunar stream failed:', e);
@@ -972,7 +972,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           const durationEl = item.querySelector('.item-duration') || item.querySelector('.drawer-ep-duration');
           const titleEl = item.querySelector('.item-title') || item.querySelector('.drawer-ep-title');
           const isThisEp = (durationEl && durationEl.textContent.trim().startsWith(`Ep ${targetEpNum}`)) ||
-                           (titleEl && (titleEl.textContent.startsWith(`Episode ${targetEpNum}:`) || titleEl.textContent === `Episode ${targetEpNum}`));
+            (titleEl && (titleEl.textContent.startsWith(`Episode ${targetEpNum}:`) || titleEl.textContent === `Episode ${targetEpNum}`));
           item.classList.toggle('active', !!isThisEp);
         });
 
@@ -1739,7 +1739,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           currentEpisodeWatchedBuckets = new Set(parsed.buckets || []);
           return;
         }
-      } catch (_) {}
+      } catch (_) { }
       currentEpisodeActiveWatchSeconds = 0;
       currentEpisodeWatchedBuckets = new Set();
     }
@@ -1751,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           seconds: Math.floor(currentEpisodeActiveWatchSeconds),
           buckets: Array.from(currentEpisodeWatchedBuckets)
         }));
-      } catch (_) {}
+      } catch (_) { }
     }
 
     function recordActiveWatchTick() {
@@ -1801,11 +1801,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const toast = document.createElement('div');
         toast.className = `player-xp-toast ${inParty ? 'party' : ''} ${leveledUp ? 'levelup' : ''}`;
-        
+
         const titleText = leveledUp
           ? `LEVEL UP! LEVEL ${level}`
           : (inParty ? `+${gained} XP • WATCH PARTY BONUS` : `+${gained} XP EARNED`);
-        
+
         const subText = leveledUp
           ? `Congratulations! You unlocked new Otaku tier rewards.`
           : `Otaku XP: ${(currentXp || 0).toLocaleString()} / ${(nextXp || (level * 200)).toLocaleString()} XP`;
@@ -1857,7 +1857,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           toast.classList.add('fade-out');
           setTimeout(() => { toast.remove(); }, 600);
         }, 4800);
-      } catch (_) {}
+      } catch (_) { }
     }
 
     // Award XP to user for watching episode
@@ -1893,7 +1893,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       const xpReason = inWatchParty ? 'watch_party' : 'episode_watched';
 
       currentEpisodeXpAwarded = true;
-      try { sessionStorage.setItem(sessionKey, 'true'); } catch (_) {}
+      try { sessionStorage.setItem(sessionKey, 'true'); } catch (_) { }
 
       try {
         const payload = {
@@ -1940,7 +1940,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 timestamp: Date.now()
               }));
               window.dispatchEvent(new CustomEvent('infinx:xp-updated', { detail: data }));
-            } catch (_) {}
+            } catch (_) { }
           }
         }
       } catch (err) {
@@ -2023,7 +2023,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 timestamp: Date.now()
               }));
               window.dispatchEvent(new CustomEvent('infinx:xp-updated', { detail: xpRes }));
-            } catch (_) {}
+            } catch (_) { }
           }
         }
       } catch (e) {
@@ -5026,44 +5026,44 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       }
 
-    // Dynamic Views Tracking & Increment
-    async function updateAndTrackEpisodeViews() {
-      const viewsEl = document.querySelector('.views');
-      const isLunar = !!(currentEpisode?.isLunar || (lunarId && lunarId !== 'null'));
-      const effectiveEpId = currentEpisode?.id || (isLunar ? `lunar-${lunarId}-${epNum}` : episodeId);
-      const anilistIdVal = currentEpisode?.anilistId || lunarId;
-      const epNumVal = currentEpisode?.episodeNumber || epNum || 1;
+      // Dynamic Views Tracking & Increment
+      async function updateAndTrackEpisodeViews() {
+        const viewsEl = document.querySelector('.views');
+        const isLunar = !!(currentEpisode?.isLunar || (lunarId && lunarId !== 'null'));
+        const effectiveEpId = currentEpisode?.id || (isLunar ? `lunar-${lunarId}-${epNum}` : episodeId);
+        const anilistIdVal = currentEpisode?.anilistId || lunarId;
+        const epNumVal = currentEpisode?.episodeNumber || epNum || 1;
 
-      if (!isLunar && effectiveEpId && /^\d+$/.test(String(effectiveEpId))) {
-        try {
-          const res = await fetch(`${API_BASE}/shows/episode/view`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              episodeId: parseInt(effectiveEpId, 10),
-              episodeNumber: epNumVal
-            })
-          });
-          if (res.ok) {
-            const data = await res.json().catch(() => null);
-            if (data && typeof data.views === 'number') {
-              if (currentEpisode) currentEpisode.views = data.views;
-              if (viewsEl) viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${data.views.toLocaleString()} views`;
-              return;
+        if (!isLunar && effectiveEpId && /^\d+$/.test(String(effectiveEpId))) {
+          try {
+            const res = await fetch(`${API_BASE}/shows/episode/view`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                episodeId: parseInt(effectiveEpId, 10),
+                episodeNumber: epNumVal
+              })
+            });
+            if (res.ok) {
+              const data = await res.json().catch(() => null);
+              if (data && typeof data.views === 'number') {
+                if (currentEpisode) currentEpisode.views = data.views;
+                if (viewsEl) viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${data.views.toLocaleString()} views`;
+                return;
+              }
             }
-          }
-        } catch (_) {}
+          } catch (_) { }
+        }
+
+        if (viewsEl) {
+          const seedVal = parseInt(anilistIdVal || effectiveEpId || 212888, 10) || 212888;
+          const seedViews = currentEpisode?.views || (12400 + ((seedVal * 31) % 64000) + (parseInt(epNumVal, 10) * 128));
+          viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${seedViews.toLocaleString()} views`;
+        }
       }
 
-      if (viewsEl) {
-        const seedVal = parseInt(anilistIdVal || effectiveEpId || 212888, 10) || 212888;
-        const seedViews = currentEpisode?.views || (12400 + ((seedVal * 31) % 64000) + (parseInt(epNumVal, 10) * 128));
-        viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${seedViews.toLocaleString()} views`;
-      }
-    }
-
-    // Update views count dynamically & increment view
-    updateAndTrackEpisodeViews();
+      // Update views count dynamically & increment view
+      updateAndTrackEpisodeViews();
 
       if (currentEpisode.show?.type === 'movie') {
         const playlistEl = document.querySelector('.video-playlist');
@@ -5095,23 +5095,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       document.querySelector('.episode-count').textContent = `(${totalEpisodes} episodes)`;
       const drawerCountEl = document.getElementById('drawer-episode-count');
       if (drawerCountEl) drawerCountEl.textContent = `(${totalEpisodes})`;
-
-      // Dynamic Mobile Binge Arc Progress Tracker Update
-      const bingePercentText = document.getElementById('bingePercentText');
-      const bingeProgressBar = document.getElementById('bingeProgressBar');
-      const bingeTotalText = document.getElementById('bingeTotalText');
-      const bingeCurrentText = document.getElementById('bingeCurrentText');
-      const bingeRemainingText = document.getElementById('bingeRemainingText');
-      if (bingeTotalText && totalEpisodes > 0) {
-        const curEp = currentEpisode.episodeNumber || 1;
-        const pct = Math.min(100, Math.round((curEp / totalEpisodes) * 100));
-        const rem = Math.max(0, totalEpisodes - curEp);
-        if (bingePercentText) bingePercentText.textContent = `${pct}% Done`;
-        if (bingeProgressBar) bingeProgressBar.style.width = `${pct}%`;
-        bingeTotalText.textContent = `${totalEpisodes} Eps`;
-        if (bingeCurrentText) bingeCurrentText.textContent = `Ep ${curEp}`;
-        if (bingeRemainingText) bingeRemainingText.textContent = `${rem} Eps`;
-      }
 
       // Load progress data from local storage
       let showProgData = { episodes: {}, lastWatched: null };
@@ -5178,7 +5161,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         let progressTrackHtml = '';
 
         if (isCurrentActive) {
-          badgeHtml = '<div class="item-status"><span class="item-watched live-neon-tag"><span class="live-pulse-dot"></span> NOW PLAYING</span></div>';
+          badgeHtml = '<div class="item-status"><span class="item-watched"><i class="fas fa-play-circle"></i> Watching</span></div>';
           if (epProg && epProg.progressPercent > 0) {
             const fillBg = isCompleted ? '#00ff88' : 'var(--primary)';
             progressTrackHtml = `<div class="item-progress-track"><div class="item-progress-fill" style="width: ${epProg.progressPercent}%; background: ${fillBg};"></div></div>`;
@@ -5191,21 +5174,17 @@ document.addEventListener('DOMContentLoaded', async function () {
           progressTrackHtml = `<div class="item-progress-track"><div class="item-progress-fill" style="width: ${epProg.progressPercent}%; background: var(--primary);"></div></div>`;
         }
 
-        const overlayContent = isCurrentActive
-          ? '<div class="audio-eq-bars" style="height:14px;"><span class="eq-bar-1"></span><span class="eq-bar-2"></span><span class="eq-bar-3"></span><span class="eq-bar-4"></span></div>'
-          : '<i class="fas fa-play"></i>';
-
         const buildItemHtml = () => `
           <div class="item-thumbnail" style="position: relative; overflow: hidden;">
             <img class="playlist-item-img" src="${fallbackPoster}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';">
-            <div class="item-overlay">${overlayContent}</div>
+            <div class="item-overlay"><i class="fas fa-play"></i></div>
             <div class="item-duration">Ep ${ep.episodeNumber || ep.number}</div>
             ${progressTrackHtml}
           </div>
           <div class="item-info">
             <h4 class="item-title">Episode ${ep.episodeNumber || ep.number}: ${ep.title}</h4>
             <div class="item-meta">
-              <span class="item-meta-duration">${ep.duration || '24m'} • HD Streaming</span>
+              <span class="item-duration">${ep.duration || '24m'} • HD Streaming</span>
             </div>
             ${badgeHtml}
           </div>
