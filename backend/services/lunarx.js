@@ -671,22 +671,27 @@ class LunarXService {
       const res = await this.get(`/api/animes/v2/vermillion/episodes?id=${id}`);
       const rawEpisodes = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
       if (rawEpisodes.length > 0) {
-        return rawEpisodes.map((ep, idx) => ({
-          id: `lunar-${id}-${ep.number || (idx + 1)}`,
-          anilistId: id,
-          number: ep.number || (idx + 1),
-          title: ep.title || `Episode ${ep.number || (idx + 1)}`,
-          description: this.cleanDescription(ep.description || ''),
-          airDate: ep.airDate || ep.airDateUtc || null,
-          thumbnail: ep.thumbnail || ep.img || null,
-          hasSub: ep.hasSub !== false,
-          hasDub: !!ep.hasDub,
-          subProviders: (Array.isArray(ep.subProviders) ? ep.subProviders.map(p => typeof p === 'object' ? p.id : p) : ['zuna', '3rdprovider']),
-          dubProviders: (Array.isArray(ep.dubProviders) ? ep.dubProviders.map(p => typeof p === 'object' ? p.id : p) : ['3rdprovider']),
-          runtime: ep.runtime || ep.length || 24,
-          isFiller: !!ep.isFiller,
-          isLunar: true
-        }));
+        return rawEpisodes.map((ep, idx) => {
+          const rawSubProviders = Array.isArray(ep.subProviders) ? ep.subProviders.map(p => typeof p === 'object' ? p.id : p) : ['zuna', '3rdprovider'];
+          const rawDubProviders = Array.isArray(ep.dubProviders) ? ep.dubProviders.map(p => typeof p === 'object' ? p.id : p) : [];
+          const dubProviders = rawDubProviders.includes('3rdprovider') ? rawDubProviders : ['3rdprovider', ...rawDubProviders];
+          return {
+            id: `lunar-${id}-${ep.number || (idx + 1)}`,
+            anilistId: id,
+            number: ep.number || (idx + 1),
+            title: ep.title || `Episode ${ep.number || (idx + 1)}`,
+            description: this.cleanDescription(ep.description || ''),
+            airDate: ep.airDate || ep.airDateUtc || null,
+            thumbnail: ep.thumbnail || ep.img || null,
+            hasSub: ep.hasSub !== false,
+            hasDub: ep.hasDub !== false && (!!ep.hasDub || dubProviders.length > 0),
+            subProviders: rawSubProviders,
+            dubProviders: dubProviders.length > 0 ? dubProviders : ['3rdprovider'],
+            runtime: ep.runtime || ep.length || 24,
+            isFiller: !!ep.isFiller,
+            isLunar: true
+          };
+        });
       }
     } catch (err) {
       console.warn(`[LunarX] Episode list fetch failed for ${id}, using fallback:`, err.message);
@@ -976,12 +981,6 @@ class LunarXService {
   // Verify stream manifest playability
   verifyM3u8(url, referer, origin) {
     if (!url) return Promise.resolve(false);
-    // Disallow hosts known to serve obfuscated/encrypted fake-PNG segments (flixcloud, fallencdn, matrixcdn)
-    // Standard native Android ExoPlayer cannot find sync byte (0x47) on fake PNGs and fails with ParserException
-    if (/flixcloud|fallencdn|matrixcdn/i.test(url)) {
-      console.warn('[LunarX] Skipping obfuscated stream provider (flixcloud/fallencdn):', url);
-      return Promise.resolve(false);
-    }
     const checkOnce = (ref, orig) => new Promise(resolve => {
       try {
         const client = url.startsWith('https://') ? https : http;
@@ -1018,8 +1017,10 @@ class LunarXService {
     });
 
     return checkOnce(referer, origin).then(res => {
-      if (!res.ok && res.status === 403 && referer !== 'https://megaplay.buzz/') {
-        return checkOnce('https://megaplay.buzz/', 'https://megaplay.buzz').then(r => r.ok);
+      if (!res.ok && res.status === 403) {
+        const altRef = (referer === 'https://lunarx.to/' || referer === 'https://lunarx.to') ? 'https://megaplay.buzz/' : 'https://lunarx.to/';
+        const altOrig = (origin === 'https://lunarx.to' || origin === 'https://lunarx.to/') ? 'https://megaplay.buzz' : 'https://lunarx.to';
+        return checkOnce(altRef, altOrig).then(r => r.ok);
       }
       return res.ok;
     });
@@ -1031,6 +1032,12 @@ class LunarXService {
     try {
       const res3rd = await this.get(`/api/3rdprovider?anilist=${id}&episode=${ep}&m3u8=true&a=${aParam}&audio=${type}`);
       if (res3rd && res3rd.stream_data && res3rd.stream_data.m3u8_url) {
+        // If dub was explicitly requested, ensure 3rdprovider actually has dub available
+        if (type === 'dub' && res3rd.stream_data.has_dub === false) {
+          console.log(`[LunarX] 3rdprovider reports has_dub: false for Anime #${id} Ep #${ep}`);
+          return null;
+        }
+
         let decrypted3rd = this.decryptM3u8(res3rd.stream_data.m3u8_url, liveAxis, livePitch);
 
         // If decryption failed with current keys, try refreshing keys
@@ -1140,9 +1147,9 @@ class LunarXService {
     // Obfuscated / fallback providers: yuki, 3rdprovider
     let hostsToTry = [];
     if (type === 'dub') {
-      const preferredHost = (requestedHost && requestedHost !== 'zuna') ? requestedHost : 'yuki';
-      hostsToTry = [preferredHost, 'yuki', 'sora', 'loli', '3rdprovider'].filter(
-        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna'
+      const preferredHost = (requestedHost && requestedHost !== 'zuna' && requestedHost !== 'yuki') ? requestedHost : '3rdprovider';
+      hostsToTry = [preferredHost, '3rdprovider', 'loli', 'sora'].filter(
+        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna' && h !== 'yuki'
       );
     } else {
       hostsToTry = [requestedHost, 'zuna', 'yuki', 'sora', 'loli', '3rdprovider'].filter(
@@ -1213,13 +1220,23 @@ class LunarXService {
           let reqReferer = res.data?.headers?.Referer;
           let reqOrigin = res.data?.headers?.Origin;
           if (candidateStreamUrl) {
-            if (candidateStreamUrl.includes('dramahot') || candidateStreamUrl.includes('drama1.cfd') || candidateStreamUrl.includes('zokoanime')) {
+            if (
+              candidateStreamUrl.includes('flixcloud') ||
+              candidateStreamUrl.includes('vividcdn') ||
+              candidateStreamUrl.includes('fallencdn') ||
+              candidateStreamUrl.includes('matrixcdn') ||
+              candidateStreamUrl.includes('furrycdn') ||
+              candidateStreamUrl.includes('/_v8/') ||
+              candidateStreamUrl.includes('/_v7/')
+            ) {
+              reqReferer = 'https://lunarx.to/';
+              reqOrigin = 'https://lunarx.to';
+            } else if (candidateStreamUrl.includes('dramahot') || candidateStreamUrl.includes('drama1.cfd') || candidateStreamUrl.includes('zokoanime')) {
               reqReferer = 'https://zokoanime.video/';
               reqOrigin = 'https://zokoanime.video';
             } else if (
               host === 'yuki' ||
               host === 'zuna' ||
-              type === 'dub' ||
               candidateStreamUrl.includes('nexabloom') || 
               candidateStreamUrl.includes('voyage') || 
               candidateStreamUrl.includes('megaplay') || 
@@ -1239,9 +1256,6 @@ class LunarXService {
             } else if (candidateStreamUrl.includes('echovideo')) {
               reqReferer = (reqReferer && reqReferer.includes('echovideo')) ? reqReferer : 'https://play.echovideo.ru/';
               reqOrigin = 'https://play.echovideo.ru';
-            } else if (candidateStreamUrl.includes('flixcloud') || candidateStreamUrl.includes('matrixcdn')) {
-              reqReferer = 'https://lunarx.to/';
-              reqOrigin = 'https://lunarx.to';
             } else if (!reqReferer) {
               reqReferer = 'https://lunarx.to/';
               reqOrigin = 'https://lunarx.to';

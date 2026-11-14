@@ -198,7 +198,20 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
     origin = null;
   }
 
-  if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
+  // 1. Flixcloud / Vividcdn / Matrixcdn / Fallencdn / Furrycdn / _v8 / _v7 / token=eyJ
+  if (
+    targetUrl.includes('flixcloud') ||
+    targetUrl.includes('vividcdn') ||
+    targetUrl.includes('fallencdn') ||
+    targetUrl.includes('matrixcdn') ||
+    targetUrl.includes('furrycdn') ||
+    targetUrl.includes('/_v8/') ||
+    targetUrl.includes('/_v7/') ||
+    targetUrl.includes('token=eyJ')
+  ) {
+    referer = 'https://lunarx.to/';
+    origin = 'https://lunarx.to';
+  } else if (targetUrl.includes('dramahot') || targetUrl.includes('drama1.cfd') || targetUrl.includes('zokoanime')) {
     referer = 'https://zokoanime.video/';
     origin = 'https://zokoanime.video';
   } else if (
@@ -221,9 +234,6 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
   } else if (targetUrl.includes('echovideo')) {
     referer = (referer && referer.includes('echovideo')) ? referer : 'https://play.echovideo.ru/';
     origin = 'https://play.echovideo.ru';
-  } else if (targetUrl.includes('flixcloud') || targetUrl.includes('matrixcdn')) {
-    referer = 'https://lunarx.to/';
-    origin = 'https://lunarx.to';
   } else if (!referer) {
     referer = 'https://lunarx.to/';
     origin = 'https://lunarx.to';
@@ -307,19 +317,21 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
     const upstream = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
 
     let fetchResult = await fetchWithRedirects(targetUrl, upstream.headers);
-    if (fetchResult.res.statusCode === 403 && upstream.headers['Referer'] !== 'https://megaplay.buzz/') {
-      console.warn(`[Proxy M3U8] Upstream 403 for ${targetUrl}, retrying with megaplay.buzz referer...`);
+    if (fetchResult.res.statusCode === 403) {
+      const altReferer = (upstream.referer === 'https://lunarx.to/' || upstream.referer === 'https://lunarx.to') ? 'https://megaplay.buzz/' : 'https://lunarx.to/';
+      const altOrigin = (upstream.origin === 'https://lunarx.to' || upstream.origin === 'https://lunarx.to/') ? 'https://megaplay.buzz' : 'https://lunarx.to';
+      console.warn(`[Proxy M3U8] Upstream 403 for ${targetUrl}, retrying with alternate referer ${altReferer}...`);
       const retryHeaders = {
         ...upstream.headers,
-        'Referer': 'https://megaplay.buzz/',
-        'Origin': 'https://megaplay.buzz'
+        'Referer': altReferer,
+        'Origin': altOrigin
       };
       try {
         const retryResult = await fetchWithRedirects(targetUrl, retryHeaders);
         if (retryResult.res.statusCode === 200) {
           fetchResult = retryResult;
-          upstream.referer = 'https://megaplay.buzz/';
-          upstream.origin = 'https://megaplay.buzz';
+          upstream.referer = altReferer;
+          upstream.origin = altOrigin;
         }
       } catch (retryErr) { }
     }
@@ -545,12 +557,14 @@ router.get(['/hls/segment.ts', '/proxy/segment'], async (req, res) => {
     }
 
     let fetchResult = await fetchWithRedirects(targetUrl, headers);
-    if (fetchResult.res.statusCode === 403 && headers['Referer'] !== 'https://megaplay.buzz/') {
-      console.warn(`[Proxy Segment] Upstream 403 for segment, retrying with megaplay.buzz referer...`);
+    if (fetchResult.res.statusCode === 403) {
+      const altReferer = (referer === 'https://lunarx.to/' || referer === 'https://lunarx.to') ? 'https://megaplay.buzz/' : 'https://lunarx.to/';
+      const altOrigin = (origin === 'https://lunarx.to' || origin === 'https://lunarx.to/') ? 'https://megaplay.buzz' : 'https://lunarx.to';
+      console.warn(`[Proxy Segment] Upstream 403 for segment, retrying with alternate referer ${altReferer}...`);
       const retryHeaders = {
         ...headers,
-        'Referer': 'https://megaplay.buzz/',
-        'Origin': 'https://megaplay.buzz'
+        'Referer': altReferer,
+        'Origin': altOrigin
       };
       try {
         const retryResult = await fetchWithRedirects(targetUrl, retryHeaders);
@@ -570,7 +584,9 @@ router.get(['/hls/segment.ts', '/proxy/segment'], async (req, res) => {
     res.status(upstreamRes.statusCode);
 
     let contentType = upstreamRes.headers['content-type'] || 'video/mp2t';
-    if (contentType.includes('image/') || contentType.includes('application/octet-stream') || !contentType) {
+    if (targetUrl.includes('key.bin') || targetUrl.endsWith('.bin') || targetUrl.includes('/key')) {
+      contentType = 'application/octet-stream';
+    } else if (contentType.includes('image/') || contentType.includes('application/octet-stream') || !contentType) {
       contentType = 'video/mp2t';
     }
     res.setHeader('Content-Type', contentType);

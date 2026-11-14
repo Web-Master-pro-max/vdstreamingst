@@ -482,9 +482,9 @@ document.addEventListener('DOMContentLoaded', async function () {
           },
           servers: [
             { id: 'server-1', name: 'Server 1 (1080p Ultra)', shortName: 'Server 1', badge: '1080p HD', host: 'zuna', type: 'hls' },
-            { id: 'server-2', name: 'Server 2 (English Dub / Fast)', shortName: 'Server 2', badge: 'English Dub', host: 'yuki', type: 'hls' },
-            { id: 'server-3', name: 'Server 3 (Dual Audio / 1080p)', shortName: 'Server 3', badge: 'Dual Audio', host: '3rdprovider', type: 'hls' },
-            { id: 'server-4', name: 'Server 4 (HD Backup)', shortName: 'Server 4', badge: 'Fast Stream', host: 'sora', type: 'hls' }
+            { id: 'server-2', name: 'Server 2 (English Dub / Multi-Audio)', shortName: 'Server 2', badge: 'English Dub', host: '3rdprovider', type: 'hls' },
+            { id: 'server-3', name: 'Server 3 (HD Backup)', shortName: 'Server 3', badge: 'HD Stream', host: 'yuki', type: 'hls' },
+            { id: 'server-4', name: 'Server 4 (HD Fast)', shortName: 'Server 4', badge: 'Fast Stream', host: 'sora', type: 'hls' }
           ]
         };
 
@@ -556,9 +556,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         },
         servers: [
           { id: 'server-1', name: 'Server 1 (1080p Ultra)', shortName: 'Server 1', badge: '1080p HD', host: 'zuna', type: 'hls' },
-          { id: 'server-2', name: 'Server 2 (English Dub / Fast)', shortName: 'Server 2', badge: 'English Dub', host: 'yuki', type: 'hls' },
-          { id: 'server-3', name: 'Server 3 (Dual Audio / 1080p)', shortName: 'Server 3', badge: 'Dual Audio', host: '3rdprovider', type: 'hls' },
-          { id: 'server-4', name: 'Server 4 (HD Backup)', shortName: 'Server 4', badge: 'Fast Stream', host: 'sora', type: 'hls' }
+          { id: 'server-2', name: 'Server 2 (English Dub / Multi-Audio)', shortName: 'Server 2', badge: 'English Dub', host: '3rdprovider', type: 'hls' },
+          { id: 'server-3', name: 'Server 3 (HD Backup)', shortName: 'Server 3', badge: 'HD Stream', host: 'yuki', type: 'hls' },
+          { id: 'server-4', name: 'Server 4 (HD Fast)', shortName: 'Server 4', badge: 'Fast Stream', host: 'sora', type: 'hls' }
         ]
       };
       // Show user-friendly notification inside the UI instead of hard-killing the tab
@@ -808,7 +808,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               localStorage.setItem('infinx_preferred_audio_type', 'sub');
               updateAudioOptions();
             }
-            const hostParam = (currentAudioType === 'dub' && target.host === 'zuna') ? 'yuki' : target.host;
+            const hostParam = (currentAudioType === 'dub') ? '3rdprovider' : target.host;
             const sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${hostParam}&type=${currentAudioType}`);
             if (sRes.ok) {
               const sData = await sRes.json();
@@ -1041,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Fetch stream for new episode
         let streamUrl = null;
-        const hostParam = (currentAudioType === 'dub') ? 'yuki' : (currentEpisode?.servers?.find(s => s.id === activeServerId)?.host || 'zuna');
+        const hostParam = (currentAudioType === 'dub') ? '3rdprovider' : (currentEpisode?.servers?.find(s => s.id === activeServerId)?.host || 'zuna');
 
         try {
           const sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode?.anilistId || lunarId}/${targetEpNum}?host=${hostParam}&type=${currentAudioType}`);
@@ -2427,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       try {
         const epNumVal = currentEpisode.episodeNumber || epNum || 1;
-        const hostParam = targetType === 'dub' ? 'yuki' : 'zuna';
+        const hostParam = targetType === 'dub' ? '3rdprovider' : 'zuna';
         const res = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${hostParam}&type=${targetType}`);
 
         if (res.ok) {
@@ -4561,6 +4561,17 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (audioDropdown) {
         audioDropdown.addEventListener('click', handleAudioClick);
       }
+      const audioPillsContainer = document.getElementById('settings-audio-pills');
+      if (audioPillsContainer) {
+        audioPillsContainer.addEventListener('click', function (e) {
+          const pill = e.target.closest('[data-audio-type]');
+          if (pill) {
+            e.stopPropagation();
+            const aType = pill.getAttribute('data-audio-type');
+            if (aType) switchAudioType(aType);
+          }
+        });
+      }
     }
 
     function setupSubtitleEventListeners() {
@@ -5965,7 +5976,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               opt.classList.toggle('active', opt.getAttribute('data-server-id') === 'server-2');
             });
           }
-          const host = (currentAudioType === 'dub') ? 'yuki' : (initialServer?.host || 'zuna');
+          const host = (currentAudioType === 'dub') ? '3rdprovider' : (initialServer?.host || 'zuna');
           const epNumVal = currentEpisode.episodeNumber || epNum || 1;
           const sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${host}&type=${currentAudioType}`);
           if (sRes.ok) {
