@@ -2,8 +2,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install system dependencies: openssl for Prisma, python3 + ffmpeg for video transcoding, netcat
-RUN apk add --no-cache openssl python3 py3-pip ffmpeg netcat-openbsd
+# Install system dependencies: openssl for Prisma, python3 + ffmpeg for video transcoding, netcat, curl
+RUN apk add --no-cache openssl python3 py3-pip ffmpeg netcat-openbsd curl
 
 COPY package*.json ./
 

@@ -275,7 +275,13 @@ function resolvePlaylistUrl(relativeOrAbsolute, baseFullUrl, baseDirectoryUrl) {
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
   if (trimmed.startsWith('//')) return 'https:' + trimmed;
   try {
-    return new URL(trimmed, baseFullUrl).href;
+    const baseObj = new URL(baseFullUrl);
+    const resolved = new URL(trimmed, baseFullUrl);
+    // Preserve authentication/security query parameters (e.g. JWT token=eyJ...) from base playlist if child URL has none
+    if (baseObj.search && !resolved.search) {
+      resolved.search = baseObj.search;
+    }
+    return resolved.href;
   } catch (e) {
     return (baseDirectoryUrl || '') + trimmed;
   }
@@ -354,13 +360,9 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
       const baseUrl = finalUrl.substring(0, finalUrl.lastIndexOf('/') + 1);
       const lines = body.split('\n');
       const targetQuality = req.query.quality ? req.query.quality.toLowerCase() : null;
-      const forwardedProto = req.headers['x-forwarded-proto'];
-      const clientReferer = req.headers['referer'] || '';
-      const isHttpsClient = forwardedProto === 'https' || clientReferer.startsWith('https://');
-      const forwardedHost = req.headers['x-forwarded-host'];
-      const hostHeader = forwardedHost || req.get('host');
-      const protocol = isHttpsClient ? 'https' : (forwardedProto || req.protocol || 'http');
-      const proxyBase = isHttpsClient ? (forwardedHost ? `https://${forwardedHost}` : '') : (hostHeader ? `${protocol}://${hostHeader}` : '');
+      // Use root-relative proxyBase ("") so URLs are /api/stream/hls/...
+      // This completely avoids Mixed Content warnings on HTTPS (Vercel, custom domains) while working natively on any host or port.
+      const proxyBase = '';
 
       // Handle Master Playlists (#EXT-X-STREAM-INF)
       if (body.includes('#EXT-X-STREAM-INF')) {
