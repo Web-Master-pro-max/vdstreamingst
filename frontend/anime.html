@@ -699,7 +699,8 @@
           const poster = item.poster || 'Postes/spyfamS3p.jpg';
           const percent = Math.min(100, Math.max(1, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
           const seekParam = item.progress > 5 ? `&t=${Math.floor(item.progress)}` : '';
-          const playUrl = `/watch?id=${anilistId}&ep=${ep}${seekParam}`;
+          const audioQuery = (localStorage.getItem('infinx_preferred_audio_type') === 'dub') ? '&type=dub' : '';
+          const playUrl = `/watch?id=${anilistId}&ep=${ep}${seekParam}${audioQuery}`;
 
           return `
             <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,80,110,0.4)] cursor-pointer" onclick="window.requireAuthPlay(event, '${playUrl}')">
@@ -795,9 +796,10 @@
         if (topAnime.banner || topAnime.poster) {
           document.getElementById('spotlightBackdrop').src = topAnime.banner || topAnime.poster;
         }
-        document.getElementById('spotlightPlayBtn').href = `/watch?id=${topAnime.anilistId}&ep=1`;
+        const audioQuery = (localStorage.getItem('infinx_preferred_audio_type') === 'dub') ? '&type=dub' : '';
+        document.getElementById('spotlightPlayBtn').href = `/watch?id=${topAnime.anilistId}&ep=1${audioQuery}`;
         document.getElementById('spotlightPlayBtn').onclick = (e) => {
-          return window.requireAuthPlay(e, `/watch?id=${topAnime.anilistId}&ep=1`);
+          return window.requireAuthPlay(e, `/watch?id=${topAnime.anilistId}&ep=1${audioQuery}`);
         };
 
         document.getElementById('spotlightInfoBtn').onclick = () => {
@@ -894,7 +896,8 @@
       }
 
       animeGrid.innerHTML = list.map(item => {
-        const playUrl = `/watch?id=${item.anilistId}&ep=1`;
+        const audioQuery = (localStorage.getItem('infinx_preferred_audio_type') === 'dub') ? '&type=dub' : '';
+        const playUrl = `/watch?id=${item.anilistId}&ep=1${audioQuery}`;
         const posterUrl = item.poster || 'Postes/spyfamS3p.jpg';
         const safeTitle = (item.title || '').replace(/'/g, "\\'");
         const safePoster = (item.poster || '').replace(/'/g, "\\'");

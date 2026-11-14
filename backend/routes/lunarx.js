@@ -365,6 +365,7 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
       // Handle Master Playlists (#EXT-X-STREAM-INF)
       if (body.includes('#EXT-X-STREAM-INF')) {
         const headerLines = [];
+        const audioMediaLines = [];
         const variantPairs = [];
         let curInf = null;
 
@@ -372,26 +373,28 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
           let trimmed = lines[i].trim();
           if (!trimmed) continue;
 
-          // If English Dub is requested, ensure English audio track is marked DEFAULT=YES
-          if (isDub && trimmed.startsWith('#EXT-X-MEDIA:TYPE=AUDIO')) {
-            const isEng = trimmed.includes('LANGUAGE="eng"') || trimmed.includes('NAME="English"') || trimmed.includes('NAME="Dub"');
-            const isJpn = trimmed.includes('LANGUAGE="jpn"') || trimmed.includes('NAME="Japanese"') || trimmed.includes('NAME="Native"');
-            if (isEng) {
-              trimmed = trimmed.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=YES').replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
-              if (!trimmed.includes('DEFAULT=')) trimmed += ',DEFAULT=YES,AUTOSELECT=YES';
-            } else if (isJpn) {
-              trimmed = trimmed.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=NO');
-            }
-          }
-
           if (trimmed.startsWith('#EXT-X-STREAM-INF:')) {
             curInf = trimmed;
           } else if (curInf && !trimmed.startsWith('#')) {
             const fullUri = resolvePlaylistUrl(trimmed, finalUrl, baseUrl);
             variantPairs.push({ inf: curInf, uri: fullUri });
             curInf = null;
+          } else if (trimmed.startsWith('#EXT-X-MEDIA:TYPE=AUDIO')) {
+            // Rewrite URI="..." in audio lines
+            if (trimmed.includes('URI="')) {
+              trimmed = trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
+                const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
+                const up = getUpstreamHeaders(fullUri, upstream.referer, upstream.origin);
+                const token = encryptStreamToken({ u: fullUri, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });
+                if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
+                  return `URI="${proxyBase}/api/stream/hls/live.m3u8?t=${token}"`;
+                }
+                return `URI="${proxyBase}/api/stream/hls/segment.ts?t=${token}"`;
+              });
+            }
+            audioMediaLines.push(trimmed);
           } else {
-            // Rewrite URI="..." in non-variant header lines (e.g. #EXT-X-MEDIA:TYPE=AUDIO)
+            // Rewrite URI="..." in non-variant header lines (e.g. SUBTITLES)
             if (trimmed.includes('URI="')) {
               trimmed = trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
                 const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
@@ -404,6 +407,52 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
               });
             }
             headerLines.push(trimmed);
+          }
+        }
+
+        // Deterministically reorder audio media lines so requested audio type is ALWAYS at index 0 (DEFAULT=YES)
+        let orderedAudioLines = [];
+        if (audioMediaLines.length > 0) {
+          const engLines = [];
+          const jpnLines = [];
+          const otherAudio = [];
+
+          for (const aLine of audioMediaLines) {
+            const isEng = aLine.includes('LANGUAGE="eng"') || aLine.includes('NAME="English"') || aLine.includes('NAME="Dub"');
+            const isJpn = aLine.includes('LANGUAGE="jpn"') || aLine.includes('NAME="Japanese"') || aLine.includes('NAME="Native"');
+            if (isEng) engLines.push(aLine);
+            else if (isJpn) jpnLines.push(aLine);
+            else otherAudio.push(aLine);
+          }
+
+          if (isDub) {
+            // English tracks FIRST with DEFAULT=YES, AUTOSELECT=YES
+            const formattedEng = engLines.map((line, idx) => {
+              let l = line.replace(/DEFAULT=(?:YES|NO)/g, idx === 0 ? 'DEFAULT=YES' : 'DEFAULT=NO')
+                          .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
+              if (!l.includes('DEFAULT=')) l += (idx === 0 ? ',DEFAULT=YES,AUTOSELECT=YES' : ',DEFAULT=NO,AUTOSELECT=YES');
+              return l;
+            });
+            // Japanese tracks SECOND with DEFAULT=NO, AUTOSELECT=NO
+            const formattedJpn = jpnLines.map(line => {
+              return line.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=NO')
+                         .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=NO');
+            });
+            orderedAudioLines = [...formattedEng, ...formattedJpn, ...otherAudio];
+          } else {
+            // Japanese tracks FIRST with DEFAULT=YES, AUTOSELECT=YES
+            const formattedJpn = jpnLines.map((line, idx) => {
+              let l = line.replace(/DEFAULT=(?:YES|NO)/g, idx === 0 ? 'DEFAULT=YES' : 'DEFAULT=NO')
+                          .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
+              if (!l.includes('DEFAULT=')) l += (idx === 0 ? ',DEFAULT=YES,AUTOSELECT=YES' : ',DEFAULT=NO,AUTOSELECT=YES');
+              return l;
+            });
+            // English tracks SECOND with DEFAULT=NO, AUTOSELECT=NO
+            const formattedEng = engLines.map(line => {
+              return line.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=NO')
+                         .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=NO');
+            });
+            orderedAudioLines = [...formattedJpn, ...formattedEng, ...otherAudio];
           }
         }
 
@@ -461,7 +510,7 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
 
         const finalVariants = selectedVariants.length > 0 ? [selectedVariants[0]] : [];
 
-        const outputLines = [...headerLines];
+        const outputLines = [...headerLines, ...orderedAudioLines];
         for (const v of finalVariants) {
           const up = getUpstreamHeaders(v.uri, upstream.referer, upstream.origin);
           const token = encryptStreamToken({ u: v.uri, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });

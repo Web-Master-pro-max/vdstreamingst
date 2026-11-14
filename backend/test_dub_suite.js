@@ -34,7 +34,7 @@ server.listen(PORT, async () => {
 
     // Test 2: Dub stream resolution on multiple popular anime
     console.log('\n--- Test 2: Multi-Anime Dub Stream Resolution ---');
-    const testAnimeIds = [21, 113415, 101922, 16498, 151807];
+    const testAnimeIds = [1735, 1, 21, 113415, 101922];
     for (const anilistId of testAnimeIds) {
       const stream = await lunarx.getStream(anilistId, 1, 'zuna', 'dub');
       assert(stream.success === true, `Anime #${anilistId} dub stream success`);
@@ -46,20 +46,24 @@ server.listen(PORT, async () => {
 
     // Test 3: Master playlist audio tag rewrites for Dub
     console.log('\n--- Test 3: Master Playlist Audio Tags ---');
-    const opStream = await lunarx.getStream(21, 1, 'yuki', 'dub');
+    const opStream = await lunarx.getStream(1735, 1, 'yuki', 'dub');
     const masterRes = await fetch(`http://localhost:${PORT}${opStream.streamUrl}`);
     assert(masterRes.status === 200, 'Master playlist returned 200 OK');
     const masterText = await masterRes.text();
     const lines = masterText.split('\n');
 
-    const engLine = lines.find(l => l.includes('LANGUAGE="eng"'));
+    const audioLines = lines.filter(l => l.startsWith('#EXT-X-MEDIA:TYPE=AUDIO'));
+    assert(audioLines.length >= 2, 'Found at least 2 audio tracks in master playlist');
+    const engLine = audioLines.find(l => l.includes('LANGUAGE="eng"'));
     assert(!!engLine, 'Found English audio track in master playlist');
+    assert(audioLines[0] === engLine, 'English audio track is strictly INDEX 0 in master playlist');
     assert(engLine.includes('DEFAULT=YES'), 'English audio marked DEFAULT=YES');
     assert(engLine.includes('AUTOSELECT=YES'), 'English audio marked AUTOSELECT=YES');
 
-    const jpnLine = lines.find(l => l.includes('LANGUAGE="jpn"'));
+    const jpnLine = audioLines.find(l => l.includes('LANGUAGE="jpn"'));
     assert(!!jpnLine, 'Found Japanese audio track in master playlist');
     assert(jpnLine.includes('DEFAULT=NO'), 'Japanese audio marked DEFAULT=NO');
+    assert(jpnLine.includes('AUTOSELECT=NO'), 'Japanese audio marked AUTOSELECT=NO');
 
     // Test 4: Audio playlist and segment proxying
     console.log('\n--- Test 4: Audio Playlist & Segment Proxy ---');

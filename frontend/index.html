@@ -2178,7 +2178,8 @@
               showTitle = item.title || item.showTitle || item.episode?.show?.title || 'Anime Series';
               posterUrl = item.poster || item.episode?.show?.poster || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';
               const seekParam = progress > 5 ? `&t=${Math.floor(progress)}` : '';
-              resumeUrl = `/watch?id=${anilistId}&ep=${epNum}${seekParam}`;
+              const audioQuery = (localStorage.getItem('infinx_preferred_audio_type') === 'dub') ? '&type=dub' : '';
+              resumeUrl = `/watch?id=${anilistId}&ep=${epNum}${seekParam}${audioQuery}`;
             } else {
               if (!item.episode || !item.episode.show) return;
               const show = item.episode.show;
@@ -2249,7 +2250,8 @@
       if (list.length === 0) return;
 
       const cardsHtml = list.slice(0, 10).map((show, idx) => {
-        const playUrl = `/watch?id=${show.anilistId}&ep=1`;
+        const audioQuery = (localStorage.getItem('infinx_preferred_audio_type') === 'dub') ? '&type=dub' : '';
+        const playUrl = `/watch?id=${show.anilistId}&ep=1${audioQuery}`;
         const fallbackPosters = [
           'https://lh3.googleusercontent.com/aida-public/AB6AXuD3jO3XlNq1WvOt2r3bYShsisWXGRPX_miaenUdaiySxkVGN53I56j2hBWtkq7kyOa1qvxkpaBwJVx32xh5tqVOkUKT3WK_1KzQ-ZeNiTca7mJBYw6Yvnqgqh4BTStuScWU9JUJhfwGdWy8PuHfoVRivs4Cre37tE-p00qy9fvuD5dPb09OtY3EL41w25dy_7NfU8zRB9qOzS5_lRmVKi4rwjGtS7xvS6LxI42k8FGSErrjkrf7LNLb7w',
           'https://lh3.googleusercontent.com/aida-public/AB6AXuCl6EP_2QWD3zTkJrmJQU1WrXHW24i-xHQjFwfpdy5_G9MZOYmYjKRP1q4STsLg397I8gABo_XNl_LKigXEoBwjRNsUe_5vq4GqvelxXfEwBPr040Si_IAshZKviXpI8c8RYqhCKvzLR_XHppqYmciWgZIGtGFEJLlsY7e_HYpG-S4k-ML3afogCGlhBHkIkTMsOv0_B9tIelXC1dzhOBBdD7Je6GcJ_hcsBAYc1-HPOcoB4r3_FZTTaw',
