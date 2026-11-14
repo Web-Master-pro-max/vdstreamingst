@@ -523,6 +523,10 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
         return res.send(outputLines.join('\n'));
       }
 
+      // Check if this media playlist uses a dedicated CDN edge vault (e.g. vault-*.surgecdn.top, vault-*.prismcdn.top, *.playercdn.net)
+      const cdnVaultMatch = body.match(/https:\/\/([a-zA-Z0-9-]+\.(?:surgecdn\.top|prismcdn\.top|playercdn\.net|matrixcdn|fallencdn|vividcdn|furrycdn))/);
+      const cdnVaultHost = cdnVaultMatch ? cdnVaultMatch[1] : null;
+
       // Handle Media Playlists (segments)
       const rewritten = lines.map(line => {
         let trimmed = line.trim();
@@ -542,7 +546,11 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
         if (trimmed.startsWith('#')) {
           if (trimmed.includes('URI="')) {
             return trimmed.replace(/URI="([^"]+)"/g, (m, uri) => {
-              const fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
+              let fullUri = resolvePlaylistUrl(uri, finalUrl, baseUrl);
+              // Route key.bin to the media CDN edge vault to avoid Cloudflare datacenter bot challenges
+              if (cdnVaultHost && (fullUri.includes('key.bin') || fullUri.endsWith('.bin')) && fullUri.includes('flixcloud.cc')) {
+                fullUri = fullUri.replace(/[a-zA-Z0-9-]+\.flixcloud\.cc/, cdnVaultHost);
+              }
               const up = getUpstreamHeaders(fullUri, upstream.referer, upstream.origin);
               const token = encryptStreamToken({ u: fullUri, r: up.referer, o: up.origin, d: isDub ? 1 : 0 });
               if (fullUri.includes('.m3u8') || fullUri.includes('manifest') || fullUri.includes('playlist')) {
@@ -609,20 +617,39 @@ router.get(['/hls/segment.ts', '/proxy/segment'], async (req, res) => {
 
     let fetchResult = await fetchWithRedirects(targetUrl, headers);
     if (fetchResult.res.statusCode === 403) {
-      const altReferer = (referer === 'https://lunarx.to/' || referer === 'https://lunarx.to') ? 'https://megaplay.buzz/' : 'https://lunarx.to/';
-      const altOrigin = (origin === 'https://lunarx.to' || origin === 'https://lunarx.to/') ? 'https://megaplay.buzz' : 'https://lunarx.to';
-      console.warn(`[Proxy Segment] Upstream 403 for segment, retrying with alternate referer ${altReferer}...`);
-      const retryHeaders = {
-        ...headers,
-        'Referer': altReferer,
-        'Origin': altOrigin
-      };
-      try {
-        const retryResult = await fetchWithRedirects(targetUrl, retryHeaders);
-        if (retryResult.res.statusCode === 200 || retryResult.res.statusCode === 206) {
-          fetchResult = retryResult;
+      // 1. If key.bin on flixcloud.cc failed with 403 (Cloudflare datacenter challenge), try known CDN vaults
+      if (targetUrl.includes('flixcloud.cc') && (targetUrl.includes('key.bin') || targetUrl.endsWith('.bin'))) {
+        const vaultHosts = ['vault-94.surgecdn.top', 'vault-92.prismcdn.top', 'vault-91.surgecdn.top', 'vault-93.surgecdn.top'];
+        for (const vHost of vaultHosts) {
+          const altTarget = targetUrl.replace(/[a-zA-Z0-9-]+\.flixcloud\.cc/, vHost);
+          try {
+            const vaultResult = await fetchWithRedirects(altTarget, headers);
+            if (vaultResult.res.statusCode === 200) {
+              fetchResult = vaultResult;
+              targetUrl = altTarget;
+              break;
+            }
+          } catch (e) { }
         }
-      } catch (retryErr) { }
+      }
+
+      // 2. Alternate referer retry
+      if (fetchResult.res.statusCode === 403) {
+        const altReferer = (referer === 'https://lunarx.to/' || referer === 'https://lunarx.to') ? 'https://megaplay.buzz/' : 'https://lunarx.to/';
+        const altOrigin = (origin === 'https://lunarx.to' || origin === 'https://lunarx.to/') ? 'https://megaplay.buzz' : 'https://lunarx.to';
+        console.warn(`[Proxy Segment] Upstream 403 for segment, retrying with alternate referer ${altReferer}...`);
+        const retryHeaders = {
+          ...headers,
+          'Referer': altReferer,
+          'Origin': altOrigin
+        };
+        try {
+          const retryResult = await fetchWithRedirects(targetUrl, retryHeaders);
+          if (retryResult.res.statusCode === 200 || retryResult.res.statusCode === 206) {
+            fetchResult = retryResult;
+          }
+        } catch (retryErr) { }
+      }
     }
 
     const { res: upstreamRes } = fetchResult;
