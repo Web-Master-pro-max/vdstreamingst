@@ -54,11 +54,9 @@ server.listen(PORT, async () => {
 
     const audioLines = lines.filter(l => l.startsWith('#EXT-X-MEDIA:TYPE=AUDIO'));
     assert(audioLines.length >= 2, 'Found at least 2 audio tracks in master playlist');
-    const engLine = audioLines.find(l => l.includes('LANGUAGE="eng"'));
-    assert(!!engLine, 'Found English audio track in master playlist');
-    assert(audioLines[0] === engLine, 'English audio track is strictly INDEX 0 in master playlist');
-    assert(engLine.includes('DEFAULT=YES'), 'English audio marked DEFAULT=YES');
-    assert(engLine.includes('AUTOSELECT=YES'), 'English audio marked AUTOSELECT=YES');
+    assert(audioLines[0].includes('LANGUAGE="eng"'), 'English audio track is strictly INDEX 0 in master playlist');
+    assert(audioLines[0].includes('DEFAULT=YES'), 'English audio marked DEFAULT=YES');
+    assert(audioLines[0].includes('AUTOSELECT=YES'), 'English audio marked AUTOSELECT=YES');
 
     const jpnLine = audioLines.find(l => l.includes('LANGUAGE="jpn"'));
     assert(!!jpnLine, 'Found Japanese audio track in master playlist');
