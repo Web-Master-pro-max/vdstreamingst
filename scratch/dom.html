@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css">
+  <style>
+    /* Same styles as anime.html */
+    .anime-continue-slider {
+      width: 100%;
+      overflow: hidden;
+      padding-top: 4px;
+      padding-bottom: 8px;
+    }
+    .anime-continue-slider:not(.swiper-initialized) .swiper-wrapper,
+    #animeContinueWatchingGrid:not(.swiper-initialized) {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+    .anime-continue-slider:not(.swiper-initialized) .swiper-wrapper::-webkit-scrollbar,
+    #animeContinueWatchingGrid:not(.swiper-initialized)::-webkit-scrollbar {
+      display: none;
+    }
+    .anime-continue-slider .swiper-slide,
+    #animeContinueWatchingGrid > div {
+      flex-shrink: 0;
+      scroll-snap-align: start;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.relative{position:relative}.-mx-1{margin-left:-0.25rem;margin-right:-0.25rem}.mx-auto{margin-left:auto;margin-right:auto}.mb-2{margin-bottom:0.5rem}.mb-1{margin-bottom:0.25rem}.flex{display:flex}.aspect-\[2\/3\]{aspect-ratio:2/3}.w-\[136px\]{width:136px}.w-full{width:100%}.max-w-7xl{max-width:80rem}.shrink-0{flex-shrink:0}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-between{justify-content:space-between}.overflow-hidden{overflow:hidden}.rounded-xl{border-radius:0.75rem}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.bg-gray-700{--tw-bg-opacity:1;background-color:rgb(55 65 81 / var(--tw-bg-opacity, 1))}.bg-gray-800{--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.p-4{padding:1rem}.p-2{padding:0.5rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.text-\[10px\]{font-size:10px}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:w-\[155px\]{width:155px}}@media (min-width: 768px){.md\:w-\[175px\]{width:175px}}@media (min-width: 1024px){.lg\:w-\[190px\]{width:190px}}</style></head>
+<body class="bg-black text-white p-4">
+  <div style="width: 390px; border: 1px solid red; margin: 0 auto;">
+    <section id="animeContinueWatchingSection" style="display: block;">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-2">
+          <h2>Continue Transmission</h2>
+          <div>
+            <button id="animeContinuePrevBtn" class="swiper-button-disabled" disabled="" tabindex="-1" aria-label="Previous slide" aria-controls="animeContinueWatchingGrid" aria-disabled="true">&lt;</button>
+            <button id="animeContinueNextBtn" tabindex="0" aria-label="Next slide" aria-controls="animeContinueWatchingGrid" aria-disabled="false">&gt;</button>
+          </div>
+        </div>
+
+        <div class="relative group/continue">
+          <div class="swiper anime-continue-slider overflow-hidden -mx-1 px-1 swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden">
+            <div class="swiper-wrapper flex items-stretch" id="animeContinueWatchingGrid" aria-live="polite" style="cursor: grab;">
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2 swiper-slide-visible swiper-slide-active" role="group" aria-label="1 / 5" style="margin-right: 10px;">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">Cowboy Bebop</div>
+        <div class="text-[10px] text-gray-400">Episode 1</div>
+      </div>
+    
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2 swiper-slide-visible swiper-slide-next" role="group" aria-label="2 / 5" style="margin-right: 10px;">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">Magical Girl</div>
+        <div class="text-[10px] text-gray-400">Episode 1</div>
+      </div>
+    
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2 swiper-slide-visible" role="group" aria-label="3 / 5" style="margin-right: 10px;">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">Overgeared</div>
+        <div class="text-[10px] text-gray-400">Episode 1</div>
+      </div>
+    
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2" role="group" aria-label="4 / 5" style="margin-right: 10px;">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">Solo Leveling</div>
+        <div class="text-[10px] text-gray-400">Episode 1</div>
+      </div>
+    
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2" role="group" aria-label="5 / 5" style="margin-right: 10px;">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">Attack on Titan</div>
+        <div class="text-[10px] text-gray-400">Episode 1</div>
+      </div>
+    </div>
+          <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+  <script>
+    const list = [
+      { lunarId: 1, title: 'Cowboy Bebop', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 1 },
+      { lunarId: 2, title: 'Magical Girl', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 50 },
+      { lunarId: 3, title: 'Overgeared', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 1 },
+      { lunarId: 4, title: 'Solo Leveling', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 20 },
+      { lunarId: 5, title: 'Attack on Titan', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 80 }
+    ];
+
+    const grid = document.getElementById('animeContinueWatchingGrid');
+    grid.innerHTML = list.map(item => `
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">${item.title}</div>
+        <div class="text-[10px] text-gray-400">Episode ${item.episodeNumber}</div>
+      </div>
+    `).join('');
+
+    let animeContinueSwiper = null;
+    function initAnimeContinueSwiper() {
+      const sliderEl = document.querySelector('.anime-continue-slider');
+      animeContinueSwiper = new Swiper(sliderEl, {
+        slidesPerView: 'auto',
+        spaceBetween: 10,
+        grabCursor: true,
+        watchSlidesProgress: true,
+        navigation: {
+          nextEl: '#animeContinueNextBtn',
+          prevEl: '#animeContinuePrevBtn'
+        }
+      });
+      
+      console.log('Swiper initialized:', {
+        sliderWidth: sliderEl.clientWidth,
+        wrapperWidth: document.querySelector('.swiper-wrapper').clientWidth,
+        slidesCount: document.querySelectorAll('.swiper-slide').length,
+        slide0Width: document.querySelectorAll('.swiper-slide')[0].offsetWidth,
+        slide1Width: document.querySelectorAll('.swiper-slide')[1].offsetWidth,
+        slide2Width: document.querySelectorAll('.swiper-slide')[2].offsetWidth,
+        slide0Left: document.querySelectorAll('.swiper-slide')[0].offsetLeft,
+        slide1Left: document.querySelectorAll('.swiper-slide')[1].offsetLeft,
+        slide2Left: document.querySelectorAll('.swiper-slide')[2].offsetLeft
+      });
+    }
+
+    requestAnimationFrame(() => {
+      initAnimeContinueSwiper();
+    });
+  </script>
+
+
+</body></html>

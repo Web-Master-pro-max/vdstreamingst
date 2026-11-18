@@ -187,10 +187,10 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
 
   // Filter out any internal, client or proxy referers passed in queries
   if (referer && (
-    referer.includes('vercel.app') || 
-    referer.includes('localhost') || 
-    referer.includes('13.202.95.5') || 
-    referer.includes('127.0.0.1') || 
+    referer.includes('vercel.app') ||
+    referer.includes('localhost') ||
+    referer.includes('13.202.95.5') ||
+    referer.includes('127.0.0.1') ||
     referer.includes('anime-shubh') ||
     referer.includes('/api/lunarx')
   )) {
@@ -215,10 +215,10 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
     referer = 'https://zokoanime.video/';
     origin = 'https://zokoanime.video';
   } else if (
-    targetUrl.includes('nexabloom') || 
-    targetUrl.includes('voyage') || 
-    targetUrl.includes('megaplay') || 
-    targetUrl.includes('horizon') || 
+    targetUrl.includes('nexabloom') ||
+    targetUrl.includes('voyage') ||
+    targetUrl.includes('megaplay') ||
+    targetUrl.includes('horizon') ||
     targetUrl.includes('broforgotsave') ||
     targetUrl.includes('playercdn') ||
     /\/anime\/[a-f0-9]{32}\//i.test(targetUrl) ||
@@ -431,28 +431,28 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
             // English tracks FIRST with DEFAULT=YES, AUTOSELECT=YES
             const formattedEng = engLines.map((line, idx) => {
               let l = line.replace(/DEFAULT=(?:YES|NO)/g, idx === 0 ? 'DEFAULT=YES' : 'DEFAULT=NO')
-                          .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
+                .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
               if (!l.includes('DEFAULT=')) l += (idx === 0 ? ',DEFAULT=YES,AUTOSELECT=YES' : ',DEFAULT=NO,AUTOSELECT=YES');
               return l;
             });
             // Japanese tracks SECOND with DEFAULT=NO, AUTOSELECT=NO
             const formattedJpn = jpnLines.map(line => {
               return line.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=NO')
-                         .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=NO');
+                .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=NO');
             });
             orderedAudioLines = [...formattedEng, ...formattedJpn, ...otherAudio];
           } else {
             // Japanese tracks FIRST with DEFAULT=YES, AUTOSELECT=YES
             const formattedJpn = jpnLines.map((line, idx) => {
               let l = line.replace(/DEFAULT=(?:YES|NO)/g, idx === 0 ? 'DEFAULT=YES' : 'DEFAULT=NO')
-                          .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
+                .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=YES');
               if (!l.includes('DEFAULT=')) l += (idx === 0 ? ',DEFAULT=YES,AUTOSELECT=YES' : ',DEFAULT=NO,AUTOSELECT=YES');
               return l;
             });
             // English tracks SECOND with DEFAULT=NO, AUTOSELECT=NO
             const formattedEng = engLines.map(line => {
               return line.replace(/DEFAULT=(?:YES|NO)/g, 'DEFAULT=NO')
-                         .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=NO');
+                .replace(/AUTOSELECT=(?:YES|NO)/g, 'AUTOSELECT=NO');
             });
             orderedAudioLines = [...formattedJpn, ...formattedEng, ...otherAudio];
           }

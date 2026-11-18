@@ -156,6 +156,55 @@
       "duration": 3568,
       "completed": false,
       "lastWatchedAt": "2026-10-25T06:36:36.053Z"
+    },
+    "lunar-212888-1": {
+      "episodeKey": "lunar-212888-1",
+      "episodeId": "lunar-212888-1",
+      "lunarId": "212888",
+      "episodeNumber": 1,
+      "episodeTitle": "Legendary Class",
+      "showTitle": "Overgeared",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/478752/posters/6aa520a8f1e17.jpg",
+      "banner": "",
+      "progress": 0,
+      "duration": 1420,
+      "completed": false,
+      "lastWatchedAt": "2026-11-15T16:04:42.555Z"
+    },
+    "lunar-195539-1": {
+      "episodeKey": "lunar-195539-1",
+      "episodeId": "lunar-195539-1",
+      "lunarId": "195539",
+      "episodeNumber": 1,
+      "episodeTitle": "Last Chance for a Slow Dance",
+      "showTitle": "Cyberpunk: Edgerunners 2",
+      "poster": "https://artworks.thetvdb.com/banners/series/384541/posters/5ef503b89742f.jpg",
+      "banner": "",
+      "progress": 335,
+      "duration": 1708,
+      "completed": false,
+      "lastWatchedAt": "2026-11-18T14:43:54.881Z"
+    },
+    "lunar-21-1092": {
+      "episodeKey": "lunar-21-1092",
+      "episodeId": "lunar-21-1092",
+      "lunarId": "21",
+      "episodeNumber": 1092,
+      "episodeTitle": "Bonney`s Lamentation! Darkness Lurking on the Future Island",
+      "showTitle": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "",
+      "progress": 1262,
+      "duration": 1430,
+      "completed": true,
+      "lastWatchedAt": "2026-11-18T15:27:48.902Z",
+      "amount": 10,
+      "reason": "episode_watched",
+      "inWatchParty": false,
+      "watchTime": 299,
+      "watchCoverage": 0.24,
+      "xpAwarded": true,
+      "xpAwardedAt": "2026-11-18T15:27:22.880Z"
     }
   }
 }

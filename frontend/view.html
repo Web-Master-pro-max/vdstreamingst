@@ -3,17 +3,76 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" name="viewport" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"
+    name="viewport" />
   <title>Watchlist & Archive Hub · Infinx Anime</title>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-  <!-- Material Symbols & Google Fonts: Outfit & Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Outfit & Inter + Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- Unified Motion System -->
-  <link rel="stylesheet" href="animations.css">
+  <link rel="stylesheet" href="animations.css" />
+
+  <style>
+    @layer base {
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000000;
+        color: #e2e2e2;
+        overflow-x: hidden;
+      }
+
+      body {
+        overscroll-behavior: none;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #08080c;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff506e;
+    }
+
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 20px rgba(0, 238, 252, 0.4);
+    }
+
+    .glow-crimson {
+      box-shadow: 0 0 24px rgba(255, 80, 110, 0.5);
+    }
+  </style>
 
   <!-- Tailwind CSS CDN for Cyberpunk Cinema Glass tokens -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,18 +92,43 @@
             "surface-container-highest": "#353535",
             "on-surface": "#e2e2e2",
             "on-surface-variant": "#e8bcbe",
+            "inverse-surface": "#e2e2e2",
+            "inverse-on-surface": "#303030",
+            "outline": "#ae8789",
+            "outline-variant": "#5e3e41",
+            "surface-tint": "#ffb2b8",
             "primary": "#ffb2b8",
+            "on-primary": "#67001d",
             "primary-container": "#ff506e",
             "on-primary-container": "#5b0018",
+            "inverse-primary": "#be003d",
             "secondary": "#d3fbff",
+            "on-secondary": "#00363a",
             "secondary-container": "#00eefc",
             "on-secondary-container": "#00686f",
+            "tertiary": "#d0bcff",
+            "on-tertiary": "#3c0091",
+            "tertiary-container": "#a078ff",
+            "on-tertiary-container": "#340080",
+            "error": "#ffb4ab",
+            "on-error": "#690005",
+            "error-container": "#93000a",
+            "on-error-container": "#ffdad6",
+            "primary-fixed": "#ffdadb",
+            "primary-fixed-dim": "#ffb2b8",
+            "on-primary-fixed": "#40000f",
+            "on-primary-fixed-variant": "#91002d",
             "secondary-fixed": "#7df4ff",
             "secondary-fixed-dim": "#00dbe9",
-            "tertiary": "#d0bcff",
-            "tertiary-container": "#a078ff",
-            "outline": "#ae8789",
-            "outline-variant": "#5e3e41"
+            "on-secondary-fixed": "#002022",
+            "on-secondary-fixed-variant": "#004f54",
+            "tertiary-fixed": "#e9ddff",
+            "tertiary-fixed-dim": "#d0bcff",
+            "on-tertiary-fixed": "#23005c",
+            "on-tertiary-fixed-variant": "#5516be",
+            "background": "#131313",
+            "on-background": "#e2e2e2",
+            "surface-variant": "#353535"
           },
           borderRadius: {
             "DEFAULT": "0.25rem",
@@ -59,9 +143,13 @@
             "space-md": "1rem",
             "space-lg": "1.5rem",
             "space-xl": "2.5rem",
-            "gutter": "1.5rem"
+            "gutter": "1.5rem",
+            "gutter-mobile": "0.75rem",
+            "margin": "3rem",
+            "margin-mobile": "1rem"
           },
           fontFamily: {
+            "display-hero": ["Outfit", "sans-serif"],
             "headline-lg": ["Outfit", "sans-serif"],
             "headline-md": ["Outfit", "sans-serif"],
             "headline-sm": ["Outfit", "sans-serif"],
@@ -76,131 +164,160 @@
       }
     };
   </script>
-
-  <style>
-    @layer base {
-      html, body {
-        margin: 0;
-        padding: 0;
-      }
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #08080c;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.16);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #ff506e;
-    }
-    .scrollbar-none::-webkit-scrollbar {
-      display: none;
-    }
-    .scrollbar-none {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-  </style>
 </head>
 
-<body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
-  <!-- ====== STITCH FROSTED GLASS HEADER ====== -->
-  <header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)] border-b border-white/5">
-    <div class="h-16 xl:h-20 w-full px-3 sm:px-gutter flex items-center justify-between gap-space-sm sm:gap-space-md max-w-7xl mx-auto">
+<body
+  class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col justify-between">
+
+  <!-- ================= TOP FROSTED CYBERPUNK HEADER ================= -->
+  <header
+    class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)] border-b border-surface-container-high/40"
+    id="siteHeader">
+    <div
+      class="h-16 xl:h-20 w-full px-3 sm:px-gutter flex items-center justify-between gap-space-sm sm:gap-space-md max-w-7xl mx-auto">
       <div class="flex items-center gap-2 sm:gap-space-lg flex-shrink-0">
-        <button type="button" onclick="if(window.history.length > 1) { history.back(); } else { window.location.href='index.html'; }" class="xl:hidden w-9 h-9 rounded-full bg-surface-container-high/80 hover:bg-surface-container-highest flex items-center justify-center text-on-surface hover:text-primary transition-colors flex-shrink-0" aria-label="Go Back">
+        <!-- Back button on mobile -->
+        <button type="button"
+          onclick="if(window.history.length > 1) { history.back(); } else { window.location.href='index.html'; }"
+          class="xl:hidden w-9 h-9 rounded-full bg-surface-container-high/80 hover:bg-surface-container-highest flex items-center justify-center text-on-surface hover:text-primary transition-colors flex-shrink-0"
+          aria-label="Go Back">
           <span class="material-symbols-outlined text-[18px]">arrow_back_ios_new</span>
         </button>
+
         <a class="flex items-center gap-space-sm group" href="index.html">
-          <div class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300">
-            <svg class="w-5 h-5 sm:w-6 sm:h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z" fill="#00eefc"></path>
+          <div
+            class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300">
+            <svg
+              class="w-5 h-5 sm:w-6 sm:h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300"
+              fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z"
+                fill="#00eefc"></path>
               <circle cx="9.5" cy="13.5" fill="#ff506e" r="1.5"></circle>
             </svg>
           </div>
           <div class="flex flex-col">
-            <span class="font-headline-sm text-sm sm:text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span></span>
-            <span class="font-label-sm text-[9px] sm:text-label-sm tracking-widest uppercase text-outline">CINEMA LABS</span>
+            <span
+              class="font-headline-sm text-sm sm:text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">
+              INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span>
+            </span>
+            <span class="font-label-sm text-[9px] sm:text-label-sm tracking-widest uppercase text-outline">CINEMA
+              LABS</span>
           </div>
         </a>
 
-        <nav class="hidden xl:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-lowest/60 backdrop-blur-md">
-          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="index.html">Home</a>
-          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="anime.html">Catalog / Browse</a>
-          <a class="px-space-md py-space-xs font-label-lg text-label-lg transition-all duration-200 bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full font-bold" href="view.html#watchlist">Watchlist &amp; Hub</a>
-          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="download.html">Get App</a>
-          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200" href="admin.html">Admin Studio</a>
+        <!-- Desktop Navigation Bar -->
+        <nav
+          class="hidden xl:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-lowest/60 backdrop-blur-md">
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200"
+            href="index.html">Home</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200"
+            href="anime.html">Catalog / Browse</a>
+          <a aria-current="page"
+            class="px-space-md py-space-xs font-label-lg transition-all duration-200 bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] rounded-full font-bold"
+            href="view.html">Watchlist &amp; Hub</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200"
+            href="download.html">Get App</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200"
+            href="profile.html">Otaku Passport</a>
+          <a class="px-space-md py-space-xs rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200"
+            href="admin.html">Admin Studio</a>
         </nav>
       </div>
 
       <!-- Live Search Box with Suggest Dropdown -->
       <div class="flex-1 max-w-md mx-space-md hidden md:block relative">
         <div class="relative flex items-center w-full">
-          <span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span>
-          <input id="searchInput" class="w-full pl-11 pr-14 py-2 bg-surface-container-low/90 backdrop-blur-xl rounded-full font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container focus:shadow-[0_0_20px_rgba(0,238,252,0.3)] transition-all" placeholder="Search anime, studios, 4K releases..." type="text" />
-          <div class="absolute right-3 px-2 py-0.5 rounded bg-surface-container-highest/80 font-label-sm text-label-sm text-on-surface-variant shadow-inner pointer-events-none">⌘K</div>
+          <span
+            class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span>
+          <input id="searchInput"
+            class="w-full pl-11 pr-14 py-2 bg-surface-container-low/90 backdrop-blur-xl rounded-full font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container focus:shadow-[0_0_20px_rgba(0,238,252,0.3)] transition-all"
+            placeholder="Search anime, studios, 4K releases..." type="text" />
+          <div
+            class="absolute right-3 px-2 py-0.5 rounded bg-surface-container-highest/80 font-label-sm text-on-surface-variant shadow-inner pointer-events-none">
+            ⌘K</div>
         </div>
-        <div id="liveSearchDropdown" class="absolute top-full left-0 right-0 mt-2 bg-surface-container-high/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-50 hidden"></div>
+        <div id="liveSearchDropdown"
+          class="absolute top-full left-0 right-0 mt-2 bg-surface-container-high/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-50 hidden">
+        </div>
       </div>
 
-      <!-- Auth & Actions Cluster -->
+      <!-- Right Header Actions Cluster -->
       <div class="flex items-center gap-2 sm:gap-space-md flex-shrink-0">
-        <a class="relative inline-flex items-center gap-1 sm:gap-space-xs px-2.5 sm:px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary shadow-[0_0_14px_rgba(255,80,110,0.35)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group" href="profile.html">
-          <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span>
+        <a class="relative inline-flex items-center gap-1 sm:gap-space-xs px-2.5 sm:px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary border border-primary/20 shadow-[0_0_14px_rgba(255,80,110,0.25)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group"
+          href="view.html#vip">
+          <span
+            class="material-symbols-outlined text-[15px] sm:text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span>
           <span class="font-label-sm text-[10px] sm:text-label-sm tracking-wider uppercase font-bold">VIP PASS</span>
         </a>
 
         <!-- Dynamic Auth Cluster -->
         <div id="authHeader" class="flex items-center gap-2">
-          <button class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm sm:font-label-md transition-all" onclick="window.location.href='index.html#login'">Sign In</button>
+          <button
+            class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm sm:font-label-md transition-all"
+            onclick="window.location.href='login.html'">Sign In</button>
         </div>
       </div>
     </div>
   </header>
 
+  <!-- ================= MAIN CONTENT ================= -->
   <main class="w-full pt-16 xl:pt-20 pb-24 xl:pb-12 bg-surface-container-lowest min-h-screen">
+
     <!-- Top Ambient Glow Field -->
     <div class="relative w-full overflow-hidden">
-      <div class="absolute -top-32 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-[128px] pointer-events-none"></div>
-      <div class="absolute -top-24 right-1/4 w-[420px] h-96 bg-secondary-container/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div
+        class="absolute -top-32 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-[128px] pointer-events-none">
+      </div>
+      <div
+        class="absolute -top-24 right-1/4 w-[420px] h-96 bg-secondary-container/10 rounded-full blur-[140px] pointer-events-none">
+      </div>
 
       <!-- Hero / Hub Header Banner -->
-      <div class="w-full px-gutter pt-space-lg pb-space-md max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+      <div
+        class="w-full px-4 sm:px-gutter pt-space-lg pb-space-md max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-space-md">
         <div>
           <div class="flex items-center gap-space-xs mb-space-xs">
             <span class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_10px_#00eefc] animate-pulse"></span>
-            <span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Vault Telemetry • Neural Sync Online</span>
+            <span class="font-label-sm text-secondary tracking-widest uppercase">Vault Telemetry • Neural Sync
+              Online</span>
           </div>
           <div class="flex items-baseline gap-space-md flex-wrap">
-            <h1 id="hubMainTitle" class="font-headline-lg text-2xl md:text-4xl text-on-surface tracking-tight font-extrabold uppercase">WATCHLIST &amp; ARCHIVE HUB</h1>
-            <span class="font-label-md text-label-md text-outline font-normal">v4.8 Ultra-Pure AMOLED</span>
+            <h1 id="hubMainTitle"
+              class="font-headline-lg text-2xl md:text-4xl text-on-surface tracking-tight font-extrabold uppercase">
+              WATCHLIST &amp; ARCHIVE HUB
+            </h1>
+            <span class="font-label-md text-outline font-normal">v4.8 Ultra-Pure AMOLED</span>
           </div>
         </div>
 
         <!-- Right Sync Telemetry Badge & Actions -->
         <div class="flex items-center gap-space-sm flex-wrap">
-          <div class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-high/90 shadow-md">
-            <span class="material-symbols-outlined text-secondary-container text-[16px] animate-spin" style="animation-duration: 6s;">sync</span>
-            <span class="font-label-sm text-label-sm text-on-surface">MAL &amp; AniList Synced</span>
+          <div
+            class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-high/90 border border-white/5 shadow-md">
+            <span class="material-symbols-outlined text-secondary-container text-[16px] animate-spin"
+              style="animation-duration: 6s;">sync</span>
+            <span class="font-label-sm text-on-surface">MAL &amp; AniList Synced</span>
             <span class="w-1.5 h-1.5 rounded-full bg-secondary-container shadow-[0_0_6px_#00eefc]"></span>
           </div>
 
-          <button id="clearHistoryBtn" type="button" class="px-space-md py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-300 font-label-md text-label-md transition-all shadow-sm flex items-center gap-space-xs" style="display: none;">
+          <button id="clearHistoryBtn" type="button"
+            class="px-space-md py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-300 font-label-md text-xs sm:text-label-md transition-all shadow-sm flex items-center gap-space-xs cursor-pointer border border-red-500/30"
+            style="display: none;" onclick="confirmClearHistory()">
             <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
             <span>Clear History</span>
           </button>
 
-          <button id="btn-batch-edit" class="px-space-md py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md transition-all shadow-sm flex items-center gap-space-xs" onclick="alert('Batch Edit Mode activated. Select cards to re-order.')">
+          <button id="btn-batch-edit"
+            class="px-space-md py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-xs sm:text-label-md transition-all shadow-sm flex items-center gap-space-xs cursor-pointer border border-white/5"
+            onclick="toggleBatchEdit()">
             <span class="material-symbols-outlined text-[16px] text-outline">tune</span>
-            <span>Batch Edit</span>
+            <span id="batchEditBtnText">Batch Edit</span>
           </button>
 
-          <button class="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md shadow-[0_0_20px_rgba(255,80,110,0.4)] hover:shadow-[0_0_28px_rgba(255,80,110,0.65)] hover:scale-[1.02] transition-all flex items-center gap-space-xs font-bold" onclick="alert('Exporting your Anime Vault archive matrix...')">
+          <button
+            class="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs sm:text-label-md shadow-[0_0_20px_rgba(255,80,110,0.4)] hover:shadow-[0_0_28px_rgba(255,80,110,0.65)] hover:scale-[1.02] transition-all flex items-center gap-space-xs font-bold cursor-pointer"
+            onclick="exportMatrix()">
             <span class="material-symbols-outlined text-[16px]">file_download</span>
             <span>Export Matrix</span>
           </button>
@@ -209,161 +326,349 @@
 
       <!-- Hub Segmented Master Switcher Tabs -->
       <div class="w-full px-3 sm:px-gutter mb-space-lg max-w-7xl mx-auto">
-        <div class="flex items-center gap-1 sm:gap-space-xs p-1 sm:p-1.5 rounded-2xl bg-surface-container-low max-w-2xl shadow-xl overflow-x-auto scrollbar-none">
-          <button class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active whitespace-nowrap" id="tab-watchlist" onclick="switchHubTab('watchlist')">
-            <span class="material-symbols-outlined text-[16px] sm:text-[18px] text-primary-container">bookmark_manager</span>
-            <span>Watchlist</span>
-            <span class="px-1.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-[10px] sm:text-xs font-bold" id="hubWlCount">0</span>
+        <div
+          class="flex items-center gap-1 sm:gap-space-xs p-1 sm:p-1.5 rounded-2xl bg-surface-container-low max-w-2xl border border-white/5 shadow-xl overflow-x-auto scrollbar-none">
+          <button
+            class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active whitespace-nowrap cursor-pointer"
+            id="tab-watchlist" onclick="switchHubTab('watchlist')">
+            <span
+              class="material-symbols-outlined text-[16px] sm:text-[18px] text-primary-container">bookmark_manager</span>
+            <span>My Watchlist</span>
+            <span
+              class="px-1.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-[10px] sm:text-xs font-bold"
+              id="hubWlCount">0</span>
           </button>
 
-          <button class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap" id="tab-history" onclick="switchHubTab('history')">
+          <button
+            class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap cursor-pointer"
+            id="tab-history" onclick="switchHubTab('history')">
             <span class="material-symbols-outlined text-[16px] sm:text-[18px]">history</span>
-            <span>History</span>
-            <span class="px-1.5 py-0.5 rounded-full bg-surface-container-highest text-outline font-label-sm text-[10px] sm:text-xs font-bold" id="hubHistCount">0</span>
+            <span>Watch History &amp; Sync</span>
+            <span
+              class="px-1.5 py-0.5 rounded-full bg-surface-container-highest text-outline font-label-sm text-[10px] sm:text-xs font-bold"
+              id="hubHistCount">0</span>
           </button>
 
-          <button class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap" id="tab-matrix" onclick="switchHubTab('matrix')">
+          <button
+            class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap cursor-pointer"
+            id="tab-matrix" onclick="switchHubTab('matrix')">
             <span class="material-symbols-outlined text-[16px] sm:text-[18px]">grid_view</span>
-            <span>Matrix</span>
-            <span class="px-1.5 py-0.5 rounded-full bg-secondary-container/15 text-secondary font-label-sm text-[10px] sm:text-xs font-bold">Browse</span>
+            <span>Genre Matrix</span>
+            <span
+              class="px-1.5 py-0.5 rounded-full bg-secondary-container/15 text-secondary font-label-sm text-[10px] sm:text-xs font-bold"
+              id="hubMatrixCount">Catalog</span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- PRIMARY SECTION CONTAINER -->
-    <div class="w-full px-3 sm:px-gutter pb-space-xl max-w-7xl mx-auto flex flex-col gap-space-xl" id="hubMainContainer">
-      <!-- 1. ACTIVE SECTION: CURRENTLY WATCHING 16:9 Detailed Progress Rail -->
+    <div class="w-full px-3 sm:px-gutter pb-space-xl max-w-7xl mx-auto flex flex-col gap-space-xl"
+      id="hubMainContainer">
+
+      <!-- ================= 1. CURRENTLY WATCHING 16:9 Detailed Progress Rail ================= -->
       <div id="currentlyWatchingRail" class="flex flex-col gap-space-md">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-space-sm">
             <span class="w-3 h-3 rounded-full bg-primary-container shadow-[0_0_12px_#ff506e] animate-pulse"></span>
-            <h2 class="font-headline-md text-lg md:text-xl text-on-surface tracking-wide font-extrabold uppercase">Currently Watching • Active Streams</h2>
-            <span class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-xs uppercase font-bold">Live Progress</span>
+            <h2 class="font-headline-md text-lg md:text-xl text-on-surface tracking-wide font-extrabold uppercase">
+              Currently Watching • Active Streams
+            </h2>
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed font-label-sm text-xs uppercase font-bold border border-primary-container/30">
+              Live Progress
+            </span>
           </div>
+          <span
+            class="font-label-md text-secondary-container cursor-pointer hover:underline flex items-center gap-0.5 text-xs sm:text-sm"
+            onclick="switchHubTab('history')">
+            <span>View Full History</span>
+            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </span>
         </div>
 
-        <!-- 16:9 Thumbnail + Progress Rail Grid (Touch Carousel on Mobile, Grid on Desktop) -->
-        <div id="currentlyWatchingGrid" class="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-3 md:pb-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-space-md scrollbar-none">
+        <!-- 16:9 Thumbnail + Progress Rail Grid (Carousel on Mobile, Grid on Desktop) -->
+        <div id="currentlyWatchingGrid"
+          class="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-3 md:pb-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-space-md scrollbar-none">
           <!-- Populated dynamically via JavaScript -->
         </div>
       </div>
 
-      <!-- 2. WATCHLIST TARGETS / GRID -->
+      <!-- ================= 2. WATCHLIST VAULT SECTION ================= -->
       <div id="watchlistVaultSection" class="flex flex-col gap-space-md">
         <!-- Filter Chips & Sort Subheader -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md p-space-md rounded-2xl bg-surface-container-low shadow-lg">
+        <div
+          class="flex flex-col md:flex-row md:items-center justify-between gap-space-md p-space-md rounded-2xl bg-surface-container-low border border-white/5 shadow-lg">
           <div class="flex items-center gap-space-xs overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-            <button class="filter-chip px-space-md py-1.5 rounded-full bg-secondary-container/15 text-secondary-container font-label-md text-xs font-bold shadow-[0_0_14px_rgba(0,238,252,0.3)] flex items-center gap-1.5 transition-all active">
-              <span>All Saved</span>
+            <button
+              class="filter-chip px-space-md py-1.5 rounded-full bg-secondary-container/15 text-secondary-container font-label-md text-xs font-bold shadow-[0_0_14px_rgba(0,238,252,0.3)] flex items-center gap-1.5 transition-all cursor-pointer border border-secondary-container/30"
+              data-filter="all">
+              <span>All Targets</span>
               <span id="allWlBadge" class="text-secondary font-mono text-[11px]">(0)</span>
+            </button>
+            <button
+              class="filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-white/5"
+              data-filter="watching">
+              <span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#ff506e]"></span>
+              <span>Watching</span>
+            </button>
+            <button
+              class="filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-white/5"
+              data-filter="plan">
+              <span class="w-2 h-2 rounded-full bg-tertiary-container shadow-[0_0_6px_#a078ff]"></span>
+              <span>Plan to Watch</span>
+            </button>
+            <button
+              class="filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-white/5"
+              data-filter="completed">
+              <span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_#d3fbff]"></span>
+              <span>Completed</span>
             </button>
           </div>
 
           <div class="flex items-center gap-space-md self-end md:self-auto flex-shrink-0">
             <div class="flex items-center gap-space-xs text-outline font-label-sm text-xs">
-              <span>SORT:</span>
-              <select id="hubSortSelect" class="bg-surface-container-highest text-on-surface font-label-md text-xs rounded-xl px-3 py-1.5 appearance-none focus:outline-none cursor-pointer shadow-inner">
-                <option value="recent">Recently Added</option>
-                <option value="rating">Highest Rating</option>
-                <option value="title">Alphabetical [A-Z]</option>
-              </select>
+              <span>SORT BY:</span>
+              <div class="relative inline-block">
+                <select id="hubSortSelect"
+                  class="bg-surface-container-highest text-on-surface font-label-md text-xs rounded-xl px-3 py-1.5 pr-7 appearance-none focus:outline-none cursor-pointer border border-white/5 shadow-inner">
+                  <option value="recent">Recently Added</option>
+                  <option value="rating">Highest Rating</option>
+                  <option value="title">Alphabetical [A-Z]</option>
+                </select>
+                <span
+                  class="material-symbols-outlined text-[16px] text-outline absolute right-1.5 top-1.5 pointer-events-none">expand_more</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 bg-surface-container-highest p-1 rounded-xl border border-white/5">
+              <button id="viewGridBtn"
+                class="p-1.5 rounded-lg bg-surface-container text-secondary-container shadow-sm cursor-pointer"
+                onclick="setWatchlistView('grid')">
+                <span class="material-symbols-outlined text-[18px]">grid_view</span>
+              </button>
+              <button id="viewListBtn" class="p-1.5 rounded-lg text-outline hover:text-on-surface cursor-pointer"
+                onclick="setWatchlistView('list')">
+                <span class="material-symbols-outlined text-[18px]">view_agenda</span>
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Watchlist Cards Matrix -->
-        <div id="watchlistGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-gutter">
-          <!-- Populated dynamically -->
+        <div id="watchlistGrid"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-gutter">
+          <!-- Populated dynamically via JS -->
         </div>
       </div>
 
-      <!-- 3. WATCH HISTORY LIST (Hidden by default, shown when tab is history) -->
+      <!-- ================= 3. WATCH HISTORY LIST ================= -->
       <div id="historyVaultSection" class="flex flex-col gap-space-md" style="display: none;">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-secondary-container shadow-[0_0_12px_#00eefc]"></span>
-            <h2 class="font-headline-md text-lg md:text-xl text-on-surface font-extrabold uppercase">Complete Streaming History &amp; Sync Matrix</h2>
+            <h2 class="font-headline-md text-lg md:text-xl text-on-surface font-extrabold uppercase">
+              Complete Streaming History &amp; Sync Matrix
+            </h2>
           </div>
         </div>
+
+        <!-- History Storage Metric Sparkline Bar -->
+        <div
+          class="flex flex-col gap-space-xs bg-surface-container-low border border-white/5 p-space-md rounded-2xl shadow-lg">
+          <div class="flex items-center justify-between font-label-sm text-xs">
+            <span class="text-outline uppercase tracking-wider">OFFLINE VAULT STORAGE TELEMETRY</span>
+            <span class="text-secondary font-mono" id="storageTelemetryText">Active Indexed Caches</span>
+          </div>
+          <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+            <div class="h-full bg-secondary-container shadow-[0_0_8px_#00eefc]" style="width: 35%;"></div>
+          </div>
+        </div>
+
         <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- ================= 4. GENRE MATRIX / CATEGORIES ================= -->
+      <div id="matrixVaultSection" class="flex flex-col gap-space-md" style="display: none;">
+        <div class="flex items-center justify-between">
+          <h2 id="matrixTitle" class="font-headline-md text-lg md:text-xl text-on-surface font-extrabold uppercase">
+            Genre Repertoire Matrix
+          </h2>
+          <span id="matrixCount" class="text-outline text-xs">Loading...</span>
+        </div>
+
+        <!-- Quick Category Chips -->
+        <div id="categoryChipsRail" class="flex flex-wrap gap-2 pb-2">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="matrixGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-gutter">
           <!-- Populated dynamically -->
         </div>
       </div>
 
-      <!-- 4. SEARCH / CATEGORY MATRIX (When browsing categories or search) -->
-      <div id="matrixVaultSection" class="flex flex-col gap-space-md" style="display: none;">
-        <div class="flex items-center justify-between">
-          <h2 id="matrixTitle" class="font-headline-md text-lg md:text-xl text-on-surface font-extrabold uppercase">Genre Repertoire Matrix</h2>
-          <span id="matrixCount" class="text-outline text-xs">Loading...</span>
-        </div>
-        <div id="matrixGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-gutter"></div>
-      </div>
     </div>
   </main>
 
-  <!-- Stitch Frosted Glass Footer -->
+  <!-- ================= CLEAR HISTORY MODAL OVERLAY ================= -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-container-lowest/80 backdrop-blur-xl hidden"
+    id="clear-history-modal">
+    <div
+      class="relative w-full max-w-md p-space-lg rounded-2xl bg-surface-container border border-error/30 shadow-[0_0_30px_rgba(255,80,110,0.3)] flex flex-col gap-space-md">
+      <div class="flex items-center gap-space-sm text-error">
+        <div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center">
+          <span class="material-symbols-outlined text-error text-[24px]">warning</span>
+        </div>
+        <div>
+          <h4 class="font-headline-sm text-headline-sm text-on-surface font-bold">Wipe Telemetry History?</h4>
+          <span class="font-label-sm text-outline">Action is irreversible across all synchronized clients.</span>
+        </div>
+      </div>
+      <p class="font-body-md text-outline text-sm">
+        Clearing your watch history will reset resume timecodes, offline cached index keys, and active recommendations
+        for your current OLED viewing session.
+      </p>
+      <div class="flex items-center justify-end gap-space-sm pt-space-xs">
+        <button
+          class="px-space-md py-2 rounded-xl bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-sm transition-all cursor-pointer"
+          onclick="closeClearModal()">
+          Cancel
+        </button>
+        <button
+          class="px-space-md py-2 rounded-xl bg-error-container text-on-error font-label-md text-sm font-bold shadow-[0_0_16px_rgba(255,80,110,0.4)] hover:shadow-[0_0_24px_rgba(255,80,110,0.7)] transition-all cursor-pointer"
+          onclick="executeClearHistory()">
+          Purge History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
   <footer class="w-full bg-surface-container-lowest shadow-[0_-8px_32px_rgba(0,0,0,0.9)] border-t border-white/5">
-    <div class="w-full px-gutter py-space-xl max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl">
+    <div class="w-full px-4 sm:px-gutter py-8 sm:py-space-xl max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-lg sm:gap-space-xl">
         <div class="lg:col-span-2 flex flex-col gap-space-md">
           <div class="flex items-center gap-space-sm">
-            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container shadow-[0_0_12px_rgba(0,238,252,0.3)]">
+            <div
+              class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container border border-secondary-container/30 shadow-[0_0_12px_rgba(0,238,252,0.3)]">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178z" fill="#00eefc"></path>
+                <path
+                  d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178z"
+                  fill="#00eefc"></path>
               </svg>
             </div>
-            <span class="font-headline-sm text-headline-sm font-extrabold tracking-wide text-secondary-container">INFINX<span class="text-primary-container ml-1">ANIME</span></span>
+            <span class="font-headline-sm font-extrabold tracking-wide text-secondary-container">
+              INFINX<span class="text-primary-container ml-1">ANIME</span>
+            </span>
           </div>
-          <p class="font-body-md text-body-md text-outline max-w-sm">Theatre Grade OLED Anime Streaming. Pure AMOLED zero-floor masterings, uncompressed audio bitrate, and simultaneous Tokyo transmissions.</p>
+          <p class="font-body-md text-outline max-w-sm text-sm">
+            Theatre Grade OLED Anime Streaming. Pure AMOLED zero-floor masterings, uncompressed audio bitrate, and
+            simultaneous Tokyo transmissions.
+          </p>
+          <div class="flex items-center gap-space-xs mt-space-xs">
+            <div
+              class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-secondary tracking-widest uppercase border border-secondary-container/30 shadow-[0_0_8px_rgba(0,238,252,0.2)]">
+              4K UHD</div>
+            <div
+              class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-primary-fixed tracking-widest uppercase border border-primary-container/30 shadow-[0_0_8px_rgba(255,80,110,0.2)]">
+              HDR10+</div>
+            <div
+              class="px-2.5 py-1 rounded bg-surface-container-low font-label-sm text-tertiary tracking-widest uppercase border border-tertiary-container/30 shadow-[0_0_8px_rgba(160,120,255,0.2)]">
+              ATMOS</div>
+          </div>
         </div>
 
         <div class="flex flex-col gap-space-sm">
-          <span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Browse</span>
-          <ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline">
-            <li class="hover:text-secondary-container transition-colors"><a href="anime.html">Top Airing Masterpieces</a></li>
-            <li class="hover:text-secondary-container transition-colors"><a href="anime.html">New Season Releases</a></li>
+          <span class="font-label-lg text-on-surface tracking-wider uppercase font-bold text-sm">Browse</span>
+          <ul class="flex flex-col gap-space-xs font-body-sm text-outline text-xs sm:text-sm">
+            <li class="hover:text-secondary-container transition-colors"><a href="anime.html">Top Airing
+                Masterpieces</a></li>
+            <li class="hover:text-secondary-container transition-colors"><a href="anime.html">New Season Releases</a>
+            </li>
             <li class="hover:text-secondary-container transition-colors"><a href="anime.html">Dual-Audio Dubbed</a></li>
           </ul>
         </div>
 
         <div class="flex flex-col gap-space-sm">
-          <span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">Community</span>
-          <ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline">
-            <li class="hover:text-secondary-container transition-colors"><a href="view.html#watchlist">My Watchlist</a></li>
-            <li class="hover:text-secondary-container transition-colors"><a href="view.html#history">Watch History</a></li>
+          <span class="font-label-lg text-on-surface tracking-wider uppercase font-bold text-sm">Community</span>
+          <ul class="flex flex-col gap-space-xs font-body-sm text-outline text-xs sm:text-sm">
+            <li class="hover:text-secondary-container transition-colors"><a href="view.html#watchlist">My Watchlist</a>
+            </li>
+            <li class="hover:text-secondary-container transition-colors"><a href="view.html#history">Watch History</a>
+            </li>
             <li class="hover:text-secondary-container transition-colors"><a href="profile.html">Otaku Passport</a></li>
           </ul>
         </div>
 
         <div class="flex flex-col gap-space-sm">
-          <span class="font-label-lg text-label-lg text-on-surface tracking-wider uppercase font-bold">System</span>
-          <ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-outline">
+          <span class="font-label-lg text-on-surface tracking-wider uppercase font-bold text-sm">System</span>
+          <ul class="flex flex-col gap-space-xs font-body-sm text-outline text-xs sm:text-sm">
             <li class="hover:text-secondary-container transition-colors"><a href="download.html">Get App</a></li>
             <li class="hover:text-secondary-container transition-colors"><a href="admin.html">Admin Studio</a></li>
           </ul>
         </div>
       </div>
 
-      <div class="mt-space-xl pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md border-t border-white/5">
-        <span class="font-body-sm text-body-sm text-outline">© 2026 INFINX ANIME BROADCAST CORP. ALL RIGHTS RESERVED.</span>
+      <div
+        class="mt-8 sm:mt-space-xl pt-6 sm:pt-space-lg border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-space-md">
+        <span class="font-body-sm text-outline text-xs sm:text-sm text-center md:text-left">
+          © 2026 INFINX ANIME BROADCAST CORP. ALL RIGHTS RESERVED. ZERO RE-COMPRESSION STANDARD.
+        </span>
         <div class="flex items-center gap-space-md">
           <span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span>
-          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Tokyo Ingestion Telemetry: 100% Operational</span>
+          <span class="font-label-sm text-on-surface-variant uppercase tracking-widest text-xs">Tokyo Ingestion
+            Telemetry: 100% Operational (9.8ms)</span>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- Scripts -->
+  <!-- ================= FLOATING GLASS MOBILE NAVIGATION BAR ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none xl:hidden" aria-label="Mobile Navigation">
+    <div class="px-4 pb-3 pt-1 max-w-md mx-auto pointer-events-auto">
+      <div
+        class="flex items-center justify-around h-16 rounded-full bg-[#08080c]/90 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] px-2 border border-white/10">
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface"
+          href="index.html">
+          <span class="material-symbols-outlined text-[20px]">home</span>
+          <span class="text-[10px] font-medium tracking-tight">Home</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface"
+          href="anime.html">
+          <span class="material-symbols-outlined text-[20px]">explore</span>
+          <span class="text-[10px] font-medium tracking-tight">Browse</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-secondary-container bg-surface-variant/70 shadow-[0_0_16px_rgba(0,238,252,0.3)]"
+          href="view.html#watchlist">
+          <span class="material-symbols-outlined text-[20px]">bookmark</span>
+          <span class="text-[10px] font-medium tracking-tight">Watchlist</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface"
+          href="download.html">
+          <span class="material-symbols-outlined text-[20px]">download_for_offline</span>
+          <span class="text-[10px] font-medium tracking-tight">Downloads</span>
+        </a>
+        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface"
+          href="profile.html">
+          <span class="material-symbols-outlined text-[20px]">person</span>
+          <span class="text-[10px] font-medium tracking-tight">Profile</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================= CORE LOGIC & SCRIPTS ================= -->
   <script>
+    // 1. API Resolution
     const getLocalBackend = () => {
       const saved = localStorage.getItem('infinx_server_url');
       if (saved && !saved.startsWith('file:')) return saved.replace(/\/$/, '');
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:8000';
       }
-      return 'http://16.179.30.197:8000';
+      return '';
     };
 
     const API_BASE = (window.location.protocol === 'file:')
@@ -377,12 +682,19 @@
       return `${API_BASE.replace('/api', '')}/${url.replace(/^\//, '')}`;
     };
 
+    // 2. Global State
     let activeTab = 'watchlist';
+    let currentFilter = 'all';
+    let currentSort = 'recent';
+    let currentView = 'grid'; // 'grid' | 'list'
+    let batchEditActive = false;
     let savedWatchlistItems = [];
     let savedHistoryItems = [];
 
+    // 3. Initialization
     document.addEventListener('DOMContentLoaded', async () => {
       updateAuthHeader();
+      initLiveSearch();
       handleHashRouting();
       await loadWatchlistData();
       await loadHistoryData();
@@ -392,13 +704,14 @@
       handleHashRouting();
     });
 
+    // 4. Auth State Handler
     function updateAuthHeader() {
       const authHeader = document.getElementById('authHeader');
       const token = localStorage.getItem('infinx_token');
       const email = localStorage.getItem('infinx_user_email') || 'User';
       const userRaw = localStorage.getItem('infinx_user');
       let user = null;
-      try { if (userRaw) user = JSON.parse(userRaw); } catch(e) {}
+      try { if (userRaw) user = JSON.parse(userRaw); } catch (e) { }
 
       const username = localStorage.getItem('infinx_username') || (user && user.username) || email.split('@')[0];
       const displayName = username.charAt(0).toUpperCase() + username.slice(1);
@@ -408,19 +721,29 @@
 
       if (token) {
         authHeader.innerHTML = `
-          <a href="profile.html" class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-sm transition-all">
-            ${avatarUrl ? `<img src="${avatarUrl}" class="w-7 h-7 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span class="hidden w-7 h-7 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">${initial}</span>` : `<div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">${initial}</div>`}
-            <span class="font-bold text-xs hidden sm:inline">${displayName}</span>
+          <a href="profile.html" class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest border border-white/5 text-on-surface text-sm transition-all shadow-sm">
+            ${avatarUrl
+            ? `<img src="${avatarUrl}" class="w-7 h-7 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span class="hidden w-7 h-7 rounded-full bg-primary text-black items-center justify-center text-xs font-bold">${initial}</span>`
+            : `<div class="w-7 h-7 rounded-full bg-primary text-black flex items-center justify-center text-xs font-bold">${initial}</div>`
+          }
+            <span class="font-bold text-xs hidden sm:inline text-secondary">${displayName}</span>
           </a>
         `;
       } else {
-        authHeader.innerHTML = `<button class="px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md transition-all" onclick="window.location.href='index.html#login'">Sign In</button>`;
+        authHeader.innerHTML = `
+          <button class="px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md transition-all cursor-pointer border border-white/5" onclick="sessionStorage.setItem('infinx_redirect_after_auth', window.location.href); window.location.href='login.html'">
+            Sign In
+          </button>
+        `;
       }
     }
 
+    // 5. Hub Segmented Tab Switcher
     function switchHubTab(tabName) {
       activeTab = tabName;
-      window.location.hash = tabName;
+      if (window.location.hash !== `#${tabName}`) {
+        window.location.hash = tabName;
+      }
 
       const tabWl = document.getElementById('tab-watchlist');
       const tabHist = document.getElementById('tab-history');
@@ -434,25 +757,25 @@
 
       [tabWl, tabHist, tabMat].forEach(t => {
         if (!t) return;
-        t.className = 'flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold';
+        t.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap cursor-pointer';
       });
 
       if (tabName === 'watchlist') {
-        tabWl.className = 'flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active';
-        if (rail) rail.style.display = 'flex';
+        tabWl.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active whitespace-nowrap cursor-pointer';
+        if (rail) rail.style.display = savedHistoryItems.length > 0 ? 'flex' : 'none';
         if (wlSec) wlSec.style.display = 'flex';
         if (histSec) histSec.style.display = 'none';
         if (matSec) matSec.style.display = 'none';
         if (clearBtn) clearBtn.style.display = 'none';
       } else if (tabName === 'history') {
-        tabHist.className = 'flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.35)] font-bold active';
+        tabHist.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.35)] font-bold active whitespace-nowrap cursor-pointer';
         if (rail) rail.style.display = 'none';
         if (wlSec) wlSec.style.display = 'none';
         if (histSec) histSec.style.display = 'flex';
         if (matSec) matSec.style.display = 'none';
         if (clearBtn) clearBtn.style.display = 'inline-flex';
       } else if (tabName === 'matrix') {
-        tabMat.className = 'flex-1 py-2.5 px-space-md rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-all duration-300 bg-surface-container-highest text-tertiary shadow-[0_0_20px_rgba(160,120,255,0.35)] font-bold active';
+        tabMat.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-tertiary-fixed shadow-[0_0_20px_rgba(160,120,255,0.35)] font-bold active whitespace-nowrap cursor-pointer';
         if (rail) rail.style.display = 'none';
         if (wlSec) wlSec.style.display = 'none';
         if (histSec) histSec.style.display = 'none';
@@ -471,16 +794,16 @@
         switchHubTab('matrix');
         document.getElementById('matrixTitle').textContent = `Search Results: "${query}"`;
         performHubSearch(query);
-      } else if (hash.startsWith('category') || hash.startsWith('genre')) {
+      } else if (hash.startsWith('category') || hash.startsWith('genre') || hash === 'matrix') {
         switchHubTab('matrix');
       } else {
         switchHubTab('watchlist');
       }
     }
 
+    // 6. Watchlist Data Engine
     async function loadWatchlistData() {
       const token = localStorage.getItem('infinx_token');
-      const wlGrid = document.getElementById('watchlistGrid');
       const hubWlCount = document.getElementById('hubWlCount');
       const allWlBadge = document.getElementById('allWlBadge');
 
@@ -512,7 +835,33 @@
       if (hubWlCount) hubWlCount.textContent = list.length;
       if (allWlBadge) allWlBadge.textContent = `(${list.length})`;
 
-      if (list.length === 0) {
+      renderWatchlist();
+    }
+
+    function renderWatchlist() {
+      const wlGrid = document.getElementById('watchlistGrid');
+      let filtered = [...savedWatchlistItems];
+
+      // Filter Status
+      if (currentFilter === 'watching') {
+        filtered = filtered.filter(item => {
+          const ep = item.lastWatchedEp || (item.history && item.history.progress > 0);
+          return ep || item.status === 'watching';
+        });
+      } else if (currentFilter === 'plan') {
+        filtered = filtered.filter(item => item.status === 'plan' || !item.lastWatchedEp);
+      } else if (currentFilter === 'completed') {
+        filtered = filtered.filter(item => item.status === 'completed');
+      }
+
+      // Sort
+      if (currentSort === 'rating') {
+        filtered.sort((a, b) => (parseFloat(b.rating || 0) - parseFloat(a.rating || 0)));
+      } else if (currentSort === 'title') {
+        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      }
+
+      if (filtered.length === 0) {
         wlGrid.innerHTML = `
           <div class="col-span-full py-16 text-center text-outline">
             <span class="material-symbols-outlined text-[48px] text-primary-container block mx-auto mb-3">bookmark_border</span>
@@ -526,49 +875,125 @@
         return;
       }
 
-      wlGrid.innerHTML = list.map(item => {
-        const isAnime = item.isLunar || item.lunarId || item.anilistId;
-        const anilistId = item.lunarId || item.anilistId || item.id;
-        const playUrl = isAnime ? `/watch?id=${anilistId}&ep=1` : `/watch?id=${item.id}`;
-        const posterUrl = item.poster || 'Postes/spyfamS3p.jpg';
-        const title = item.title || 'Anime Series';
-        const rating = item.rating || '8.8';
+      if (currentView === 'list') {
+        wlGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
+        wlGrid.innerHTML = filtered.map(item => {
+          const isAnime = item.isLunar || item.lunarId || item.anilistId;
+          const anilistId = item.lunarId || item.anilistId || item.id;
+          const playUrl = isAnime ? `/watch?id=${anilistId}&ep=1` : `/watch?id=${item.id}`;
+          const posterUrl = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
+          const title = item.title || 'Anime Series';
+          const rating = item.rating || '8.8';
 
-        return `
-          <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
-            <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
-              <img src="${posterUrl}" alt="${title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
-              <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
-
-              <div class="absolute top-2 left-2 pointer-events-none">
-                <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold uppercase">
-                  SAVED
-                </span>
+          return `
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low border border-white/5 hover:border-secondary-container/30 transition-all">
+              <img src="${posterUrl}" alt="${title}" class="w-16 h-22 rounded-xl object-cover flex-shrink-0 bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'" onerror="this.src='Postes/spyfamS3p.jpg';" />
+              <div class="flex-1 min-w-0 flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-label-sm text-[10px] text-primary font-bold">SAVED</span>
+                  <span class="text-secondary font-mono text-[11px] font-bold">★ ${rating}</span>
+                </div>
+                <h4 class="text-white font-bold text-sm truncate cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='${playUrl}'">${title}</h4>
+                <div class="text-[11px] text-outline">${item.year || '2025'} • 4K OLED Master</div>
               </div>
-              <div class="absolute top-2 right-2 pointer-events-none">
-                <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5">
-                  ★ ${rating}
-                </span>
-              </div>
-
-              <div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
-                <a href="${playUrl}" class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] flex items-center justify-center gap-1.5 text-center">
-                  <span class="material-symbols-outlined text-[16px]">play_arrow</span> Stream
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <a href="${playUrl}" class="p-2.5 rounded-xl bg-primary-container text-on-primary-container shadow-[0_0_12px_rgba(255,80,110,0.4)] hover:scale-105 transition-transform flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[18px]">play_arrow</span>
                 </a>
+                <button type="button" onclick="removeWatchlistItem('${item.id || anilistId}')" class="p-2.5 rounded-xl bg-surface-container-high text-outline hover:text-error transition-colors flex items-center justify-center" title="Remove">
+                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
               </div>
             </div>
-            <div class="p-2.5 flex flex-col gap-0.5">
-              <h3 class="font-headline-sm text-[13px] font-bold text-on-surface truncate group-hover:text-primary transition-colors">${title}</h3>
-              <div class="flex items-center justify-between text-outline font-label-sm text-[10px]">
-                <span>${item.year || '2025'}</span>
-                <span class="text-secondary font-semibold">4K OLED</span>
+          `;
+        }).join('');
+      } else {
+        wlGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-gutter';
+        wlGrid.innerHTML = filtered.map(item => {
+          const isAnime = item.isLunar || item.lunarId || item.anilistId;
+          const anilistId = item.lunarId || item.anilistId || item.id;
+          const playUrl = isAnime ? `/watch?id=${anilistId}&ep=1` : `/watch?id=${item.id}`;
+          const posterUrl = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
+          const title = item.title || 'Anime Series';
+          const rating = item.rating || '8.8';
+
+          return `
+            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low border border-white/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
+              <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
+                <img src="${posterUrl}" alt="${title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
+
+                <div class="absolute top-2 left-2 pointer-events-none">
+                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold uppercase border border-primary/30">
+                    SAVED
+                  </span>
+                </div>
+                <div class="absolute top-2 right-2 pointer-events-none">
+                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-secondary-container font-extrabold flex items-center gap-0.5 border border-secondary-container/30">
+                    ★ ${rating}
+                  </span>
+                </div>
+
+                <!-- Hover Quick Actions (Stitch Design) -->
+                <div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+                  <a href="${playUrl}" class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] flex items-center justify-center gap-1.5 text-center">
+                    <span class="material-symbols-outlined text-[16px]">play_arrow</span> Stream
+                  </a>
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="event.stopPropagation(); markCompleted('${item.id || anilistId}')" class="p-2 rounded-lg bg-surface-container-highest text-secondary hover:scale-110 transition-transform" title="Mark Completed">
+                      <span class="material-symbols-outlined text-[16px]">done_all</span>
+                    </button>
+                    <button type="button" onclick="event.stopPropagation(); removeWatchlistItem('${item.id || anilistId}')" class="p-2 rounded-lg bg-surface-container-highest text-outline hover:text-error hover:scale-110 transition-transform" title="Remove from list">
+                      <span class="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2.5 flex flex-col gap-0.5">
+                <h3 class="font-headline-sm text-[13px] font-bold text-on-surface truncate group-hover:text-primary transition-colors">${title}</h3>
+                <div class="flex items-center justify-between text-outline font-label-sm text-[10px]">
+                  <span>${item.year || '2025'}</span>
+                  <span class="text-secondary font-semibold">4K OLED</span>
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
     }
 
+    async function removeWatchlistItem(id) {
+      savedWatchlistItems = savedWatchlistItems.filter(item => String(item.id || item.anilistId) !== String(id));
+      localStorage.setItem('infinx_watchlist', JSON.stringify(savedWatchlistItems));
+
+      const token = localStorage.getItem('infinx_token');
+      if (token) {
+        try {
+          await fetch(`${API_BASE}/user/watchlist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ showId: parseInt(id, 10) || id })
+          });
+        } catch (e) { }
+      }
+
+      document.getElementById('hubWlCount').textContent = savedWatchlistItems.length;
+      document.getElementById('allWlBadge').textContent = `(${savedWatchlistItems.length})`;
+      renderWatchlist();
+      showToast('Show removed from your Watchlist Vault.');
+    }
+
+    function markCompleted(id) {
+      const match = savedWatchlistItems.find(item => String(item.id || item.anilistId) === String(id));
+      if (match) {
+        match.status = 'completed';
+        localStorage.setItem('infinx_watchlist', JSON.stringify(savedWatchlistItems));
+        renderWatchlist();
+        showToast(`Marked "${match.title}" as Completed!`);
+      }
+    }
+
+    // 7. Watch History & Active Streams Rail
     async function loadHistoryData() {
       const token = localStorage.getItem('infinx_token');
       const rail = document.getElementById('currentlyWatchingRail');
@@ -622,12 +1047,12 @@
       if (historyList.length === 0) {
         if (rail) rail.style.display = 'none';
       } else {
-        if (rail) rail.style.display = 'flex';
-        railGrid.innerHTML = historyList.slice(0, 4).map(item => {
+        if (rail && activeTab === 'watchlist') rail.style.display = 'flex';
+        railGrid.innerHTML = historyList.slice(0, 5).map(item => {
           const anilistId = item.lunarId || item.anilistId || item.id;
           const ep = item.episodeNumber || 1;
           const title = item.title || 'Anime Series';
-          const banner = item.banner || item.poster || 'Postes/spyfamS3p.jpg';
+          const banner = item.banner || item.poster ? (item.banner ? window.formatMediaUrl(item.banner) : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
           const percent = Math.min(100, Math.max(2, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
           const seekParam = item.progress > 5 ? `&t=${Math.floor(item.progress)}` : '';
           const playUrl = `/watch?id=${anilistId}&ep=${ep}${seekParam}`;
@@ -641,13 +1066,14 @@
                   <span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-sm text-[10px] font-bold">4K OLED</span>
                   <span class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-label-sm text-[10px] font-bold shadow-[0_0_8px_#ff506e]">SUB/DUB</span>
                 </div>
-                <!-- Floating Resume pill on mobile/desktop -->
+                <!-- Floating Resume pill -->
                 <div class="absolute bottom-2 right-2 flex items-center">
-                  <button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-[11px] font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all" onclick="event.stopPropagation(); window.location.href='${playUrl}'">
+                  <button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-[11px] font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all cursor-pointer" onclick="event.stopPropagation(); window.location.href='${playUrl}'">
                     <span class="material-symbols-outlined text-[14px]">play_arrow</span>
                     <span>Resume</span>
                   </button>
                 </div>
+                <!-- Neon Scrubber Progress Ribbon -->
                 <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
                   <div class="h-full bg-primary-container shadow-[0_0_10px_#ff506e]" style="width: ${percent}%;"></div>
                 </div>
@@ -687,51 +1113,60 @@
           const anilistId = item.lunarId || item.anilistId || item.id;
           const ep = item.episodeNumber || 1;
           const title = item.title || 'Anime Series';
-          const poster = item.poster || 'Postes/spyfamS3p.jpg';
+          const poster = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
           const percent = Math.min(100, Math.max(1, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
           const playUrl = `/watch?id=${anilistId}&ep=${ep}`;
 
           return `
             <div class="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-white/5">
-              <img src="${poster}" alt="${title}" class="w-16 h-20 rounded-xl object-cover flex-shrink-0" onerror="this.src='Postes/spyfamS3p.jpg';" />
+              <img src="${poster}" alt="${title}" class="w-16 h-20 rounded-xl object-cover flex-shrink-0 bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'" onerror="this.src='Postes/spyfamS3p.jpg';" />
               <div class="flex-1 min-w-0 flex flex-col gap-1">
-                <h4 class="text-white font-bold text-xs truncate">${title}</h4>
+                <h4 class="text-white font-bold text-xs truncate cursor-pointer hover:text-secondary transition-colors" onclick="window.location.href='${playUrl}'">${title}</h4>
                 <div class="text-[11px] text-secondary-container font-semibold">Episode ${ep} • ${percent}%</div>
                 <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden mt-1">
                   <div class="h-full bg-secondary-container shadow-[0_0_8px_#00eefc]" style="width: ${percent}%;"></div>
                 </div>
               </div>
-              <a href="${playUrl}" class="p-2.5 rounded-xl bg-surface-container-high hover:bg-primary-container text-white hover:text-on-primary-container transition-all flex items-center justify-center flex-shrink-0">
+              <a href="${playUrl}" class="p-2.5 rounded-xl bg-surface-container-high hover:bg-primary-container text-white hover:text-on-primary-container transition-all flex items-center justify-center flex-shrink-0 cursor-pointer shadow-sm">
                 <span class="material-symbols-outlined text-[18px]">play_arrow</span>
               </a>
             </div>
           `;
         }).join('');
       }
-
-      // Clear History Action
-      const clearBtn = document.getElementById('clearHistoryBtn');
-      if (clearBtn) {
-        clearBtn.onclick = async () => {
-          if (!confirm('Are you sure you want to clear your local and cloud streaming history?')) return;
-          localStorage.removeItem('@infinx_continue_watching');
-          const token = localStorage.getItem('infinx_token');
-          if (token) {
-            try {
-              await fetch(`${API_BASE}/user/history`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-              });
-            } catch (e) { }
-          }
-          await loadHistoryData();
-        };
-      }
     }
 
+    // 8. Clear History Action
+    function confirmClearHistory() {
+      document.getElementById('clear-history-modal').classList.remove('hidden');
+    }
+
+    function closeClearModal() {
+      document.getElementById('clear-history-modal').classList.add('hidden');
+    }
+
+    async function executeClearHistory() {
+      closeClearModal();
+      localStorage.removeItem('@infinx_continue_watching');
+      const token = localStorage.getItem('infinx_token');
+      if (token) {
+        try {
+          await fetch(`${API_BASE}/user/history`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } catch (e) { }
+      }
+      await loadHistoryData();
+      showToast('Streaming telemetry history purged successfully.');
+    }
+
+    // 9. Genre / Matrix Data
     async function loadMatrixData() {
       const matGrid = document.getElementById('matrixGrid');
       const matCount = document.getElementById('matrixCount');
+      const chipsRail = document.getElementById('categoryChipsRail');
+
       matGrid.innerHTML = `
         <div class="col-span-full py-16 text-center text-outline text-xs">
           <span class="material-symbols-outlined text-[36px] text-tertiary animate-spin block mx-auto mb-2">progress_activity</span>
@@ -743,6 +1178,15 @@
         const res = await fetch(`${API_BASE}/shows/categories`);
         if (!res.ok) throw new Error('Failed to load categories');
         const categories = await res.json();
+
+        // Render chips
+        chipsRail.innerHTML = categories.map(c => `
+          <button class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface font-label-md text-xs flex items-center gap-2 transition-all cursor-pointer border border-white/5" onclick="filterByGenre('${c.id}')">
+            <span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+            <span>${c.name}</span>
+            <span class="text-outline font-mono text-[10px]">${(c.shows || []).length}</span>
+          </button>
+        `).join('');
 
         let allShows = [];
         categories.forEach(c => {
@@ -758,105 +1202,157 @@
         matCount.textContent = `${allShows.length} titles available`;
         matGrid.innerHTML = allShows.slice(0, 24).map(item => {
           const playUrl = `/watch?id=${item.id}`;
-          const posterUrl = window.formatMediaUrl(item.poster);
+          const posterUrl = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
           return `
-            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(160,120,255,0.4)]">
+            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low border border-white/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(160,120,255,0.4)]">
               <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
                 <img src="${posterUrl}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
                 <div class="absolute top-2 right-2 pointer-events-none">
-                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-[9px] text-secondary-container font-extrabold">★ ${item.rating || '8.5'}</span>
+                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-[9px] text-secondary-container font-extrabold border border-secondary-container/30">
+                    ★ ${item.rating || '8.5'}
+                  </span>
                 </div>
               </div>
               <div class="p-2.5 flex flex-col gap-0.5">
-                <h4 class="text-xs font-bold text-white truncate">${item.title}</h4>
-                <div class="text-[10px] text-outline">${item.year || '2024'} • 1080p</div>
+                <h4 class="text-xs font-bold text-white truncate group-hover:text-tertiary transition-colors">${item.title}</h4>
+                <div class="text-[10px] text-outline">${item.year || '2025'} • 1080p</div>
               </div>
             </div>
           `;
         }).join('');
       } catch (err) {
-        matGrid.innerHTML = `<div class="col-span-full py-16 text-center text-outline text-xs">Failed to load categories.</div>`;
+        matGrid.innerHTML = `<div class="col-span-full py-16 text-center text-outline text-xs">Failed to load categories from node.</div>`;
       }
     }
 
-    async function performHubSearch(q) {
-      const matGrid = document.getElementById('matrixGrid');
-      const matCount = document.getElementById('matrixCount');
-      matGrid.innerHTML = `
-        <div class="col-span-full py-16 text-center text-outline text-xs">
-          <span class="material-symbols-outlined text-[36px] text-secondary-container animate-spin block mx-auto mb-2">progress_activity</span>
-          Searching for "${q}"...
-        </div>
-      `;
+    // 10. Live Search
+    function initLiveSearch() {
+      const searchInput = document.getElementById('searchInput');
+      const dropdown = document.getElementById('liveSearchDropdown');
+      if (!searchInput || !dropdown) return;
 
-      try {
-        const res = await fetch(`${API_BASE}/shows/search?q=${encodeURIComponent(q)}`);
-        if (!res.ok) throw new Error('Search failed');
-        const results = await res.json();
-
-        matCount.textContent = `${results.length} results found`;
-        if (results.length === 0) {
-          matGrid.innerHTML = `<div class="col-span-full py-16 text-center text-outline text-xs">No records found for "${q}".</div>`;
+      let debounceTimer = null;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = searchInput.value.trim();
+        if (query.length < 2) {
+          dropdown.classList.add('hidden');
           return;
         }
 
-        matGrid.innerHTML = results.map(item => {
-          const isAnime = item.isLunar || (typeof item.id === 'string' && item.id.startsWith('lunar-')) || item.anilistId;
-          const anilistId = item.anilistId || (typeof item.id === 'string' ? item.id.replace('lunar-', '') : item.id);
-          const playUrl = isAnime ? `/watch?id=${anilistId}&ep=1` : `/watch?id=${item.id}`;
-          const posterUrl = (item.poster && item.poster.startsWith('http')) ? item.poster : window.formatMediaUrl(item.poster);
+        debounceTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(`${API_BASE}/shows/search?q=${encodeURIComponent(query)}`);
+            if (!res.ok) return;
+            const results = await res.json();
+            if (results.length === 0) {
+              dropdown.innerHTML = `<div class="p-3 text-center text-xs text-outline">No anime matches found for "${query}"</div>`;
+              dropdown.classList.remove('hidden');
+              return;
+            }
 
-          return `
-            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(0,238,252,0.4)]">
-              <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
-                <img src="${posterUrl}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
-                <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
-                <div class="absolute top-2 right-2 pointer-events-none">
-                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-[9px] text-secondary-container font-extrabold">★ ${item.rating || '8.8'}</span>
-                </div>
-              </div>
-              <div class="p-2.5 flex flex-col gap-0.5">
-                <h4 class="text-xs font-bold text-white truncate">${item.title}</h4>
-                <div class="text-[10px] text-outline">${item.year || '2025'} • HD</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        matGrid.innerHTML = `<div class="col-span-full py-16 text-center text-outline text-xs">Error performing search.</div>`;
+            dropdown.innerHTML = results.slice(0, 6).map(item => {
+              const playUrl = `/watch?id=${item.id}&ep=1`;
+              const poster = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
+              return `
+                <a href="${playUrl}" class="flex items-center gap-3 p-2.5 hover:bg-surface-container transition-colors border-b border-white/5 last:border-b-0">
+                  <img src="${poster}" class="w-10 h-14 rounded-lg object-cover" onerror="this.src='Postes/spyfamS3p.jpg';" />
+                  <div class="flex-1 min-w-0">
+                    <h5 class="text-white font-bold text-xs truncate">${item.title}</h5>
+                    <span class="text-[10px] text-secondary font-mono">★ ${item.rating || '8.8'}</span>
+                  </div>
+                </a>
+              `;
+            }).join('');
+            dropdown.classList.remove('hidden');
+          } catch (e) { }
+        }, 300);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    // 11. Toast Notifications
+    function showToast(msg) {
+      const existing = document.getElementById('infinx-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'infinx-toast';
+      toast.className = "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-surface-container-high border border-secondary-container/40 text-secondary-container shadow-[0_0_24px_rgba(0,238,252,0.4)] font-label-md text-xs sm:text-sm animate-fade-in";
+      toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span> <span>${msg}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // 12. Batch Edit & Export
+    function toggleBatchEdit() {
+      batchEditActive = !batchEditActive;
+      const btnText = document.getElementById('batchEditBtnText');
+      if (batchEditActive) {
+        btnText.textContent = 'Exit Batch';
+        showToast('Batch Selection Active: Click cards to multi-select.');
+      } else {
+        btnText.textContent = 'Batch Edit';
+        showToast('Batch Selection Closed.');
       }
     }
-  </script>
-  <script src="/show-details-modal.js"></script>
 
-  <!-- Floating Glass Cyberpunk Bottom Navigation Bar (Stitch Specification) -->
-  <nav class="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none xl:hidden" aria-label="Mobile Navigation">
-    <div class="px-4 pb-3 pt-1 max-w-md mx-auto pointer-events-auto">
-      <div class="flex items-center justify-around h-16 rounded-full bg-[#08080c]/85 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] px-2 border border-white/10">
-        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="home" href="index.html">
-          <span class="material-symbols-outlined text-[20px]">home</span>
-          <span class="text-[10px] font-medium tracking-tight">Home</span>
-        </a>
-        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="browse" href="anime.html">
-          <span class="material-symbols-outlined text-[20px]">explore</span>
-          <span class="text-[10px] font-medium tracking-tight">Browse</span>
-        </a>
-        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-secondary-container bg-surface-variant/70 shadow-[0_0_16px_rgba(0,238,252,0.3)]" data-path="watchlist" href="view.html#watchlist">
-          <span class="material-symbols-outlined text-[20px]">bookmark</span>
-          <span class="text-[10px] font-medium tracking-tight">Watchlist</span>
-        </a>
-        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="downloads" href="download.html">
-          <span class="material-symbols-outlined text-[20px]">download_for_offline</span>
-          <span class="text-[10px] font-medium tracking-tight">Downloads</span>
-        </a>
-        <a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 rounded-full transition-all text-on-surface-variant hover:text-on-surface" data-path="profile" href="profile.html">
-          <span class="material-symbols-outlined text-[20px]">person</span>
-          <span class="text-[10px] font-medium tracking-tight">Profile</span>
-        </a>
-      </div>
-    </div>
-  </nav>
+    function exportMatrix() {
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        version: "4.8",
+        watchlist: savedWatchlistItems,
+        history: savedHistoryItems
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `infinx_anime_matrix_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Anime Vault Matrix Exported as JSON.');
+    }
+
+    function setWatchlistView(view) {
+      currentView = view;
+      const gridBtn = document.getElementById('viewGridBtn');
+      const listBtn = document.getElementById('viewListBtn');
+      if (view === 'grid') {
+        gridBtn.className = 'p-1.5 rounded-lg bg-surface-container text-secondary-container shadow-sm cursor-pointer';
+        listBtn.className = 'p-1.5 rounded-lg text-outline hover:text-on-surface cursor-pointer';
+      } else {
+        listBtn.className = 'p-1.5 rounded-lg bg-surface-container text-secondary-container shadow-sm cursor-pointer';
+        gridBtn.className = 'p-1.5 rounded-lg text-outline hover:text-on-surface cursor-pointer';
+      }
+      renderWatchlist();
+    }
+
+    // Filter Chips Event Binding
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-chip').forEach(b => {
+          b.className = "filter-chip px-space-md py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-white/5";
+        });
+        this.className = "filter-chip px-space-md py-1.5 rounded-full bg-secondary-container/15 text-secondary-container font-label-md text-xs font-bold shadow-[0_0_14px_rgba(0,238,252,0.3)] flex items-center gap-1.5 transition-all cursor-pointer border border-secondary-container/30";
+        currentFilter = this.getAttribute('data-filter') || 'all';
+        renderWatchlist();
+      });
+    });
+
+    // Sort Dropdown Event Binding
+    document.getElementById('hubSortSelect').addEventListener('change', function () {
+      currentSort = this.value;
+      renderWatchlist();
+    });
+  </script>
+  <script src="navbar.js"></script>
 </body>
 
 </html>

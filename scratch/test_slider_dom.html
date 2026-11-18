@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css" />
+  <style>
+    /* Same styles as anime.html */
+    .anime-continue-slider {
+      width: 100%;
+      overflow: hidden;
+      padding-top: 4px;
+      padding-bottom: 8px;
+    }
+    .anime-continue-slider:not(.swiper-initialized) .swiper-wrapper,
+    #animeContinueWatchingGrid:not(.swiper-initialized) {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+    .anime-continue-slider:not(.swiper-initialized) .swiper-wrapper::-webkit-scrollbar,
+    #animeContinueWatchingGrid:not(.swiper-initialized)::-webkit-scrollbar {
+      display: none;
+    }
+    .anime-continue-slider .swiper-slide,
+    #animeContinueWatchingGrid > div {
+      flex-shrink: 0;
+      scroll-snap-align: start;
+    }
+  </style>
+</head>
+<body class="bg-black text-white p-4">
+  <div style="width: 390px; border: 1px solid red; margin: 0 auto;">
+    <section id="animeContinueWatchingSection" style="display: block;">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-2">
+          <h2>Continue Transmission</h2>
+          <div>
+            <button id="animeContinuePrevBtn">&lt;</button>
+            <button id="animeContinueNextBtn">&gt;</button>
+          </div>
+        </div>
+
+        <div class="relative group/continue">
+          <div class="swiper anime-continue-slider overflow-hidden -mx-1 px-1">
+            <div class="swiper-wrapper flex items-stretch" id="animeContinueWatchingGrid">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+  <script>
+    const list = [
+      { lunarId: 1, title: 'Cowboy Bebop', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 1 },
+      { lunarId: 2, title: 'Magical Girl', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 50 },
+      { lunarId: 3, title: 'Overgeared', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 1 },
+      { lunarId: 4, title: 'Solo Leveling', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 20 },
+      { lunarId: 5, title: 'Attack on Titan', poster: 'Postes/spyfamS3p.jpg', episodeNumber: 1, percent: 80 }
+    ];
+
+    const grid = document.getElementById('animeContinueWatchingGrid');
+    grid.innerHTML = list.map(item => `
+      <div class="swiper-slide w-[136px] sm:w-[155px] md:w-[175px] lg:w-[190px] shrink-0 bg-gray-800 rounded-xl overflow-hidden p-2">
+        <div class="aspect-[2/3] bg-gray-700 w-full mb-1"></div>
+        <div class="text-xs font-bold">${item.title}</div>
+        <div class="text-[10px] text-gray-400">Episode ${item.episodeNumber}</div>
+      </div>
+    `).join('');
+
+    let animeContinueSwiper = null;
+    function initAnimeContinueSwiper() {
+      const sliderEl = document.querySelector('.anime-continue-slider');
+      animeContinueSwiper = new Swiper(sliderEl, {
+        slidesPerView: 'auto',
+        spaceBetween: 10,
+        grabCursor: true,
+        watchSlidesProgress: true,
+        navigation: {
+          nextEl: '#animeContinueNextBtn',
+          prevEl: '#animeContinuePrevBtn'
+        }
+      });
+      
+      console.log('Swiper initialized:', {
+        sliderWidth: sliderEl.clientWidth,
+        wrapperWidth: document.querySelector('.swiper-wrapper').clientWidth,
+        slidesCount: document.querySelectorAll('.swiper-slide').length,
+        slide0Width: document.querySelectorAll('.swiper-slide')[0].offsetWidth,
+        slide1Width: document.querySelectorAll('.swiper-slide')[1].offsetWidth,
+        slide2Width: document.querySelectorAll('.swiper-slide')[2].offsetWidth,
+        slide0Left: document.querySelectorAll('.swiper-slide')[0].offsetLeft,
+        slide1Left: document.querySelectorAll('.swiper-slide')[1].offsetLeft,
+        slide2Left: document.querySelectorAll('.swiper-slide')[2].offsetLeft
+      });
+    }
+
+    requestAnimationFrame(() => {
+      initAnimeContinueSwiper();
+    });
+  </script>
+</body>
+</html>

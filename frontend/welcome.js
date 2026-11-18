@@ -698,6 +698,7 @@
           window.removeEventListener('deviceorientation', onOrientation);
         }
         overlay.remove();
+        document.body.style.overflow = '';
       }, totalDelay);
     };
 

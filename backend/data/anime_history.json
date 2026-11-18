@@ -1,6 +1,51 @@
 {
   "1": [
     {
+      "id": "lunar-21-1092",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "21",
+      "episodeId": "lunar-21-1092",
+      "episodeNumber": 1092,
+      "episodeTitle": "Bonney`s Lamentation! Darkness Lurking on the Future Island",
+      "showTitle": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "",
+      "progress": 1262,
+      "duration": 1430,
+      "watchedAt": "2026-11-18T15:27:48.901Z"
+    },
+    {
+      "id": "lunar-195539-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "195539",
+      "episodeId": "lunar-195539-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Last Chance for a Slow Dance",
+      "showTitle": "Cyberpunk: Edgerunners 2",
+      "poster": "https://artworks.thetvdb.com/banners/series/384541/posters/5ef503b89742f.jpg",
+      "banner": "",
+      "progress": 335,
+      "duration": 1708,
+      "watchedAt": "2026-11-18T14:43:54.880Z"
+    },
+    {
+      "id": "lunar-212888-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "212888",
+      "episodeId": "lunar-212888-1",
+      "episodeNumber": 1,
+      "episodeTitle": "Legendary Class",
+      "showTitle": "Overgeared",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/478752/posters/6aa520a8f1e17.jpg",
+      "banner": "",
+      "progress": 0,
+      "duration": 1420,
+      "watchedAt": "2026-11-15T16:04:42.554Z"
+    },
+    {
       "id": "lunar-1-1",
       "userId": 1,
       "isLunar": true,
@@ -74,21 +119,6 @@
       "progress": 0,
       "duration": 1419,
       "watchedAt": "2026-10-18T11:27:32.675Z"
-    },
-    {
-      "id": "lunar-21-6",
-      "userId": 1,
-      "isLunar": true,
-      "lunarId": "21",
-      "episodeId": "lunar-21-6",
-      "episodeNumber": 6,
-      "episodeTitle": "Desperate Situation! Beast Tamer Mohji vs. Luffy!",
-      "showTitle": "ONE PIECE",
-      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
-      "banner": "",
-      "progress": 217,
-      "duration": 1500,
-      "watchedAt": "2026-10-17T17:14:01.473Z"
     },
     {
       "id": "lunar-204389-1",
