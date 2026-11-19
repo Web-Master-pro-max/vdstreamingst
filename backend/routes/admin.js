@@ -989,7 +989,7 @@ function normalizeSpotlightBannerOrder(banners) {
 }
 
 // GET /api/admin/banners - Get all active carousel slides
-router.get('/banners', authenticate, requireAdmin, async (req, res) => {
+router.get(['/banners', '/shows/banners'], authenticate, requireAdmin, async (req, res) => {
   try {
     let banners = await getStoredBanners();
     banners = normalizeSpotlightBannerOrder(banners);
@@ -1001,7 +1001,7 @@ router.get('/banners', authenticate, requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin/banners - Add or update a carousel banner (Anime or Local Show)
-router.post('/banners', authenticate, requireAdmin, imageUpload.fields([{ name: 'banner', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), async (req, res) => {
+router.post(['/banners', '/shows/banners'], authenticate, requireAdmin, imageUpload.fields([{ name: 'banner', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), async (req, res) => {
   try {
     const {
       id: existingId,
@@ -1094,7 +1094,7 @@ router.post('/banners', authenticate, requireAdmin, imageUpload.fields([{ name: 
 });
 
 // DELETE /api/admin/banners/:id - Remove a banner slide
-router.delete('/banners/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete(['/banners/:id', '/shows/banners/:id'], authenticate, requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     let banners = await getStoredBanners();
@@ -1121,7 +1121,7 @@ router.delete('/banners/:id', authenticate, requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin/banners/:id/spotlight - Designate as the reserved Spotlight Banner (Slide #1)
-router.post('/banners/:id/spotlight', authenticate, requireAdmin, async (req, res) => {
+router.post(['/banners/:id/spotlight', '/shows/banners/:id/spotlight'], authenticate, requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     let banners = await getStoredBanners();

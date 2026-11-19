@@ -1316,6 +1316,9 @@
         window.clearSelectedAnime = clearSelectedAnime;
 
         // Quick pick from Trending Anime list
+        let currentTrendingList = [];
+        let currentSearchResults = [];
+
         async function loadTrendingAnimeForBanner() {
             const resultsDropdown = document.getElementById('bannerAnimeSearchResults');
             const spinner = document.getElementById('bannerAnimeSearchSpinner');
@@ -1328,8 +1331,11 @@
             try {
                 const res = await fetch(`${API_BASE}/lunarx/trending`);
                 if (res.ok) {
-                    const list = await res.json();
-                    if (Array.isArray(list) && list.length > 0) {
+                    const raw = await res.json();
+                    const list = Array.isArray(raw) ? raw : (raw.trendingNow || raw.popularThisSeason || []);
+                    currentTrendingList = list;
+
+                    if (list.length > 0) {
                         resultsDropdown.innerHTML = `
                             <div style="padding: 10px 14px; background: rgba(0, 238, 252, 0.08); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.15rem; font-weight: 700; color: #00eefc; display: flex; justify-content: space-between; align-items: center;">
                                 <span><i class="fas fa-fire"></i> TOP TRENDING ANIME (CLICK TO SELECT)</span>
@@ -1337,17 +1343,17 @@
                             </div>
                             <div style="display: flex; flex-direction: column;">
                                 ${list.slice(0, 10).map((a, i) => {
-                                    const safeTitle = (a.title?.english || a.title?.romaji || a.title || 'Untitled Anime').replace(/'/g, "\\'");
                                     const poster = a.poster || a.coverImage?.large || 'Postes/spyfamS3p.jpg';
                                     const rating = a.rating || '9.8';
                                     const year = a.year || '2024';
                                     const anilistId = a.anilistId || a.id;
+                                    const titleStr = escapeHtml(a.title?.english || a.title?.romaji || a.title || 'Untitled Anime');
                                     return `
-                                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" onclick='selectAnimeForBanner(${JSON.stringify(a).replace(/'/g, "&#39;")})'>
+                                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" onclick="selectAnimeForBanner(currentTrendingList[${i}])">
                                             <span style="font-weight: 800; font-size: 1.25rem; color: ${i === 0 ? '#ff506e' : '#00eefc'}; width: 22px;">#${i + 1}</span>
                                             <img src="${poster}" style="width: 36px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='Postes/spyfamS3p.jpg';">
                                             <div style="flex: 1; min-width: 0;">
-                                                <div style="font-size: 1.35rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(a.title?.english || a.title?.romaji || a.title || '')}</div>
+                                                <div style="font-size: 1.35rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${titleStr}</div>
                                                 <div style="font-size: 1.15rem; color: var(--gray-text); margin-top: 2px;">
                                                     <span style="color: var(--warning);"><i class="fas fa-star"></i> ${rating}</span> &bull; <span>${year}</span> &bull; <span style="color:#00eefc;">AniList #${anilistId}</span>
                                                 </div>
@@ -1400,8 +1406,10 @@
                         const res = await fetch(`${API_BASE}/lunarx/search?q=${encodeURIComponent(query)}&limit=8`);
                         if (res.ok) {
                             const results = await res.json();
-                            if (Array.isArray(results) && results.length > 0) {
-                                resultsDropdown.innerHTML = results.map(anime => {
+                            currentSearchResults = Array.isArray(results) ? results : [];
+
+                            if (currentSearchResults.length > 0) {
+                                resultsDropdown.innerHTML = currentSearchResults.map((anime, idx) => {
                                     const title = anime.title?.english || anime.title?.romaji || anime.title || 'Untitled Anime';
                                     const poster = anime.poster || anime.coverImage?.large || 'Postes/spyfamS3p.jpg';
                                     const rating = anime.rating || '9.8';
@@ -1409,7 +1417,7 @@
                                     const anilistId = anime.anilistId || anime.id;
 
                                     return `
-                                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" onclick='selectAnimeForBanner(${JSON.stringify(anime).replace(/'/g, "&#39;")})'>
+                                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" onclick="selectAnimeForBanner(currentSearchResults[${idx}])">
                                             <img src="${poster}" style="width: 36px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='Postes/spyfamS3p.jpg';">
                                             <div style="flex: 1; min-width: 0;">
                                                 <div style="font-size: 1.35rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(title)}</div>
