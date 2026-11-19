@@ -4737,13 +4737,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Update Screen Fit Button icon & title
         if (fitScreenBtn) {
           if (currentFitMode === 'cover') {
-            fitScreenBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+            fitScreenBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">aspect_ratio</span>';
             fitScreenBtn.title = 'Fill Notch Screen (Cover)';
           } else if (currentFitMode === 'fill') {
-            fitScreenBtn.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+            fitScreenBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">fit_screen</span>';
             fitScreenBtn.title = 'Stretch Video (Fill)';
           } else {
-            fitScreenBtn.innerHTML = '<i class="fas fa-compress-arrows-alt"></i>';
+            fitScreenBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">crop_free</span>';
             fitScreenBtn.title = 'Fit to Screen (Contain)';
           }
         }

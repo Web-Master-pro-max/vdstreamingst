@@ -35,10 +35,11 @@ router.get('/search', async (req, res) => {
 // 2b. Advanced Anime Browse & Filter
 router.get('/browse', async (req, res) => {
   try {
-    const { search, genre, format, season, year, status, sort, page, limit } = req.query;
+    const { search, genre, tag, format, season, year, status, sort, page, limit } = req.query;
     const results = await lunarx.browse({
       search,
       genre,
+      tag,
       format,
       season,
       year,

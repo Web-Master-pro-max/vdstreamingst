@@ -7,8 +7,8 @@ const { execSync } = require('child_process');
 const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = 'gT7Xzj6F6sceeskBtG5Z8mGDXEEgZ4L0JoKhChsqXMFCsY0E9QFK7hSlmZVawJeM6lihOPW8NhI8uWnvRiTZwTlVw';
-const DEFAULT_PITCH = 'y2cg7XKIZQsMHpVGt2mvbAXr5zVF8mRMoq4fEjGJoncNh78tMU099nQ0BophO5iKSGBLypQIhqzsLiAElJBke8p9DWI2';
+const DEFAULT_AXIS = 'NR4aO0wnFbEr8H9fgriGS1y5LgH6lF1xMCDHmafNBJYazyz5JuOKgmFx0Jl4i6FFxfYB9miSzmkgy4E3xU4';
+const DEFAULT_PITCH = 'd121ClteiHMfLWyWkrxVInq8G3jFhlZ326Cy5TX2ghciMTVMuYNKquoStUgPUosUe5kAHaR80iPLb2gnE60D03';
 const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {
@@ -276,16 +276,40 @@ class LunarXService {
     });
   }
 
-  // Advanced Browse Anime catalog with filters (search, genre, format, season, year, status, sort, page, perPage)
-  async browse({ search, genre, format, season, year, status, sort = 'TRENDING_DESC', page = 1, perPage = 20 } = {}) {
-    const cacheKey = `browse:${JSON.stringify({ search, genre, format, season, year, status, sort, page, perPage })}`;
+  // Advanced Browse Anime catalog with filters (search, genre, tag, format, season, year, status, sort, page, perPage)
+  async browse({ search, genre, tag, format, season, year, status, sort = 'TRENDING_DESC', page = 1, perPage = 20 } = {}) {
+    const cacheKey = `browse:${JSON.stringify({ search, genre, tag, format, season, year, status, sort, page, perPage })}`;
     const cached = this.cache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp < this.cacheTTL)) {
       return cached.data;
     }
 
+    // Map non-standard AniList genre queries to AniList tags
+    const ANILIST_TAG_MAP = {
+      'crime': 'Crime',
+      'historical': 'Historical',
+      'political': 'Politics',
+      'politics': 'Politics',
+      'kids': 'Kids',
+      'kids & family': 'Kids'
+    };
+
+    let activeGenre = (genre && genre !== 'all' && genre !== 'All') ? genre.trim() : null;
+    let activeTag = (tag && tag !== 'all' && tag !== 'All') ? tag.trim() : null;
+
+    if (activeGenre) {
+      const gLower = activeGenre.toLowerCase();
+      if (ANILIST_TAG_MAP[gLower]) {
+        activeTag = ANILIST_TAG_MAP[gLower];
+        activeGenre = null;
+      } else if (gLower === 'animation') {
+        // Animation is universal across all anime in AniList
+        activeGenre = null;
+      }
+    }
+
     const gqlQuery = `
-      query ($page: Int, $perPage: Int, $search: String, $genre: String, $format: MediaFormat, $season: MediaSeason, $seasonYear: Int, $status: MediaStatus, $sort: [MediaSort]) {
+      query ($page: Int, $perPage: Int, $search: String, $genre: String, $tag: String, $format: MediaFormat, $season: MediaSeason, $seasonYear: Int, $status: MediaStatus, $sort: [MediaSort]) {
         Page(page: $page, perPage: $perPage) {
           pageInfo {
             total
@@ -294,7 +318,7 @@ class LunarXService {
             lastPage
             hasNextPage
           }
-          media(search: $search, genre: $genre, format: $format, season: $season, seasonYear: $seasonYear, status: $status, sort: $sort, type: ANIME) {
+          media(search: $search, genre: $genre, tag: $tag, format: $format, season: $season, seasonYear: $seasonYear, status: $status, sort: $sort, type: ANIME) {
             id
             title {
               english
@@ -325,7 +349,8 @@ class LunarXService {
       sort: Array.isArray(sort) ? sort : [sort]
     };
     if (search && search.trim()) variables.search = search.trim();
-    if (genre && genre !== 'all' && genre !== 'All') variables.genre = genre;
+    if (activeGenre) variables.genre = activeGenre;
+    if (activeTag) variables.tag = activeTag;
     if (format && format !== 'all' && format !== 'All') variables.format = format;
     if (season && season !== 'all' && season !== 'All') variables.season = season.toUpperCase();
     if (year && parseInt(year, 10)) variables.seasonYear = parseInt(year, 10);
@@ -1008,12 +1033,19 @@ class LunarXService {
       if (remoteRaw) {
         const parsed = JSON.parse(remoteRaw);
         if (parsed && parsed.axis && parsed.pitch) {
-          console.log('[LunarX] Successfully synced cipher keys from remote repository');
-          this.globalKeys = { axis: parsed.axis, pitch: parsed.pitch, timestamp: parsed.updatedAt || Date.now() };
-          this.axis = parsed.axis;
-          this.pitch = parsed.pitch;
-          this.saveKeysToDisk(parsed.axis, parsed.pitch);
-          return [parsed.axis, parsed.pitch];
+          // Guard against stale remote repository keys overwriting fresh verified local keys
+          const currentTimestamp = this.globalKeys?.timestamp || 0;
+          const remoteTimestamp = parsed.updatedAt || 0;
+          if (currentTimestamp > 0 && remoteTimestamp > 0 && remoteTimestamp < currentTimestamp) {
+            console.log('[LunarX] Remote keys are older than current live keys, keeping current verified keys');
+          } else {
+            console.log('[LunarX] Successfully synced cipher keys from remote repository');
+            this.globalKeys = { axis: parsed.axis, pitch: parsed.pitch, timestamp: parsed.updatedAt || Date.now() };
+            this.axis = parsed.axis;
+            this.pitch = parsed.pitch;
+            this.saveKeysToDisk(parsed.axis, parsed.pitch);
+            return [parsed.axis, parsed.pitch];
+          }
         }
       }
     } catch (remoteErr) {
@@ -1321,10 +1353,16 @@ class LunarXService {
   }
 
   // Fetch video streams, subtitles, and intro/outro timestamps with auto-fallback
-  async getStream(anilistId, epNum, requestedHost = 'zuna', type = 'sub') {
+  async getStream(anilistId, epNum, requestedHost = 'zuna', type = 'sub', visitedIds = new Set()) {
     const id = parseInt(anilistId, 10);
     const ep = parseInt(epNum, 10) || 1;
     if (!id) throw new Error('Invalid anilistId');
+
+    // Circular recursion guard to prevent franchise/prequel loops
+    if (visitedIds.has(id)) {
+      throw new Error(`Recursion cycle prevented for Anime #${id}`);
+    }
+    visitedIds.add(id);
 
     // Obtain live cipher keys
     let [liveAxis, livePitch] = await this.getDecryptionKeys(id);
@@ -1524,7 +1562,7 @@ class LunarXService {
     // If dub was requested but no playable dub stream exists, gracefully fall back to clear Japanese sub stream
     if (type === 'dub') {
       console.log(`[LunarX] Dub unavailable for Anime #${id} Ep #${ep}, falling back to clear sub stream...`);
-      const fallbackResult = await this.getStream(id, ep, 'zuna', 'sub');
+      const fallbackResult = await this.getStream(id, ep, 'zuna', 'sub', new Set([id]));
       return {
         ...fallbackResult,
         isFallbackSub: true
@@ -1537,10 +1575,10 @@ class LunarXService {
       console.log(`[LunarX] No direct sources for Anime #${id}, checking franchise relations/prequels...`);
       const media = await this.getAniListMedia(id);
       if (media && Array.isArray(media.seasons) && media.seasons.length > 0) {
-        const candidateSeason = media.seasons.find(s => s.anilistId !== id && (s.episodes > 0 || s.episodeCount > 0));
+        const candidateSeason = media.seasons.find(s => !visitedIds.has(s.anilistId) && s.anilistId !== id && (s.episodes > 0 || s.episodeCount > 0));
         if (candidateSeason) {
           console.log(`[LunarX] Falling back to franchise season #${candidateSeason.anilistId} (${candidateSeason.title}) for Anime #${id}...`);
-          const franchiseResult = await this.getStream(candidateSeason.anilistId, 1, requestedHost, type);
+          const franchiseResult = await this.getStream(candidateSeason.anilistId, 1, requestedHost, type, visitedIds);
           if (franchiseResult && franchiseResult.streamUrl) {
             return {
               ...franchiseResult,
@@ -1556,10 +1594,10 @@ class LunarXService {
         const cleanTitle = media.title.split(':')[0].replace(/Season \d+|Part \d+/i, '').trim();
         if (cleanTitle.length >= 3) {
           const searchResults = await this.search(cleanTitle, 5);
-          const match = (searchResults || []).find(r => r.anilistId !== id && (r.episodes > 0 || r.episodeCount > 0));
+          const match = (searchResults || []).find(r => !visitedIds.has(r.anilistId) && r.anilistId !== id && (r.episodes > 0 || r.episodeCount > 0));
           if (match) {
             console.log(`[LunarX] Falling back to searched franchise title #${match.anilistId} (${match.title}) for Anime #${id}...`);
-            const searchFallbackResult = await this.getStream(match.anilistId, 1, requestedHost, type);
+            const searchFallbackResult = await this.getStream(match.anilistId, 1, requestedHost, type, visitedIds);
             if (searchFallbackResult && searchFallbackResult.streamUrl) {
               return {
                 ...searchFallbackResult,
