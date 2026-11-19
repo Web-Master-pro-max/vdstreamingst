@@ -1185,6 +1185,14 @@ function renderDynamicHomeSections() {
             `;
       });
 
+      // Determine correct routing for "View All":
+      // All dynamic home sections from categories should route to anime.html?category=slug
+      // (or anime.html for anime / anime-hub) so the actual category shows are displayed
+      let viewAllUrl = `anime.html?category=${encodeURIComponent(cat.slug)}`;
+      if (cat.slug === 'anime' || cat.slug === 'anime-hub') {
+        viewAllUrl = 'anime.html';
+      }
+
       sectionsHtml += `
             <section class="w-full max-w-7xl mx-auto px-gutter pt-space-xl" id="section-${cat.slug}">
               <div class="flex items-center justify-between mb-space-md">
@@ -1193,7 +1201,7 @@ function renderDynamicHomeSections() {
                   <h2 class="font-headline-md text-headline-md tracking-tight font-bold text-on-surface">${info.name}</h2>
                   <span class="font-label-sm text-label-sm text-outline px-2 py-0.5 rounded bg-surface-container-low">${shows.length} Masterpieces</span>
                 </div>
-                <a class="font-label-md text-label-md text-secondary-container hover:text-secondary flex items-center gap-0.5 transition-colors" href="anime.html?category=${cat.slug}">
+                <a class="font-label-md text-label-md text-secondary-container hover:text-secondary flex items-center gap-0.5 transition-colors" href="${viewAllUrl}">
                   <span>View All</span>
                   <span class="material-symbols-outlined text-[16px]">chevron_right</span>
                 </a>

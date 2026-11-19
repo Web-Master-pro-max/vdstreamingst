@@ -1792,6 +1792,8 @@
     let currentTab = 'trending';
     let activeAudio = localStorage.getItem('infinx_audio_pref') || 'SUB';
     let isLoadingCatalog = false;
+    let catalogRequestId = 0;
+    let catalogAbortController = null;
 
     // Parse URL Search Parameters if passed from other views / search bar
     // Master Genre & Category Dictionaries
@@ -1822,13 +1824,24 @@
       'hollywood': 'Hollywood Movies',
       'bollywood': 'Bollywood Movies',
       'anime': 'Anime Series',
+      'anime-hub': 'Anime Hub',
       'web-series': 'Web Series',
       'kids': 'Kids & Family',
       'kdrama': 'Korean Drama',
-      'action': 'Action',
-      'horror': 'Horror',
+      'action': 'Action Movies',
+      'horror': 'Horror Movies',
       'adventure': 'Adventure',
+      'animation': 'Animation',
+      'comedy': 'Comedy',
+      'crime': 'Crime',
+      'drama': 'Drama',
+      'fantasy': 'Fantasy',
+      'historical': 'Historical',
+      'mystery': 'Mystery',
+      'political': 'Political',
+      'romance': 'Romance',
       'sci-fi': 'Sci-Fi',
+      'scifi': 'Sci-Fi',
       'thriller': 'Thriller'
     };
 
@@ -1981,27 +1994,40 @@
       const href = link.getAttribute('href');
       if (!href) return;
 
-      if (href.startsWith('anime.html?') || href.startsWith('./anime.html?') || (window.location.pathname.endsWith('anime.html') && href.startsWith('?'))) {
-        e.preventDefault();
+      try {
         const url = new URL(link.href, window.location.origin);
-        window.history.pushState({}, '', url.pathname + url.search);
-        const newParams = new URLSearchParams(url.search);
-        currentFilters.genre = newParams.get('genre') || 'all';
-        currentFilters.category = newParams.get('category') || '';
-        currentFilters.search = newParams.get('search') || '';
-        currentPage = 1;
-        highlightGenrePill(currentFilters.genre);
-        loadCatalog();
+        const isCurrentAnimePage = window.location.pathname.includes('anime');
+        const isTargetAnimePage = url.pathname.includes('anime');
 
-        const target = document.getElementById('catalogSectionTitle') || animeGrid;
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (isCurrentAnimePage && isTargetAnimePage) {
+          e.preventDefault();
+          window.history.pushState({}, '', url.pathname + url.search);
+          const newParams = new URLSearchParams(url.search);
+          currentFilters.genre = newParams.get('genre') || 'all';
+          currentFilters.category = newParams.get('category') || '';
+          currentFilters.search = newParams.get('search') || '';
+          currentPage = 1;
+
+          if (!currentFilters.search) {
+            const dSearch = document.getElementById('catalogSearchInput');
+            const mSearch = document.getElementById('mobileCatalogSearch');
+            if (dSearch) dSearch.value = '';
+            if (mSearch) mSearch.value = '';
+          }
+
+          highlightGenrePill(currentFilters.genre);
+          loadCatalog();
+
+          const target = document.getElementById('catalogSectionTitle') || animeGrid;
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          if (typeof window.closeMobileMenu === 'function') {
+            window.closeMobileMenu();
+          }
+          document.querySelectorAll('.nav-item-dropdown').forEach(d => d.classList.remove('active'));
         }
-        if (typeof window.closeMobileMenu === 'function') {
-          window.closeMobileMenu();
-        }
-        document.querySelectorAll('.nav-item-dropdown').forEach(d => d.classList.remove('active'));
-      }
+      } catch (err) { }
     });
 
     window.addEventListener('popstate', () => {
@@ -2010,6 +2036,12 @@
       currentFilters.category = newParams.get('category') || '';
       currentFilters.search = newParams.get('search') || '';
       currentPage = 1;
+      if (!currentFilters.search) {
+        const dSearch = document.getElementById('catalogSearchInput');
+        const mSearch = document.getElementById('mobileCatalogSearch');
+        if (dSearch) dSearch.value = '';
+        if (mSearch) mSearch.value = '';
+      }
       highlightGenrePill(currentFilters.genre);
       loadCatalog();
     });
@@ -2255,7 +2287,13 @@
 
     // Load Catalog Records with current filters & pagination
     async function loadCatalog() {
-      if (isLoadingCatalog) return;
+      const thisRequestId = ++catalogRequestId;
+      if (catalogAbortController) {
+        try { catalogAbortController.abort(); } catch (e) { }
+      }
+      catalogAbortController = new AbortController();
+      const signal = catalogAbortController.signal;
+
       isLoadingCatalog = true;
 
       if (currentPage === 1) {
@@ -2271,11 +2309,14 @@
 
       try {
         if (currentFilters.category && currentFilters.category !== 'all' && currentFilters.category !== 'anime-hub') {
-          await loadCategoryCatalog(currentFilters.category);
+          await loadCategoryCatalog(currentFilters.category, thisRequestId, signal);
         } else {
-          await loadLunarCatalog();
+          await loadLunarCatalog(thisRequestId, signal);
         }
       } catch (err) {
+        if (err.name === 'AbortError' || thisRequestId !== catalogRequestId) {
+          return;
+        }
         console.error('Catalog load error:', err);
         if (currentPage === 1) {
           animeGrid.innerHTML = `
@@ -2286,13 +2327,15 @@
           `;
         }
       } finally {
-        isLoadingCatalog = false;
-        if (mobileSyncingIndicator) mobileSyncingIndicator.style.display = 'none';
+        if (thisRequestId === catalogRequestId) {
+          isLoadingCatalog = false;
+          if (mobileSyncingIndicator) mobileSyncingIndicator.style.display = 'none';
+        }
       }
     }
 
     // Master Anime / Lunar Catalog loader
-    async function loadLunarCatalog() {
+    async function loadLunarCatalog(requestId, signal) {
         const params = new URLSearchParams({
           page: currentPage,
           limit: 24,
@@ -2313,19 +2356,7 @@
         if (currentFilters.year && currentFilters.year !== 'all') params.append('year', currentFilters.year);
         if (currentFilters.status && currentFilters.status !== 'all') params.append('status', currentFilters.status);
 
-        const res = await fetch(`${API_BASE}/lunarx/browse?${params.toString()}`);
-        if (!res.ok) throw new Error(`API error ${res.status}`);
-        const data = await res.json();
-
-        const media = data.media || [];
-        const pageInfo = data.pageInfo || {};
-        totalPages = pageInfo.lastPage || Math.ceil((pageInfo.total || 0) / 24) || 1;
-
-        if (resultsCountBadge) {
-          const totalCount = pageInfo.total ? pageInfo.total.toLocaleString() : media.length;
-          resultsCountBadge.textContent = `${totalCount} TITLES`;
-        }
-
+        // Immediate visual title update
         if (catalogSectionTitle) {
           if (cleanGenre) {
             catalogSectionTitle.innerHTML = `
@@ -2350,12 +2381,27 @@
           }
         }
 
+        const res = await fetch(`${API_BASE}/lunarx/browse?${params.toString()}`, { signal });
+        if (!res.ok) throw new Error(`API error ${res.status}`);
+        const data = await res.json();
+
+        if (requestId && requestId !== catalogRequestId) return;
+
+        const media = data.media || [];
+        const pageInfo = data.pageInfo || {};
+        totalPages = pageInfo.lastPage || Math.ceil((pageInfo.total || 0) / 24) || 1;
+
+        if (resultsCountBadge) {
+          const totalCount = pageInfo.total ? pageInfo.total.toLocaleString() : media.length;
+          resultsCountBadge.textContent = `${totalCount} TITLES`;
+        }
+
         renderAnimeCards(media);
         updatePagination(pageInfo);
       }
 
       // Category Catalog Loader (South Hindi Dubbed, Hollywood, Bollywood, Web Series, Korean Drama, etc.)
-      async function loadCategoryCatalog(categorySlug) {
+      async function loadCategoryCatalog(categorySlug, requestId, signal) {
         const slugNorm = (categorySlug || '').toLowerCase().trim();
         const catName = CATEGORY_NAMES[slugNorm] || categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
@@ -2371,7 +2417,7 @@
 
         let shows = [];
         try {
-          const res = await fetch(`${API_BASE}/shows/categories`);
+          const res = await fetch(`${API_BASE}/shows/categories`, { signal });
           if (res.ok) {
             const categories = await res.json();
             const cat = categories.find(c =>
@@ -2385,12 +2431,15 @@
             }
           }
         } catch (e) {
+          if (e.name === 'AbortError') throw e;
           console.warn('Failed to load shows from /categories:', e);
         }
 
+        if (requestId && requestId !== catalogRequestId) return;
+
         if (shows.length === 0) {
           try {
-            const res = await fetch(`${API_BASE}/shows`);
+            const res = await fetch(`${API_BASE}/shows`, { signal });
             if (res.ok) {
               const allShows = await res.json();
               shows = allShows.filter(s => {
@@ -2402,14 +2451,18 @@
                 });
               });
             }
-          } catch (e) { }
+          } catch (e) {
+            if (e.name === 'AbortError') throw e;
+          }
         }
+
+        if (requestId && requestId !== catalogRequestId) return;
 
         // If category is anime or has 0 local shows and is recognized as an AniList genre, fall back to Lunar
         if (shows.length === 0 && (slugNorm === 'anime' || ANILIST_GENRE_MAP[slugNorm])) {
           currentFilters.genre = ANILIST_GENRE_MAP[slugNorm] || slugNorm;
           currentFilters.category = '';
-          return loadLunarCatalog();
+          return loadLunarCatalog(requestId, signal);
         }
 
         // Filter search
@@ -2869,17 +2922,6 @@
             loadCatalog();
           });
         });
-
-        function highlightGenrePill(genreName) {
-          document.querySelectorAll('.genre-pill').forEach(p => {
-            const g = p.getAttribute('data-genre');
-            if (g.toLowerCase() === genreName.toLowerCase()) {
-              p.className = 'genre-pill shrink-0 h-8 px-4 rounded-full bg-secondary-container text-on-secondary-fixed font-label-md text-label-md font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all';
-            } else {
-              p.className = 'genre-pill shrink-0 h-8 px-3.5 rounded-full bg-surface-container-low text-on-surface-variant font-label-md text-label-md hover:bg-surface-container active:scale-95 transition-all';
-            }
-          });
-        }
 
         // Season Selector Dropdowns & Pills
         document.querySelectorAll('.season-filter-select').forEach(sel => {
