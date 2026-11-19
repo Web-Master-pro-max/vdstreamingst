@@ -291,14 +291,6 @@
 
         <!-- Right Sync Telemetry Badge & Actions -->
         <div class="flex items-center gap-space-sm flex-wrap">
-          <div
-            class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-high/90 border border-white/5 shadow-md">
-            <span class="material-symbols-outlined text-secondary-container text-[16px] animate-spin"
-              style="animation-duration: 6s;">sync</span>
-            <span class="font-label-sm text-on-surface">MAL &amp; AniList Synced</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-secondary-container shadow-[0_0_6px_#00eefc]"></span>
-          </div>
-
           <button id="clearHistoryBtn" type="button"
             class="px-space-md py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-300 font-label-md text-xs sm:text-label-md transition-all shadow-sm flex items-center gap-space-xs cursor-pointer border border-red-500/30"
             style="display: none;" onclick="confirmClearHistory()">
@@ -312,20 +304,13 @@
             <span class="material-symbols-outlined text-[16px] text-outline">tune</span>
             <span id="batchEditBtnText">Batch Edit</span>
           </button>
-
-          <button
-            class="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs sm:text-label-md shadow-[0_0_20px_rgba(255,80,110,0.4)] hover:shadow-[0_0_28px_rgba(255,80,110,0.65)] hover:scale-[1.02] transition-all flex items-center gap-space-xs font-bold cursor-pointer"
-            onclick="exportMatrix()">
-            <span class="material-symbols-outlined text-[16px]">file_download</span>
-            <span>Export Matrix</span>
-          </button>
         </div>
       </div>
 
       <!-- Hub Segmented Master Switcher Tabs -->
       <div class="w-full px-3 sm:px-gutter mb-space-lg max-w-7xl mx-auto">
         <div
-          class="flex items-center gap-1 sm:gap-space-xs p-1 sm:p-1.5 rounded-2xl bg-surface-container-low max-w-2xl border border-white/5 shadow-xl overflow-x-auto scrollbar-none">
+          class="flex items-center gap-1 sm:gap-space-xs p-1 sm:p-1.5 rounded-2xl bg-surface-container-low max-w-xl border border-white/5 shadow-xl overflow-x-auto scrollbar-none">
           <button
             class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active whitespace-nowrap cursor-pointer"
             id="tab-watchlist" onclick="switchHubTab('watchlist')">
@@ -345,16 +330,6 @@
             <span
               class="px-1.5 py-0.5 rounded-full bg-surface-container-highest text-outline font-label-sm text-[10px] sm:text-xs font-bold"
               id="hubHistCount">0</span>
-          </button>
-
-          <button
-            class="flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap cursor-pointer"
-            id="tab-matrix" onclick="switchHubTab('matrix')">
-            <span class="material-symbols-outlined text-[16px] sm:text-[18px]">grid_view</span>
-            <span>Genre Matrix</span>
-            <span
-              class="px-1.5 py-0.5 rounded-full bg-secondary-container/15 text-secondary font-label-sm text-[10px] sm:text-xs font-bold"
-              id="hubMatrixCount">Catalog</span>
           </button>
         </div>
       </div>
@@ -449,6 +424,12 @@
                 <span class="material-symbols-outlined text-[18px]">view_agenda</span>
               </button>
             </div>
+            <button id="btn-batch-toggle-wl"
+              class="px-3 py-1.5 rounded-xl bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-md text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-white/5"
+              onclick="toggleBatchEdit()">
+              <span class="material-symbols-outlined text-[16px] text-secondary">checklist</span>
+              <span class="batch-select-label font-bold text-secondary">Select</span>
+            </button>
           </div>
         </div>
 
@@ -461,12 +442,20 @@
 
       <!-- ================= 3. WATCH HISTORY LIST ================= -->
       <div id="historyVaultSection" class="flex flex-col gap-space-md" style="display: none;">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-secondary-container shadow-[0_0_12px_#00eefc]"></span>
             <h2 class="font-headline-md text-lg md:text-xl text-on-surface font-extrabold uppercase">
               Complete Streaming History &amp; Sync Matrix
             </h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-batch-toggle-hist"
+              class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-white/5"
+              onclick="toggleBatchEdit()">
+              <span class="material-symbols-outlined text-[16px] text-secondary">checklist</span>
+              <span class="batch-select-label font-bold text-secondary">Select Multiple</span>
+            </button>
           </div>
         </div>
 
@@ -484,25 +473,6 @@
 
         <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
           <!-- Populated dynamically via JS -->
-        </div>
-      </div>
-
-      <!-- ================= 4. GENRE MATRIX / CATEGORIES ================= -->
-      <div id="matrixVaultSection" class="flex flex-col gap-space-md" style="display: none;">
-        <div class="flex items-center justify-between">
-          <h2 id="matrixTitle" class="font-headline-md text-lg md:text-xl text-on-surface font-extrabold uppercase">
-            Genre Repertoire Matrix
-          </h2>
-          <span id="matrixCount" class="text-outline text-xs">Loading...</span>
-        </div>
-
-        <!-- Quick Category Chips -->
-        <div id="categoryChipsRail" class="flex flex-wrap gap-2 pb-2">
-          <!-- Populated dynamically -->
-        </div>
-
-        <div id="matrixGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-gutter">
-          <!-- Populated dynamically -->
         </div>
       </div>
 
@@ -538,6 +508,97 @@
           class="px-space-md py-2 rounded-xl bg-error-container text-on-error font-label-md text-sm font-bold shadow-[0_0_16px_rgba(255,80,110,0.4)] hover:shadow-[0_0_24px_rgba(255,80,110,0.7)] transition-all cursor-pointer"
           onclick="executeClearHistory()">
           Purge History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BATCH DELETE CONFIRMATION MODAL ================= -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-container-lowest/80 backdrop-blur-xl hidden"
+    id="batch-delete-modal">
+    <div
+      class="relative w-full max-w-md p-space-lg rounded-2xl bg-surface-container border border-error/30 shadow-[0_0_40px_rgba(255,80,110,0.35)] flex flex-col gap-space-md animate-fade-in">
+      <div class="flex items-center gap-space-sm text-error">
+        <div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-error text-[24px]">delete_sweep</span>
+        </div>
+        <div>
+          <h4 id="batchModalTitle" class="font-headline-sm text-headline-sm text-on-surface font-bold">Delete Selected Anime?</h4>
+          <span id="batchModalSubtitle" class="font-label-sm text-outline">Action will remove telemetry records.</span>
+        </div>
+      </div>
+
+      <p id="batchModalMessage" class="font-body-md text-outline text-sm">
+        Are you sure you want to delete <strong id="batchModalCount" class="text-white">0</strong> selected anime from your watch history?
+      </p>
+
+      <div id="batchSelectedListPreview" class="max-h-36 overflow-y-auto pr-1 flex flex-col gap-1.5 rounded-xl bg-surface-container-low p-2 border border-white/5 scrollbar-thin text-xs text-on-surface">
+        <!-- List of selected titles -->
+      </div>
+
+      <div class="flex items-center gap-2 pt-1 text-xs text-on-surface-variant" id="batchAlsoWatchlistRow">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" id="batchAlsoDeleteWlCheckbox" class="rounded accent-primary w-4 h-4 cursor-pointer" />
+          <span>Also remove from My Watchlist</span>
+        </label>
+      </div>
+
+      <div class="flex items-center justify-end gap-space-sm pt-space-xs">
+        <button type="button"
+          class="px-space-md py-2 rounded-xl bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-sm transition-all cursor-pointer"
+          onclick="closeBatchDeleteModal()">
+          Cancel
+        </button>
+        <button id="batchConfirmDeleteBtn" type="button"
+          class="px-space-md py-2 rounded-xl bg-error-container text-on-error font-label-md text-sm font-bold shadow-[0_0_16px_rgba(255,80,110,0.4)] hover:shadow-[0_0_24px_rgba(255,80,110,0.7)] transition-all cursor-pointer flex items-center gap-1.5"
+          onclick="executeBatchDelete()">
+          <span class="material-symbols-outlined text-[16px]">delete</span>
+          <span>Delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BATCH MULTI-SELECT FLOATING ACTION DOCK ================= -->
+  <div id="batchActionDock"
+    class="fixed bottom-20 xl:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-2xl bg-[#090b14]/95 backdrop-blur-2xl rounded-2xl border border-secondary-container/40 shadow-[0_10px_40px_rgba(0,0,0,0.9),0_0_25px_rgba(0,238,252,0.25)] p-3 sm:p-4 transition-all duration-300 hidden">
+    <div class="flex items-center justify-between gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
+      <!-- Left: Counter & Status -->
+      <div class="flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-secondary-container shadow-[0_0_10px_#00eefc] animate-pulse"></span>
+        <div class="flex flex-col">
+          <span class="text-xs font-mono font-bold text-white tracking-wide">
+            <span id="batchSelectedCount" class="text-secondary font-black text-sm">0</span> anime selected
+          </span>
+          <span class="text-[10px] text-outline hidden sm:inline">Tap cards to toggle selection</span>
+        </div>
+      </div>
+
+      <!-- Right: Action Buttons Cluster -->
+      <div class="flex items-center gap-1.5 sm:gap-2 ml-auto">
+        <button id="batchSelectAllBtn" type="button" onclick="toggleSelectAll()"
+          class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-xs transition-all flex items-center gap-1 cursor-pointer border border-white/5">
+          <span class="material-symbols-outlined text-[16px]">select_all</span>
+          <span>Select All</span>
+        </button>
+
+        <button type="button" onclick="promptBatchDelete('history')"
+          class="batch-action-delete opacity-50 pointer-events-none px-3.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-white font-label-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-red-500/40 shadow-[0_0_14px_rgba(255,80,110,0.3)]">
+          <span class="material-symbols-outlined text-[16px]">delete</span>
+          <span>Delete from History</span>
+        </button>
+
+        <button id="batchWlDeleteBtn" type="button" onclick="promptBatchDelete('watchlist')"
+          class="batch-action-delete opacity-50 pointer-events-none px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-red-500/20 text-outline hover:text-error font-label-md text-xs transition-all flex items-center gap-1 cursor-pointer border border-white/5">
+          <span class="material-symbols-outlined text-[16px]">bookmark_remove</span>
+          <span>From Watchlist</span>
+        </button>
+
+        <button type="button" onclick="toggleBatchEdit(false)"
+          class="p-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-outline hover:text-white transition-all cursor-pointer"
+          title="Cancel">
+          <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
       </div>
     </div>
@@ -688,6 +749,26 @@
     let batchEditActive = false;
     let savedWatchlistItems = [];
     let savedHistoryItems = [];
+    let selectedItems = new Map(); // key -> { id, title, source }
+    let pendingBatchActionType = 'history';
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeJsString(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"');
+    }
 
     // 3. Initialization
     document.addEventListener('DOMContentLoaded', async () => {
@@ -738,49 +819,41 @@
 
     // 5. Hub Segmented Tab Switcher
     function switchHubTab(tabName) {
-      activeTab = tabName;
-      if (window.location.hash !== `#${tabName}`) {
-        window.location.hash = tabName;
+      activeTab = tabName === 'history' ? 'history' : 'watchlist';
+      if (window.location.hash !== `#${activeTab}`) {
+        window.location.hash = activeTab;
       }
 
       const tabWl = document.getElementById('tab-watchlist');
       const tabHist = document.getElementById('tab-history');
-      const tabMat = document.getElementById('tab-matrix');
 
       const rail = document.getElementById('currentlyWatchingRail');
       const wlSec = document.getElementById('watchlistVaultSection');
       const histSec = document.getElementById('historyVaultSection');
-      const matSec = document.getElementById('matrixVaultSection');
       const clearBtn = document.getElementById('clearHistoryBtn');
 
-      [tabWl, tabHist, tabMat].forEach(t => {
+      [tabWl, tabHist].forEach(t => {
         if (!t) return;
         t.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold whitespace-nowrap cursor-pointer';
       });
 
-      if (tabName === 'watchlist') {
-        tabWl.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active whitespace-nowrap cursor-pointer';
+      if (activeTab === 'watchlist') {
+        if (tabWl) tabWl.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-primary-fixed shadow-[0_0_20px_rgba(255,80,110,0.35)] font-bold active whitespace-nowrap cursor-pointer';
         if (rail) rail.style.display = savedHistoryItems.length > 0 ? 'flex' : 'none';
         if (wlSec) wlSec.style.display = 'flex';
         if (histSec) histSec.style.display = 'none';
-        if (matSec) matSec.style.display = 'none';
         if (clearBtn) clearBtn.style.display = 'none';
-      } else if (tabName === 'history') {
-        tabHist.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.35)] font-bold active whitespace-nowrap cursor-pointer';
+        renderWatchlist();
+        renderCurrentlyWatchingRail();
+      } else {
+        if (tabHist) tabHist.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.35)] font-bold active whitespace-nowrap cursor-pointer';
         if (rail) rail.style.display = 'none';
         if (wlSec) wlSec.style.display = 'none';
         if (histSec) histSec.style.display = 'flex';
-        if (matSec) matSec.style.display = 'none';
         if (clearBtn) clearBtn.style.display = 'inline-flex';
-      } else if (tabName === 'matrix') {
-        tabMat.className = 'flex-1 py-2 sm:py-2.5 px-2 sm:px-space-md rounded-xl font-label-md sm:font-label-lg text-xs sm:text-label-lg flex items-center justify-center gap-1 sm:gap-space-xs transition-all duration-300 bg-surface-container-highest text-tertiary-fixed shadow-[0_0_20px_rgba(160,120,255,0.35)] font-bold active whitespace-nowrap cursor-pointer';
-        if (rail) rail.style.display = 'none';
-        if (wlSec) wlSec.style.display = 'none';
-        if (histSec) histSec.style.display = 'none';
-        if (matSec) matSec.style.display = 'flex';
-        if (clearBtn) clearBtn.style.display = 'none';
-        loadMatrixData();
+        renderHistoryGrid();
       }
+      updateBatchUI();
     }
 
     function handleHashRouting() {
@@ -789,11 +862,19 @@
         switchHubTab('history');
       } else if (hash.startsWith('search')) {
         const query = decodeURIComponent(hash.split('q=')[1] || '');
-        switchHubTab('matrix');
-        document.getElementById('matrixTitle').textContent = `Search Results: "${query}"`;
-        performHubSearch(query);
-      } else if (hash.startsWith('category') || hash.startsWith('genre') || hash === 'matrix') {
-        switchHubTab('matrix');
+        window.location.replace(`anime.html?search=${encodeURIComponent(query)}`);
+      } else if (hash && hash !== 'watchlist' && hash !== 'vip') {
+        const KNOWN_CATEGORIES = ['south-hindi-dubbed', 'hollywood', 'bollywood', 'web-series', 'kids', 'kdrama', 'anime'];
+        if (KNOWN_CATEGORIES.includes(hash)) {
+          window.location.replace(`anime.html?category=${encodeURIComponent(hash)}`);
+          return;
+        }
+        const KNOWN_GENRES = ['action', 'adventure', 'animation', 'comedy', 'crime', 'drama', 'fantasy', 'historical', 'horror', 'mystery', 'political', 'romance', 'sci-fi', 'thriller'];
+        if (KNOWN_GENRES.includes(hash)) {
+          window.location.replace(`anime.html?genre=${encodeURIComponent(hash)}`);
+          return;
+        }
+        switchHubTab('watchlist');
       } else {
         switchHubTab('watchlist');
       }
@@ -838,6 +919,7 @@
 
     function renderWatchlist() {
       const wlGrid = document.getElementById('watchlistGrid');
+      if (!wlGrid) return;
       let filtered = [...savedWatchlistItems];
 
       // Filter Status
@@ -877,28 +959,38 @@
         wlGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
         wlGrid.innerHTML = filtered.map(item => {
           const isAnime = item.isLunar || item.lunarId || item.anilistId;
-          const anilistId = item.lunarId || item.anilistId || item.id;
+          const anilistId = String(item.lunarId || item.anilistId || item.id);
           const playUrl = isAnime ? `/watch?id=${anilistId}&ep=1` : `/watch?id=${item.id}`;
           const posterUrl = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
           const title = item.title || 'Anime Series';
           const rating = item.rating || '8.8';
+          const isSelected = selectedItems.has(anilistId);
 
           return `
-            <div class="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low border border-white/5 hover:border-secondary-container/30 transition-all">
-              <img src="${posterUrl}" alt="${title}" class="w-16 h-22 rounded-xl object-cover flex-shrink-0 bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'" onerror="this.src='Postes/spyfamS3p.jpg';" />
+            <div class="relative flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low border border-white/5 hover:border-secondary-container/30 transition-all cursor-pointer ${isSelected ? 'ring-2 ring-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.4)]' : ''}"
+              data-anime-key="${anilistId}" data-anime-title="${escapeHtml(title)}"
+              onclick="handleCardClick('${anilistId}', '${escapeJsString(title)}', '${playUrl}', event)">
+
+              <!-- Selection Checkbox -->
+              <div class="batch-checkbox ${isSelected ? 'selected' : ''} ${batchEditActive ? 'flex' : 'hidden'} absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-lg ${isSelected ? 'bg-secondary-container text-surface-container-lowest shadow-[0_0_12px_#00eefc]' : 'bg-black/80 border border-white/40 text-transparent hover:border-white'} items-center justify-center transition-all cursor-pointer"
+                onclick="event.stopPropagation(); toggleCardSelection('${anilistId}', '${escapeJsString(title)}');">
+                <span class="material-symbols-outlined text-[16px] font-black">${isSelected ? 'check' : ''}</span>
+              </div>
+
+              <img src="${posterUrl}" alt="${escapeHtml(title)}" class="w-16 h-22 rounded-xl object-cover flex-shrink-0 bg-surface-container-highest cursor-pointer ${batchEditActive ? 'ml-6' : ''} transition-all" onerror="this.src='Postes/spyfamS3p.jpg';" />
               <div class="flex-1 min-w-0 flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-label-sm text-[10px] text-primary font-bold">SAVED</span>
                   <span class="text-secondary font-mono text-[11px] font-bold">★ ${rating}</span>
                 </div>
-                <h4 class="text-white font-bold text-sm truncate cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='${playUrl}'">${title}</h4>
+                <h4 class="text-white font-bold text-sm truncate hover:text-primary transition-colors">${escapeHtml(title)}</h4>
                 <div class="text-[11px] text-outline">${item.year || '2025'} • 4K OLED Master</div>
               </div>
-              <div class="flex items-center gap-2 flex-shrink-0">
+              <div class="flex items-center gap-2 flex-shrink-0 ${batchEditActive ? 'hidden' : 'flex'}">
                 <a href="${playUrl}" class="p-2.5 rounded-xl bg-primary-container text-on-primary-container shadow-[0_0_12px_rgba(255,80,110,0.4)] hover:scale-105 transition-transform flex items-center justify-center">
                   <span class="material-symbols-outlined text-[18px]">play_arrow</span>
                 </a>
-                <button type="button" onclick="removeWatchlistItem('${item.id || anilistId}')" class="p-2.5 rounded-xl bg-surface-container-high text-outline hover:text-error transition-colors flex items-center justify-center" title="Remove">
+                <button type="button" onclick="event.stopPropagation(); removeWatchlistItem('${anilistId}')" class="p-2.5 rounded-xl bg-surface-container-high text-outline hover:text-error transition-colors flex items-center justify-center cursor-pointer" title="Remove">
                   <span class="material-symbols-outlined text-[18px]">delete</span>
                 </button>
               </div>
@@ -909,19 +1001,29 @@
         wlGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-gutter';
         wlGrid.innerHTML = filtered.map(item => {
           const isAnime = item.isLunar || item.lunarId || item.anilistId;
-          const anilistId = item.lunarId || item.anilistId || item.id;
+          const anilistId = String(item.lunarId || item.anilistId || item.id);
           const playUrl = isAnime ? `/watch?id=${anilistId}&ep=1` : `/watch?id=${item.id}`;
           const posterUrl = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
           const title = item.title || 'Anime Series';
           const rating = item.rating || '8.8';
+          const isSelected = selectedItems.has(anilistId);
 
           return `
-            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low border border-white/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)]">
-              <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
-                <img src="${posterUrl}" alt="${title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
+            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low border border-white/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(255,80,110,0.4)] cursor-pointer ${isSelected ? 'ring-2 ring-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.4)]' : ''}"
+              data-anime-key="${anilistId}" data-anime-title="${escapeHtml(title)}"
+              onclick="handleCardClick('${anilistId}', '${escapeJsString(title)}', '${playUrl}', event)">
+
+              <!-- Selection Checkbox -->
+              <div class="batch-checkbox ${isSelected ? 'selected' : ''} ${batchEditActive ? 'flex' : 'hidden'} absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-lg ${isSelected ? 'bg-secondary-container text-surface-container-lowest shadow-[0_0_12px_#00eefc]' : 'bg-black/80 border border-white/40 text-transparent hover:border-white'} items-center justify-center transition-all cursor-pointer"
+                onclick="event.stopPropagation(); toggleCardSelection('${anilistId}', '${escapeJsString(title)}');">
+                <span class="material-symbols-outlined text-[16px] font-black">${isSelected ? 'check' : ''}</span>
+              </div>
+
+              <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest">
+                <img src="${posterUrl}" alt="${escapeHtml(title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
 
-                <div class="absolute top-2 left-2 pointer-events-none">
+                <div class="absolute top-2 ${batchEditActive ? 'left-10' : 'left-2'} pointer-events-none transition-all">
                   <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-[9px] text-primary font-bold uppercase border border-primary/30">
                     SAVED
                   </span>
@@ -932,23 +1034,23 @@
                   </span>
                 </div>
 
-                <!-- Hover Quick Actions (Stitch Design) -->
-                <div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2">
+                <!-- Hover Quick Actions (Only active when NOT in batch mode) -->
+                <div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-3 gap-2 ${batchEditActive ? '!hidden' : ''}">
                   <a href="${playUrl}" class="w-full py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-xs uppercase tracking-wider font-bold shadow-[0_0_18px_rgba(255,80,110,0.6)] flex items-center justify-center gap-1.5 text-center">
                     <span class="material-symbols-outlined text-[16px]">play_arrow</span> Stream
                   </a>
                   <div class="flex items-center gap-2">
-                    <button type="button" onclick="event.stopPropagation(); markCompleted('${item.id || anilistId}')" class="p-2 rounded-lg bg-surface-container-highest text-secondary hover:scale-110 transition-transform" title="Mark Completed">
+                    <button type="button" onclick="event.stopPropagation(); markCompleted('${anilistId}')" class="p-2 rounded-lg bg-surface-container-highest text-secondary hover:scale-110 transition-transform cursor-pointer" title="Mark Completed">
                       <span class="material-symbols-outlined text-[16px]">done_all</span>
                     </button>
-                    <button type="button" onclick="event.stopPropagation(); removeWatchlistItem('${item.id || anilistId}')" class="p-2 rounded-lg bg-surface-container-highest text-outline hover:text-error hover:scale-110 transition-transform" title="Remove from list">
+                    <button type="button" onclick="event.stopPropagation(); removeWatchlistItem('${anilistId}')" class="p-2 rounded-lg bg-surface-container-highest text-outline hover:text-error hover:scale-110 transition-transform cursor-pointer" title="Remove from list">
                       <span class="material-symbols-outlined text-[16px]">delete</span>
                     </button>
                   </div>
                 </div>
               </div>
               <div class="p-2.5 flex flex-col gap-0.5">
-                <h3 class="font-headline-sm text-[13px] font-bold text-on-surface truncate group-hover:text-primary transition-colors">${title}</h3>
+                <h3 class="font-headline-sm text-[13px] font-bold text-on-surface truncate group-hover:text-primary transition-colors">${escapeHtml(title)}</h3>
                 <div class="flex items-center justify-between text-outline font-label-sm text-[10px]">
                   <span>${item.year || '2025'}</span>
                   <span class="text-secondary font-semibold">4K OLED</span>
@@ -994,9 +1096,6 @@
     // 7. Watch History & Active Streams Rail
     async function loadHistoryData() {
       const token = localStorage.getItem('infinx_token');
-      const rail = document.getElementById('currentlyWatchingRail');
-      const railGrid = document.getElementById('currentlyWatchingGrid');
-      const histGrid = document.getElementById('historyGrid');
       const hubHistCount = document.getElementById('hubHistCount');
 
       let historyList = [];
@@ -1041,61 +1140,96 @@
       savedHistoryItems = historyList;
       if (hubHistCount) hubHistCount.textContent = historyList.length;
 
-      // Populate 16:9 Currently Watching Active Streams Rail
-      if (historyList.length === 0) {
-        if (rail) rail.style.display = 'none';
-      } else {
-        if (rail && activeTab === 'watchlist') rail.style.display = 'flex';
-        railGrid.innerHTML = historyList.slice(0, 5).map(item => {
-          const anilistId = item.lunarId || item.anilistId || item.id;
-          const ep = item.episodeNumber || 1;
-          const title = item.title || 'Anime Series';
-          const banner = item.banner || item.poster ? (item.banner ? window.formatMediaUrl(item.banner) : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
-          const percent = Math.min(100, Math.max(2, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
-          const seekParam = item.progress > 5 ? `&t=${Math.floor(item.progress)}` : '';
-          const playUrl = `/watch?id=${anilistId}&ep=${ep}${seekParam}`;
+      renderCurrentlyWatchingRail();
+      renderHistoryGrid();
+    }
 
-          return `
-            <div class="snap-start shrink-0 w-[276px] md:w-auto group flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(255,80,110,0.25)] transition-all duration-300 border border-white/5">
-              <div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
-                <img src="${banner}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='Postes/spyfamS3p.jpg';" />
-                <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
-                <div class="absolute top-2.5 left-2.5 flex items-center gap-1">
-                  <span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-sm text-[10px] font-bold">4K OLED</span>
-                  <span class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-label-sm text-[10px] font-bold shadow-[0_0_8px_#ff506e]">SUB/DUB</span>
-                </div>
-                <!-- Floating Resume pill -->
-                <div class="absolute bottom-2 right-2 flex items-center">
-                  <button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-[11px] font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all cursor-pointer" onclick="event.stopPropagation(); window.location.href='${playUrl}'">
-                    <span class="material-symbols-outlined text-[14px]">play_arrow</span>
-                    <span>Resume</span>
-                  </button>
-                </div>
-                <!-- Neon Scrubber Progress Ribbon -->
-                <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest">
-                  <div class="h-full bg-primary-container shadow-[0_0_10px_#ff506e]" style="width: ${percent}%;"></div>
-                </div>
-              </div>
-              <div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
-                <div>
-                  <div class="flex items-center justify-between gap-space-xs mb-1">
-                    <span class="font-label-sm text-[11px] text-secondary-container font-semibold uppercase tracking-wider">EPISODE ${ep}</span>
-                    <span class="font-label-sm text-[11px] text-outline font-mono">${percent}% watched</span>
-                  </div>
-                  <h3 class="font-headline-sm text-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-primary transition-colors">${title}</h3>
-                </div>
-                <div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
-                  <span class="text-secondary-fixed">Resume Episode ${ep}</span>
-                  <span class="material-symbols-outlined text-[16px] text-outline hover:text-white">cast</span>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
+    function renderCurrentlyWatchingRail() {
+      const rail = document.getElementById('currentlyWatchingRail');
+      const railGrid = document.getElementById('currentlyWatchingGrid');
+      if (!rail || !railGrid) return;
+
+      if (savedHistoryItems.length === 0) {
+        rail.style.display = 'none';
+        return;
       }
 
-      // Populate Complete History Grid
-      if (historyList.length === 0) {
+      if (activeTab === 'watchlist') rail.style.display = 'flex';
+
+      railGrid.innerHTML = savedHistoryItems.slice(0, 5).map(item => {
+        const anilistId = String(item.lunarId || item.anilistId || item.id);
+        const ep = item.episodeNumber || 1;
+        const title = item.title || 'Anime Series';
+        const banner = item.banner || item.poster ? (item.banner ? window.formatMediaUrl(item.banner) : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
+        const percent = Math.min(100, Math.max(2, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
+        const seekParam = item.progress > 5 ? `&t=${Math.floor(item.progress)}` : '';
+        const playUrl = `/watch?id=${anilistId}&ep=${ep}${seekParam}`;
+        const isSelected = selectedItems.has(anilistId);
+
+        return `
+          <div class="snap-start shrink-0 w-[276px] md:w-auto group relative flex flex-col rounded-2xl bg-surface-container-low overflow-hidden shadow-lg hover:shadow-[0_12px_36px_rgba(255,80,110,0.25)] transition-all duration-300 border border-white/5 cursor-pointer ${isSelected ? 'ring-2 ring-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.4)]' : ''}"
+            data-anime-key="${anilistId}" data-anime-title="${escapeHtml(title)}"
+            onclick="handleCardClick('${anilistId}', '${escapeJsString(title)}', '${playUrl}', event)">
+
+            <!-- Selection Checkbox Badge -->
+            <div class="batch-checkbox ${isSelected ? 'selected' : ''} ${batchEditActive ? 'flex' : 'hidden'} absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-lg ${isSelected ? 'bg-secondary-container text-surface-container-lowest shadow-[0_0_12px_#00eefc]' : 'bg-black/80 border border-white/40 text-transparent hover:border-white'} items-center justify-center transition-all cursor-pointer"
+              onclick="event.stopPropagation(); toggleCardSelection('${anilistId}', '${escapeJsString(title)}');">
+              <span class="material-symbols-outlined text-[16px] font-black">${isSelected ? 'check' : ''}</span>
+            </div>
+
+            <div class="relative w-full aspect-video overflow-hidden bg-surface-container-highest">
+              <img src="${banner}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='Postes/spyfamS3p.jpg';" />
+              <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent pointer-events-none"></div>
+              
+              <div class="absolute top-2.5 ${batchEditActive ? 'left-10' : 'left-2.5'} flex items-center gap-1 transition-all pointer-events-none">
+                <span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-sm text-[10px] font-bold">4K OLED</span>
+                <span class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-label-sm text-[10px] font-bold shadow-[0_0_8px_#ff506e]">SUB/DUB</span>
+              </div>
+
+              <!-- Quick Delete single button -->
+              <button type="button" class="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full bg-black/60 hover:bg-red-500/80 text-outline hover:text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-md ${batchEditActive ? 'hidden' : 'flex'}"
+                onclick="deleteSingleHistoryItem('${anilistId}', '${escapeJsString(title)}', event);" title="Remove from history">
+                <span class="material-symbols-outlined text-[14px]">close</span>
+              </button>
+
+              <!-- Floating Resume pill -->
+              <div class="absolute bottom-2 right-2 flex items-center ${batchEditActive ? 'hidden' : 'flex'}">
+                <button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-white font-label-sm text-[11px] font-bold shadow-[0_0_16px_rgba(255,80,110,0.8)] active:scale-95 transition-all cursor-pointer"
+                  onclick="event.stopPropagation(); window.location.href='${playUrl}'">
+                  <span class="material-symbols-outlined text-[14px]">play_arrow</span>
+                  <span>Resume</span>
+                </button>
+              </div>
+
+              <!-- Neon Scrubber Progress Ribbon -->
+              <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-container-highest pointer-events-none">
+                <div class="h-full bg-primary-container shadow-[0_0_10px_#ff506e]" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+
+            <div class="p-space-md flex flex-col justify-between flex-1 gap-space-sm">
+              <div>
+                <div class="flex items-center justify-between gap-space-xs mb-1">
+                  <span class="font-label-sm text-[11px] text-secondary-container font-semibold uppercase tracking-wider">EPISODE ${ep}</span>
+                  <span class="font-label-sm text-[11px] text-outline font-mono">${percent}% watched</span>
+                </div>
+                <h3 class="font-headline-sm text-sm text-on-surface font-bold leading-tight line-clamp-1 group-hover:text-primary transition-colors">${escapeHtml(title)}</h3>
+              </div>
+              <div class="flex items-center justify-between text-outline font-label-sm text-[11px]">
+                <span class="text-secondary-fixed">Resume Episode ${ep}</span>
+                <span class="material-symbols-outlined text-[16px] text-outline hover:text-white">cast</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHistoryGrid() {
+      const histGrid = document.getElementById('historyGrid');
+      if (!histGrid) return;
+
+      if (savedHistoryItems.length === 0) {
         histGrid.innerHTML = `
           <div class="col-span-full py-16 text-center text-outline">
             <span class="material-symbols-outlined text-[48px] text-secondary-container block mx-auto mb-3">history</span>
@@ -1106,32 +1240,88 @@
             </a>
           </div>
         `;
-      } else {
-        histGrid.innerHTML = historyList.map(item => {
-          const anilistId = item.lunarId || item.anilistId || item.id;
-          const ep = item.episodeNumber || 1;
-          const title = item.title || 'Anime Series';
-          const poster = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
-          const percent = Math.min(100, Math.max(1, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
-          const playUrl = `/watch?id=${anilistId}&ep=${ep}`;
+        return;
+      }
 
-          return `
-            <div class="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-white/5">
-              <img src="${poster}" alt="${title}" class="w-16 h-20 rounded-xl object-cover flex-shrink-0 bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'" onerror="this.src='Postes/spyfamS3p.jpg';" />
-              <div class="flex-1 min-w-0 flex flex-col gap-1">
-                <h4 class="text-white font-bold text-xs truncate cursor-pointer hover:text-secondary transition-colors" onclick="window.location.href='${playUrl}'">${title}</h4>
-                <div class="text-[11px] text-secondary-container font-semibold">Episode ${ep} • ${percent}%</div>
-                <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden mt-1">
-                  <div class="h-full bg-secondary-container shadow-[0_0_8px_#00eefc]" style="width: ${percent}%;"></div>
-                </div>
+      histGrid.innerHTML = savedHistoryItems.map(item => {
+        const anilistId = String(item.lunarId || item.anilistId || item.id);
+        const ep = item.episodeNumber || 1;
+        const title = item.title || 'Anime Series';
+        const poster = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
+        const percent = Math.min(100, Math.max(1, item.percent || (item.duration ? Math.round((item.progress / item.duration) * 100) : 0)));
+        const playUrl = `/watch?id=${anilistId}&ep=${ep}`;
+        const isSelected = selectedItems.has(anilistId);
+
+        return `
+          <div class="group relative flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-white/5 cursor-pointer ${isSelected ? 'ring-2 ring-secondary-container shadow-[0_0_20px_rgba(0,238,252,0.4)]' : ''}"
+            data-anime-key="${anilistId}" data-anime-title="${escapeHtml(title)}"
+            onclick="handleCardClick('${anilistId}', '${escapeJsString(title)}', '${playUrl}', event)">
+
+            <!-- Selection Checkbox -->
+            <div class="batch-checkbox ${isSelected ? 'selected' : ''} ${batchEditActive ? 'flex' : 'hidden'} absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-lg ${isSelected ? 'bg-secondary-container text-surface-container-lowest shadow-[0_0_12px_#00eefc]' : 'bg-black/80 border border-white/40 text-transparent hover:border-white'} items-center justify-center transition-all cursor-pointer"
+              onclick="event.stopPropagation(); toggleCardSelection('${anilistId}', '${escapeJsString(title)}');">
+              <span class="material-symbols-outlined text-[16px] font-black">${isSelected ? 'check' : ''}</span>
+            </div>
+
+            <div class="relative w-16 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest ${batchEditActive ? 'ml-6' : ''} transition-all">
+              <img src="${poster}" alt="${escapeHtml(title)}" class="w-full h-full object-cover" onerror="this.src='Postes/spyfamS3p.jpg';" />
+            </div>
+
+            <div class="flex-1 min-w-0 flex flex-col gap-1">
+              <h4 class="text-white font-bold text-xs truncate hover:text-secondary transition-colors">${escapeHtml(title)}</h4>
+              <div class="text-[11px] text-secondary-container font-semibold">Episode ${ep} • ${percent}%</div>
+              <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden mt-1">
+                <div class="h-full bg-secondary-container shadow-[0_0_8px_#00eefc]" style="width: ${percent}%;"></div>
               </div>
-              <a href="${playUrl}" class="p-2.5 rounded-xl bg-surface-container-high hover:bg-primary-container text-white hover:text-on-primary-container transition-all flex items-center justify-center flex-shrink-0 cursor-pointer shadow-sm">
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-shrink-0 ${batchEditActive ? 'hidden' : 'flex'}">
+              <a href="${playUrl}" class="p-2.5 rounded-xl bg-surface-container-high hover:bg-primary-container text-white hover:text-on-primary-container transition-all flex items-center justify-center cursor-pointer shadow-sm">
                 <span class="material-symbols-outlined text-[18px]">play_arrow</span>
               </a>
+              <button type="button" onclick="deleteSingleHistoryItem('${anilistId}', '${escapeJsString(title)}', event)" class="p-2.5 rounded-xl bg-surface-container-high hover:bg-red-500/20 text-outline hover:text-red-400 transition-colors flex items-center justify-center cursor-pointer shadow-sm" title="Remove from history">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
             </div>
-          `;
-        }).join('');
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteSingleHistoryItem(animeId, animeTitle, event) {
+      if (event) event.stopPropagation();
+      const title = animeTitle || 'Anime';
+
+      let historyList = [];
+      try {
+        const raw = localStorage.getItem('@infinx_continue_watching');
+        if (raw) historyList = JSON.parse(raw);
+        if (!Array.isArray(historyList)) historyList = [];
+      } catch (e) { }
+
+      historyList = historyList.filter(item => {
+        const k = String(item.lunarId || item.anilistId || item.showId || item.id);
+        return k !== String(animeId);
+      });
+      localStorage.setItem('@infinx_continue_watching', JSON.stringify(historyList));
+      savedHistoryItems = historyList;
+
+      const token = localStorage.getItem('infinx_token');
+      if (token) {
+        try {
+          await fetch(`${API_BASE}/user/history`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ lunarId: animeId, episodeId: animeId, ids: [animeId] })
+          });
+        } catch (err) { }
       }
+
+      await loadHistoryData();
+      showToast(`Removed "${title}" from watch history.`);
     }
 
     // 8. Clear History Action
@@ -1157,71 +1347,6 @@
       }
       await loadHistoryData();
       showToast('Streaming telemetry history purged successfully.');
-    }
-
-    // 9. Genre / Matrix Data
-    async function loadMatrixData() {
-      const matGrid = document.getElementById('matrixGrid');
-      const matCount = document.getElementById('matrixCount');
-      const chipsRail = document.getElementById('categoryChipsRail');
-
-      matGrid.innerHTML = `
-        <div class="col-span-full py-16 text-center text-outline text-xs">
-          <span class="material-symbols-outlined text-[36px] text-tertiary animate-spin block mx-auto mb-2">progress_activity</span>
-          Loading Master Catalog Genres...
-        </div>
-      `;
-
-      try {
-        const res = await fetch(`${API_BASE}/shows/categories`);
-        if (!res.ok) throw new Error('Failed to load categories');
-        const categories = await res.json();
-
-        // Render chips
-        chipsRail.innerHTML = categories.map(c => `
-          <button class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-secondary-container/20 hover:text-secondary-container text-on-surface font-label-md text-xs flex items-center gap-2 transition-all cursor-pointer border border-white/5" onclick="filterByGenre('${c.id}')">
-            <span class="w-2 h-2 rounded-full bg-secondary-container"></span>
-            <span>${c.name}</span>
-            <span class="text-outline font-mono text-[10px]">${(c.shows || []).length}</span>
-          </button>
-        `).join('');
-
-        let allShows = [];
-        categories.forEach(c => {
-          if (Array.isArray(c.shows)) {
-            c.shows.forEach(s => {
-              if (!allShows.some(existing => existing.id === s.id)) {
-                allShows.push(s);
-              }
-            });
-          }
-        });
-
-        matCount.textContent = `${allShows.length} titles available`;
-        matGrid.innerHTML = allShows.slice(0, 24).map(item => {
-          const playUrl = `/watch?id=${item.id}`;
-          const posterUrl = item.poster ? (item.poster.startsWith('http') ? item.poster : window.formatMediaUrl(item.poster)) : 'Postes/spyfamS3p.jpg';
-          return `
-            <div class="group relative flex flex-col rounded-xl overflow-hidden bg-surface-container-low border border-white/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_0_24px_rgba(160,120,255,0.4)]">
-              <div class="relative w-full aspect-[2/3] overflow-hidden bg-surface-container-highest cursor-pointer" onclick="window.location.href='${playUrl}'">
-                <img src="${posterUrl}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='Postes/spyfamS3p.jpg';" />
-                <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-black/60 pointer-events-none"></div>
-                <div class="absolute top-2 right-2 pointer-events-none">
-                  <span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-[9px] text-secondary-container font-extrabold border border-secondary-container/30">
-                    ★ ${item.rating || '8.5'}
-                  </span>
-                </div>
-              </div>
-              <div class="p-2.5 flex flex-col gap-0.5">
-                <h4 class="text-xs font-bold text-white truncate group-hover:text-tertiary transition-colors">${item.title}</h4>
-                <div class="text-[10px] text-outline">${item.year || '2025'} • 1080p</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        matGrid.innerHTML = `<div class="col-span-full py-16 text-center text-outline text-xs">Failed to load categories from node.</div>`;
-      }
     }
 
     // 10. Live Search
@@ -1288,34 +1413,271 @@
       setTimeout(() => toast.remove(), 3500);
     }
 
-    // 12. Batch Edit & Export
-    function toggleBatchEdit() {
-      batchEditActive = !batchEditActive;
-      const btnText = document.getElementById('batchEditBtnText');
+    // 12. Batch Multi-Select & History Purge Engine
+    function handleCardClick(itemKey, title, playUrl, event) {
       if (batchEditActive) {
-        btnText.textContent = 'Exit Batch';
-        showToast('Batch Selection Active: Click cards to multi-select.');
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        toggleCardSelection(itemKey, title);
       } else {
-        btnText.textContent = 'Batch Edit';
-        showToast('Batch Selection Closed.');
+        window.location.href = playUrl;
       }
     }
 
-    function exportMatrix() {
-      const exportData = {
-        exportedAt: new Date().toISOString(),
-        version: "4.8",
-        watchlist: savedWatchlistItems,
-        history: savedHistoryItems
-      };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `infinx_anime_matrix_${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Anime Vault Matrix Exported as JSON.');
+    function toggleCardSelection(itemKey, title) {
+      const sKey = String(itemKey);
+      if (selectedItems.has(sKey)) {
+        selectedItems.delete(sKey);
+      } else {
+        selectedItems.set(sKey, { id: sKey, title: title || 'Anime Series' });
+      }
+      updateBatchUI();
+    }
+
+    function getCurrentlyVisibleItemKeys() {
+      const visible = [];
+      document.querySelectorAll('[data-anime-key]').forEach(el => {
+        const key = el.getAttribute('data-anime-key');
+        const title = el.getAttribute('data-anime-title') || 'Anime Series';
+        if (key && !visible.some(v => v.key === key)) {
+          visible.push({ key, title });
+        }
+      });
+      return visible;
+    }
+
+    function toggleSelectAll() {
+      const visible = getCurrentlyVisibleItemKeys();
+      if (visible.length === 0) return;
+
+      const allSelected = visible.every(v => selectedItems.has(v.key));
+      if (allSelected) {
+        visible.forEach(v => selectedItems.delete(v.key));
+      } else {
+        visible.forEach(v => {
+          selectedItems.set(v.key, { id: v.key, title: v.title });
+        });
+      }
+      updateBatchUI();
+    }
+
+    function updateBatchUI() {
+      const count = selectedItems.size;
+      const countBadge = document.getElementById('batchSelectedCount');
+      if (countBadge) countBadge.textContent = count;
+
+      const selectAllBtn = document.getElementById('batchSelectAllBtn');
+      if (selectAllBtn) {
+        const visible = getCurrentlyVisibleItemKeys();
+        if (visible.length > 0 && count >= visible.length) {
+          selectAllBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">deselect</span><span>Deselect All</span>';
+        } else {
+          selectAllBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">select_all</span><span>Select All</span>';
+        }
+      }
+
+      // Live update cards visually
+      document.querySelectorAll('[data-anime-key]').forEach(el => {
+        const key = el.getAttribute('data-anime-key');
+        const isSelected = selectedItems.has(key);
+        const box = el.querySelector('.batch-checkbox');
+        if (box) {
+          if (batchEditActive) {
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+          } else {
+            box.classList.add('hidden');
+            box.classList.remove('flex');
+          }
+
+          if (isSelected) {
+            box.className = 'batch-checkbox selected flex absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-lg bg-secondary-container text-surface-container-lowest shadow-[0_0_12px_#00eefc] items-center justify-center transition-all cursor-pointer';
+            box.innerHTML = '<span class="material-symbols-outlined text-[16px] font-black">check</span>';
+            el.classList.add('ring-2', 'ring-secondary-container', 'shadow-[0_0_20px_rgba(0,238,252,0.4)]');
+          } else {
+            box.className = 'batch-checkbox flex absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-lg bg-black/80 border border-white/40 text-transparent hover:border-white items-center justify-center transition-all cursor-pointer';
+            box.innerHTML = '';
+            el.classList.remove('ring-2', 'ring-secondary-container', 'shadow-[0_0_20px_rgba(0,238,252,0.4)]');
+          }
+        }
+      });
+
+      // Enable/disable action delete buttons
+      document.querySelectorAll('.batch-action-delete').forEach(btn => {
+        if (count === 0) {
+          btn.classList.add('opacity-50', 'pointer-events-none');
+        } else {
+          btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+      });
+
+      // Show/hide watchlist specific button depending on active tab
+      const batchWlBtn = document.getElementById('batchWlDeleteBtn');
+      if (batchWlBtn) {
+        batchWlBtn.style.display = (activeTab === 'watchlist') ? 'inline-flex' : 'none';
+      }
+    }
+
+    function toggleBatchEdit(forceState) {
+      if (typeof forceState === 'boolean') {
+        batchEditActive = forceState;
+      } else {
+        batchEditActive = !batchEditActive;
+      }
+
+      const btnText = document.getElementById('batchEditBtnText');
+      const btnIcon = document.querySelector('#btn-batch-edit .material-symbols-outlined');
+      const actionDock = document.getElementById('batchActionDock');
+
+      document.querySelectorAll('.batch-select-label').forEach(lbl => {
+        lbl.textContent = batchEditActive ? 'Exit' : (lbl.closest('#btn-batch-toggle-hist') ? 'Select Multiple' : 'Select');
+      });
+
+      if (batchEditActive) {
+        if (btnText) btnText.textContent = 'Exit Selection';
+        if (btnIcon) btnIcon.textContent = 'close';
+        document.getElementById('btn-batch-edit')?.classList.add('bg-secondary-container/20', 'text-secondary', 'border-secondary-container/40', 'shadow-[0_0_16px_rgba(0,238,252,0.3)]');
+        if (actionDock) actionDock.classList.remove('hidden');
+        showToast('Batch Selection Active: Click anime cards to select.');
+      } else {
+        if (btnText) btnText.textContent = 'Batch Edit';
+        if (btnIcon) btnIcon.textContent = 'tune';
+        document.getElementById('btn-batch-edit')?.classList.remove('bg-secondary-container/20', 'text-secondary', 'border-secondary-container/40', 'shadow-[0_0_16px_rgba(0,238,252,0.3)]');
+        if (actionDock) actionDock.classList.add('hidden');
+        selectedItems.clear();
+      }
+
+      // Re-render views to apply interactive batch states
+      if (activeTab === 'watchlist') {
+        renderWatchlist();
+        renderCurrentlyWatchingRail();
+      } else if (activeTab === 'history') {
+        renderHistoryGrid();
+      }
+      updateBatchUI();
+    }
+
+    function promptBatchDelete(type) {
+      if (selectedItems.size === 0) {
+        showToast('Please select at least one anime first.');
+        return;
+      }
+      pendingBatchActionType = type || 'history';
+      const count = selectedItems.size;
+      const modal = document.getElementById('batch-delete-modal');
+      const countEl = document.getElementById('batchModalCount');
+      const titleEl = document.getElementById('batchModalTitle');
+      const msgEl = document.getElementById('batchModalMessage');
+      const preview = document.getElementById('batchSelectedListPreview');
+      const wlRow = document.getElementById('batchAlsoWatchlistRow');
+
+      if (countEl) countEl.textContent = count;
+      if (type === 'history') {
+        if (titleEl) titleEl.textContent = `Delete ${count} Anime from History?`;
+        if (msgEl) msgEl.innerHTML = `This will permanently remove telemetry records, episode progress, and resume markers for <strong class="text-white">${count} selected anime</strong>.`;
+        if (wlRow) wlRow.style.display = 'flex';
+      } else {
+        if (titleEl) titleEl.textContent = `Remove ${count} Anime from Watchlist?`;
+        if (msgEl) msgEl.innerHTML = `This will remove <strong class="text-white">${count} selected anime</strong> from your saved Watchlist Vault.`;
+        if (wlRow) wlRow.style.display = 'none';
+      }
+
+      if (preview) {
+        preview.innerHTML = Array.from(selectedItems.values()).map(it => `
+          <div class="flex items-center justify-between py-1 px-2.5 rounded-lg bg-surface-container-high/60 border border-white/5">
+            <span class="truncate font-semibold text-white">${escapeHtml(it.title)}</span>
+            <span class="text-[10px] text-outline font-mono ml-2">ID: ${it.id}</span>
+          </div>
+        `).join('');
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeBatchDeleteModal() {
+      document.getElementById('batch-delete-modal')?.classList.add('hidden');
+    }
+
+    async function executeBatchDelete() {
+      closeBatchDeleteModal();
+      const count = selectedItems.size;
+      if (count === 0) return;
+
+      const selectedKeys = Array.from(selectedItems.keys());
+      const alsoDeleteWl = document.getElementById('batchAlsoDeleteWlCheckbox')?.checked;
+      const token = localStorage.getItem('infinx_token');
+
+      if (pendingBatchActionType === 'history' || alsoDeleteWl) {
+        // 1. Remove from localStorage @infinx_continue_watching
+        let historyList = [];
+        try {
+          const raw = localStorage.getItem('@infinx_continue_watching');
+          if (raw) historyList = JSON.parse(raw);
+          if (!Array.isArray(historyList)) historyList = [];
+        } catch (e) { }
+
+        historyList = historyList.filter(item => {
+          const k = String(item.lunarId || item.anilistId || item.showId || item.id);
+          return !selectedKeys.includes(k);
+        });
+        localStorage.setItem('@infinx_continue_watching', JSON.stringify(historyList));
+        savedHistoryItems = historyList;
+
+        // 2. Sync backend DELETE /api/user/history
+        if (token) {
+          try {
+            await fetch(`${API_BASE}/user/history`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ ids: selectedKeys, lunarIds: selectedKeys })
+            });
+          } catch (err) {
+            console.warn('Backend history delete failed:', err);
+          }
+        }
+      }
+
+      if (pendingBatchActionType === 'watchlist' || alsoDeleteWl) {
+        // 1. Remove from localStorage infinx_watchlist
+        savedWatchlistItems = savedWatchlistItems.filter(item => {
+          const k = String(item.id || item.lunarId || item.anilistId);
+          return !selectedKeys.includes(k);
+        });
+        localStorage.setItem('infinx_watchlist', JSON.stringify(savedWatchlistItems));
+
+        // 2. Sync backend DELETE /api/user/watchlist
+        if (token) {
+          try {
+            await fetch(`${API_BASE}/user/watchlist`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ showIds: selectedKeys })
+            });
+          } catch (err) {
+            console.warn('Backend watchlist delete failed:', err);
+          }
+        }
+      }
+
+      // Reload & re-render
+      await loadWatchlistData();
+      await loadHistoryData();
+
+      // Reset selection mode
+      toggleBatchEdit(false);
+
+      const actionMsg = pendingBatchActionType === 'history'
+        ? `Deleted ${count} anime from watch history.`
+        : `Removed ${count} anime from watchlist.`;
+      showToast(actionMsg);
     }
 
     function setWatchlistView(view) {

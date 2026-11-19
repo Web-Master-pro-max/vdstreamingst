@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const term = this.value.trim();
         if (term) {
           if (liveDropdown) liveDropdown.style.display = 'none';
-          window.location.href = `view.html#search?q=${encodeURIComponent(term)}`;
+          window.location.href = `anime.html?search=${encodeURIComponent(term)}`;
         }
       }
     });
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const term = this.value.trim();
         if (term) {
           if (mobileSearchOverlay) mobileSearchOverlay.classList.remove('active');
-          window.location.href = `view.html#search?q=${encodeURIComponent(term)}`;
+          window.location.href = `anime.html?search=${encodeURIComponent(term)}`;
         }
       }
     });

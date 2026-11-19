@@ -255,7 +255,7 @@
 
     // Genres grid items HTML
     const genresItemsHtml = GENRES_LIST.map(g => `
-      <a href="${prefix}view.html#${g.slug}" class="dropdown-item">
+      <a href="${prefix}anime.html?genre=${g.slug}" class="dropdown-item">
         <i class="fas ${g.icon}"></i>
         <span>${g.name}</span>
       </a>
@@ -263,7 +263,7 @@
 
     // Categories items HTML
     const categoriesItemsHtml = CATEGORIES_LIST.map(c => `
-      <a href="${c.isAnimeHub ? `${prefix}anime.html` : `${prefix}view.html#${c.slug}`}" class="dropdown-item">
+      <a href="${c.isAnimeHub ? `${prefix}anime.html` : `${prefix}anime.html?category=${c.slug}`}" class="dropdown-item">
         <i class="fas ${c.icon}"></i>
         <span>${c.name}</span>
       </a>
@@ -399,14 +399,14 @@
     const prefix = getPathPrefix();
 
     const genresDrawerItems = GENRES_LIST.map(g => `
-      <a href="${prefix}view.html#${g.slug}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-secondary-container/15 transition-all">
+      <a href="${prefix}anime.html?genre=${g.slug}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-secondary-container/15 transition-all">
         <i class="fas ${g.icon} text-primary-container text-xs w-4"></i>
         <span>${g.name}</span>
       </a>
     `).join('');
 
     const categoriesDrawerItems = CATEGORIES_LIST.map(c => `
-      <a href="${c.isAnimeHub ? `${prefix}anime.html` : `${prefix}view.html#${c.slug}`}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-primary-container/15 transition-all">
+      <a href="${c.isAnimeHub ? `${prefix}anime.html` : `${prefix}anime.html?category=${c.slug}`}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-primary-container/15 transition-all">
         <i class="fas ${c.icon} text-primary-container text-xs w-4"></i>
         <span>${c.name}</span>
       </a>
@@ -782,6 +782,10 @@
     });
 
     document.addEventListener('click', function (e) {
+      if (e.target.closest('.dropdown-item')) {
+        document.querySelectorAll('.nav-item-dropdown').forEach(d => d.classList.remove('active'));
+        return;
+      }
       if (!e.target.closest('.nav-item-dropdown')) {
         document.querySelectorAll('.nav-item-dropdown').forEach(d => d.classList.remove('active'));
       }

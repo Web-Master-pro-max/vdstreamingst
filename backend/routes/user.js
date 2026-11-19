@@ -101,6 +101,34 @@ router.post('/watchlist', authenticate, async (req, res) => {
   }
 });
 
+// Delete show(s) from watchlist
+router.delete('/watchlist', authenticate, async (req, res) => {
+  try {
+    const { showId, showIds } = req.body || req.query || {};
+    const ids = [];
+    if (showId) ids.push(showId);
+    if (Array.isArray(showIds)) ids.push(...showIds);
+
+    if (ids.length > 0) {
+      const numIds = ids.map(id => parseInt(id, 10)).filter(n => !isNaN(n));
+      if (numIds.length > 0) {
+        await prisma.watchlist.deleteMany({
+          where: {
+            userId: req.user.id,
+            showId: { in: numIds }
+          }
+        });
+      }
+      return res.json({ success: true, message: `${ids.length} items removed from watchlist.` });
+    }
+
+    res.status(400).json({ error: 'No showId or showIds provided.' });
+  } catch (error) {
+    console.error('Error deleting from watchlist:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 const fs = require('fs');
 const path = require('path');
 
@@ -643,32 +671,124 @@ router.post('/history', authenticate, async (req, res) => {
   }
 });
 
-// Clear or Delete watch history
+// Clear or Delete watch history (single or batch)
 router.delete('/history', authenticate, async (req, res) => {
   try {
-    const { episodeId, lunarId } = req.query || {};
+    const query = req.query || {};
+    const body = req.body || {};
 
-    if (episodeId) {
-      await prisma.watchHistory.deleteMany({
-        where: {
-          userId: req.user.id,
-          episodeId: parseInt(episodeId)
+    const episodeId = body.episodeId || query.episodeId;
+    const lunarId = body.lunarId || query.lunarId;
+    const episodeIds = body.episodeIds || (query.episodeIds ? String(query.episodeIds).split(',') : []);
+    const lunarIds = body.lunarIds || (query.lunarIds ? String(query.lunarIds).split(',') : []);
+    const rawIds = body.ids || (query.ids ? String(query.ids).split(',') : []);
+
+    const allLunarIds = new Set();
+    const allEpisodeIds = new Set();
+    const allShowIds = new Set();
+
+    if (lunarId) allLunarIds.add(String(lunarId));
+    if (episodeId) allEpisodeIds.add(parseInt(episodeId, 10));
+
+    (Array.isArray(lunarIds) ? lunarIds : [lunarIds]).forEach(id => {
+      if (id) allLunarIds.add(String(id));
+    });
+
+    (Array.isArray(episodeIds) ? episodeIds : [episodeIds]).forEach(id => {
+      const n = parseInt(id, 10);
+      if (!isNaN(n)) allEpisodeIds.add(n);
+    });
+
+    (Array.isArray(rawIds) ? rawIds : [rawIds]).forEach(rawId => {
+      if (!rawId) return;
+      const s = String(rawId);
+      if (s.startsWith('lunar-')) {
+        const parts = s.split('-');
+        if (parts[1]) allLunarIds.add(parts[1]);
+      } else if (!isNaN(Number(s))) {
+        allLunarIds.add(s);
+        allShowIds.add(parseInt(s, 10));
+        allEpisodeIds.add(parseInt(s, 10));
+      } else {
+        allLunarIds.add(s);
+      }
+    });
+
+    const isSpecificDelete = allLunarIds.size > 0 || allEpisodeIds.size > 0 || allShowIds.size > 0;
+
+    if (isSpecificDelete) {
+      // 1. Prisma watch history
+      const orClauses = [];
+      if (allEpisodeIds.size > 0) {
+        orClauses.push({ episodeId: { in: Array.from(allEpisodeIds) } });
+      }
+      if (allShowIds.size > 0) {
+        orClauses.push({ episode: { showId: { in: Array.from(allShowIds) } } });
+      }
+      if (orClauses.length > 0) {
+        try {
+          await prisma.watchHistory.deleteMany({
+            where: {
+              userId: req.user.id,
+              OR: orClauses
+            }
+          });
+        } catch (dbErr) {
+          console.warn('Prisma watchHistory delete error:', dbErr.message);
         }
-      });
-      return res.json({ success: true, message: 'Episode removed from history' });
-    }
+      }
 
-    if (lunarId) {
-      if (fs.existsSync(ANIME_HISTORY_FILE)) {
+      // 2. Anime History File (anime_history.json)
+      if (fs.existsSync(ANIME_HISTORY_FILE) && allLunarIds.size > 0) {
         try {
           const data = JSON.parse(fs.readFileSync(ANIME_HISTORY_FILE, 'utf8') || '{}');
           if (Array.isArray(data[req.user.id])) {
-            data[req.user.id] = data[req.user.id].filter(item => String(item.lunarId || item.anilistId) !== String(lunarId));
-            fs.writeFileSync(ANIME_HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+            data[req.user.id] = data[req.user.id].filter(item => {
+              const itemKey = String(item.lunarId || item.anilistId || item.id || '');
+              return !allLunarIds.has(itemKey);
+            });
+            const tempFile = path.join(ANIME_HISTORY_DIR, `anime_history_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+            fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+            fs.renameSync(tempFile, ANIME_HISTORY_FILE);
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('Error filtering anime_history.json:', e);
+        }
       }
-      return res.json({ success: true, message: 'Anime removed from history' });
+
+      // 3. Watched Episodes File (watched_episodes.json)
+      if (fs.existsSync(WATCHED_EPISODES_FILE)) {
+        try {
+          const data = JSON.parse(fs.readFileSync(WATCHED_EPISODES_FILE, 'utf8') || '{}');
+          if (data[req.user.id]) {
+            const userWatched = data[req.user.id];
+            let modified = false;
+            Object.keys(userWatched).forEach(epKey => {
+              for (const lid of allLunarIds) {
+                if (epKey.startsWith(`lunar-${lid}-`) || epKey === `lunar-${lid}` || epKey === String(lid)) {
+                  delete userWatched[epKey];
+                  modified = true;
+                  break;
+                }
+              }
+              for (const epid of allEpisodeIds) {
+                if (epKey === `db-${epid}` || epKey === String(epid)) {
+                  delete userWatched[epKey];
+                  modified = true;
+                  break;
+                }
+              }
+            });
+            if (modified) {
+              saveUserWatchedEpisodes(req.user.id, userWatched);
+            }
+          }
+        } catch (e) {
+          console.error('Error filtering watched_episodes.json:', e);
+        }
+      }
+
+      return res.json({ success: true, message: 'Selected anime removed from history' });
     }
 
     // Clear all history
@@ -680,7 +800,19 @@ router.delete('/history', authenticate, async (req, res) => {
       try {
         const data = JSON.parse(fs.readFileSync(ANIME_HISTORY_FILE, 'utf8') || '{}');
         delete data[req.user.id];
-        fs.writeFileSync(ANIME_HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+        const tempFile = path.join(ANIME_HISTORY_DIR, `anime_history_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+        fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+        fs.renameSync(tempFile, ANIME_HISTORY_FILE);
+      } catch (e) {}
+    }
+
+    if (fs.existsSync(WATCHED_EPISODES_FILE)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(WATCHED_EPISODES_FILE, 'utf8') || '{}');
+        delete data[req.user.id];
+        const tempFile = path.join(ANIME_HISTORY_DIR, `watched_episodes_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+        fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+        fs.renameSync(tempFile, WATCHED_EPISODES_FILE);
       } catch (e) {}
     }
 

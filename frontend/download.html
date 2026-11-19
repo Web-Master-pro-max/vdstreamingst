@@ -1502,7 +1502,7 @@
 
           targetContainer.innerHTML = `
             ${itemsHtml}
-            <div class="live-search-footer" onclick="window.location.href='view.html#search?q=${encodeURIComponent(query)}'">
+            <div class="live-search-footer" onclick="window.location.href='anime.html?search=${encodeURIComponent(query)}'">
               View all results for "${query}" <i class="fas fa-arrow-right ml-1"></i>
             </div>
           `;
@@ -1526,7 +1526,7 @@
             const term = this.value.trim();
             if (term) {
               liveDropdown.style.display = 'none';
-              window.location.href = `view.html#search?q=${encodeURIComponent(term)}`;
+              window.location.href = `anime.html?search=${encodeURIComponent(term)}`;
             }
           }
         });
@@ -1579,7 +1579,7 @@
             const term = this.value.trim();
             if (term) {
               if (mobileSearchOverlay) mobileSearchOverlay.classList.remove('active');
-              window.location.href = `view.html#search?q=${encodeURIComponent(term)}`;
+              window.location.href = `anime.html?search=${encodeURIComponent(term)}`;
             }
           }
         });

@@ -271,10 +271,17 @@
       "showTitle": "Tsun M!: Gyutto Shibatte Shidoushite THE ANIMATION",
       "poster": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101021-Aos9u0966UQA.jpg",
       "banner": "",
-      "progress": 744,
+      "progress": 1356,
       "duration": 1529,
-      "completed": false,
-      "lastWatchedAt": "2026-11-19T07:16:51.226Z"
+      "completed": true,
+      "lastWatchedAt": "2026-11-19T07:23:07.525Z",
+      "amount": 10,
+      "reason": "episode_watched",
+      "inWatchParty": false,
+      "watchTime": 121,
+      "watchCoverage": 0.41,
+      "xpAwarded": true,
+      "xpAwardedAt": "2026-11-19T07:19:42.181Z"
     }
   }
 }

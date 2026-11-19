@@ -1,36 +1,4 @@
 {
-  "1": [
-    {
-      "id": "lunar-101021-1",
-      "userId": 1,
-      "isLunar": true,
-      "lunarId": "101021",
-      "episodeId": "lunar-101021-1",
-      "episodeNumber": 1,
-      "episodeTitle": "Episode 1",
-      "showTitle": "Tsun M!: Gyutto Shibatte Shidoushite THE ANIMATION",
-      "poster": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101021-Aos9u0966UQA.jpg",
-      "banner": "",
-      "progress": 744,
-      "duration": 1529,
-      "watchedAt": "2026-11-19T07:16:51.225Z"
-    },
-    {
-      "id": "lunar-191656-1",
-      "userId": 1,
-      "isLunar": true,
-      "lunarId": "191656",
-      "episodeId": "lunar-191656-1",
-      "episodeNumber": 1,
-      "episodeTitle": "オスガキにも穴はあるんだよな…／かいちょーは梅くんに貰われました",
-      "showTitle": "Even the Student Council Has Its Holes!",
-      "poster": "https://artworks.thetvdb.com/banners/v4/series/463051/posters/680e1e60858db.jpg",
-      "banner": "",
-      "progress": 516,
-      "duration": 1419,
-      "watchedAt": "2026-11-19T07:14:16.238Z"
-    }
-  ],
   "6": [
     {
       "id": "lunar-21-387",

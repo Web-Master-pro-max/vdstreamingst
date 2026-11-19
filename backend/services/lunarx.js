@@ -1237,10 +1237,10 @@ class LunarXService {
           let upRef = 'https://lunarx.to/';
           let upOrig = 'https://lunarx.to';
           if (
-            decrypted3rd.includes('nexabloom') || 
-            decrypted3rd.includes('voyage') || 
-            decrypted3rd.includes('megaplay') || 
-            decrypted3rd.includes('horizon') || 
+            decrypted3rd.includes('nexabloom') ||
+            decrypted3rd.includes('voyage') ||
+            decrypted3rd.includes('megaplay') ||
+            decrypted3rd.includes('horizon') ||
             decrypted3rd.includes('broforgotsave') ||
             decrypted3rd.includes('playercdn') ||
             /\/anime\/[a-f0-9]{32}\//i.test(decrypted3rd)
@@ -1427,10 +1427,10 @@ class LunarXService {
             } else if (
               host === 'yuki' ||
               host === 'zuna' ||
-              candidateStreamUrl.includes('nexabloom') || 
-              candidateStreamUrl.includes('voyage') || 
-              candidateStreamUrl.includes('megaplay') || 
-              candidateStreamUrl.includes('horizon') || 
+              candidateStreamUrl.includes('nexabloom') ||
+              candidateStreamUrl.includes('voyage') ||
+              candidateStreamUrl.includes('megaplay') ||
+              candidateStreamUrl.includes('horizon') ||
               candidateStreamUrl.includes('broforgotsave') ||
               candidateStreamUrl.includes('playercdn') ||
               /\/anime\/[a-f0-9]{32}\//i.test(candidateStreamUrl) ||

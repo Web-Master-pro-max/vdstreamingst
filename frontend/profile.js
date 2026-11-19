@@ -1810,7 +1810,7 @@
         const q = searchInput.value.trim();
         if (q) {
           if (liveDropdown) liveDropdown.style.display = 'none';
-          window.location.href = `view.html#search?q=${encodeURIComponent(q)}`;
+          window.location.href = `anime.html?search=${encodeURIComponent(q)}`;
         }
       }
     });
@@ -1856,7 +1856,7 @@
             }).join('');
             liveDropdown.innerHTML = `
               ${itemsHtml}
-              <div class="live-search-footer" onclick="window.location.href='view.html#search?q=${encodeURIComponent(term)}'">
+              <div class="live-search-footer" onclick="window.location.href='anime.html?search=${encodeURIComponent(term)}'">
                 View all results for "${term}" <i class="fas fa-arrow-right"></i>
               </div>
             `;
