@@ -7,8 +7,8 @@ const { execSync } = require('child_process');
 const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = '2Ge3n6UhLVbnG4BhvrnuS9URbYzXvVOuhnTPmxUjhBsP0p9EiSd0eIPQIzBne3U50a8PNw';
-const DEFAULT_PITCH = 'eSJxouAM3xEUwToePzN5WOnjulogC5fs5sZTL6YDEeiqSKGhmtE8oX4RgEvVLJ0OlQKD5';
+const DEFAULT_AXIS = 'dYAJnhYq1W2nsJ4IzeHqXsLOvN6pkHkPDOqcwca7u4WNeUDB5B8qIywzIQXtBtA08up68MsIp';
+const DEFAULT_PITCH = 'uCw4lWbBvm4yFzY2CH2dc1xyjconkajmIez4hb4D6wawtqjsPcVP2oHd0gbnSLVBfTSJz6PkFmu9F';
 const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {
@@ -1011,8 +1011,13 @@ class LunarXService {
     try {
       console.log('[LunarX] Fetching verified cipher keys from remote repository...');
       const remoteRaw = await new Promise((resolve) => {
-        const req = https.get('https://raw.githubusercontent.com/Web-Master-pro-max/vdstreamingst/main/backend/data/lunarx_keys.json', {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' },
+        const bustUrl = `https://raw.githubusercontent.com/Web-Master-pro-max/vdstreamingst/main/backend/data/lunarx_keys.json?t=${Date.now()}`;
+        const req = https.get(bustUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          },
           timeout: 6000
         }, res => {
           if (res.statusCode === 200) {
@@ -1054,40 +1059,6 @@ class LunarXService {
     } catch (remoteErr) {
       console.warn('[LunarX] Remote key sync failed:', remoteErr.message);
     }
-
-    // 5. Alternate CDN fallback (jsDelivr CDN mirror of GitHub)
-    try {
-      const cdnRaw = await new Promise((resolve) => {
-        const req = https.get('https://cdn.jsdelivr.net/gh/Web-Master-pro-max/vdstreamingst@main/backend/data/lunarx_keys.json', {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-          timeout: 5000
-        }, res => {
-          if (res.statusCode === 200) {
-            let body = '';
-            res.on('data', chunk => body += chunk);
-            res.on('end', () => resolve(body));
-          } else {
-            resolve(null);
-          }
-        });
-        req.on('error', () => resolve(null));
-        req.setTimeout(5000, () => { req.destroy(); resolve(null); });
-      });
-      if (cdnRaw) {
-        const parsed = JSON.parse(cdnRaw);
-        if (parsed && parsed.axis && parsed.pitch) {
-          const isSame = this.axis === parsed.axis && this.pitch === parsed.pitch;
-          if (!isSame) {
-            console.log('[LunarX] Successfully synced cipher keys from jsDelivr CDN');
-            this.globalKeys = { axis: parsed.axis, pitch: parsed.pitch, timestamp: parsed.updatedAt || Date.now() };
-            this.axis = parsed.axis;
-            this.pitch = parsed.pitch;
-            this.saveKeysToDisk(parsed.axis, parsed.pitch);
-            return [parsed.axis, parsed.pitch];
-          }
-        }
-      }
-    } catch (cdnErr) { }
 
     // Fallback to loaded or default keys
     return [this.axis, this.pitch];
