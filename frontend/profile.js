@@ -1696,22 +1696,44 @@
     const avatarFrame = (safeProfile && safeProfile.avatarFrame) || localStorage.getItem('infinx_avatar_frame') || (parsedUser && parsedUser.avatarFrame) || 'default';
     const initial = (displayName || email || 'U')[0].toUpperCase();
 
+    // Keep localStorage synchronized so navbar.js renders the live state
+    if (safeProfile) {
+      if (username) localStorage.setItem('infinx_username', username);
+      if (role) localStorage.setItem('infinx_user_role', role);
+      if (avatarUrl) localStorage.setItem('infinx_avatar', avatarUrl);
+      if (avatarFrame) localStorage.setItem('infinx_avatar_frame', avatarFrame);
+    }
+
+    // Prefer universal master navbar updater from navbar.js if available
+    if (typeof window.updateAuthHeader === 'function') {
+      window.updateAuthHeader();
+      return;
+    }
+
+    const fallbackSrc = 'https://s4.anilist.co/file/anilistcdn/character/large/b129928-BCEjVaP0AQSw.png';
     const avatarHtml = avatarUrl
-      ? `<div class="user-avatar aura-${avatarFrame}" title="${displayName} (${email})"><img src="${avatarUrl}" alt="${displayName}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span style="display:none;">${initial}</span></div>`
-      : `<div class="user-avatar aura-${avatarFrame}" title="${displayName} (${email})">${initial}</div>`;
+      ? `<div class="user-avatar aura-${avatarFrame}" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;" title="${displayName} (${email})"><img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" onerror="if(this.src!=='${fallbackSrc}'){this.src='${fallbackSrc}';}else{this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';}" /><span style="display:none; font-weight:700; font-size:13px;">${initial}</span></div>`
+      : `<div class="user-avatar aura-${avatarFrame}" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight:700; font-size:13px;" title="${displayName} (${email})">${initial}</div>`;
 
     if (token) {
-      const adminLink = role === 'ADMIN' ? `<a href="/admin.html" class="nav-link" style="color: var(--secondary);"><i class="fas fa-lock"></i> Admin</a>` : '';
+      const adminLink = role === 'ADMIN' ?
+        `<a href="/admin.html" class="hidden sm:inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-surface-container-high text-secondary hover:text-white font-label-sm text-xs font-semibold hover:bg-surface-container-highest transition-all shrink-0"><span class="material-symbols-outlined text-[15px]">admin_panel_settings</span>Admin</a>` : '';
 
       if (authHeader) {
         authHeader.innerHTML = `
-          <div class="user-profile-menu">
+          <div class="user-profile-menu flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             ${adminLink}
-            <a href="/profile.html" class="nav-link profile-name-text"><i class="fas fa-user-ninja" style="color: var(--primary);"></i> <span>${displayName}</span></a>
-            <a href="/profile.html" class="user-avatar-link" title="View Profile (${displayName})">
+            <a href="/profile.html" class="profile-name-text text-xs sm:text-sm font-extrabold text-white hover:text-secondary-container transition-colors hidden sm:inline-flex items-center gap-1.5 shrink-0" title="View Profile (${displayName})">
+              <i class="fas fa-user-ninja text-primary-container text-xs sm:text-sm" style="color: #ff0055;"></i>
+              <span class="font-extrabold uppercase tracking-wide max-w-[85px] sm:max-w-[140px] md:max-w-[180px] truncate">${displayName}</span>
+            </a>
+            <a href="/profile.html" class="user-avatar-link shrink-0" title="View Profile (${displayName})">
               ${avatarHtml}
             </a>
-            <button class="btn btn-secondary btn-small" id="headerLogoutBtn">Logout</button>
+            <button class="hidden lg:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-red-950/40 text-on-surface-variant hover:text-red-400 font-label-sm text-xs font-semibold transition-all cursor-pointer shrink-0" id="headerLogoutBtn" type="button" title="Sign Out">
+              <span class="material-symbols-outlined text-[16px] align-middle">logout</span>
+              <span class="hidden xl:inline">Logout</span>
+            </button>
           </div>
         `;
         const logoutBtn = document.getElementById('headerLogoutBtn');
@@ -1720,8 +1742,8 @@
 
       if (drawerAuthHeader) {
         const drawerAvatarHtml = avatarUrl
-          ? `<div class="user-avatar aura-${avatarFrame}" style="width: 44px; height: 44px; flex-shrink: 0;"><img src="${avatarUrl}" alt="${displayName}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span style="display:none;">${initial}</span></div>`
-          : `<div class="user-avatar aura-${avatarFrame}" style="width: 44px; height: 44px; flex-shrink: 0;">${initial}</div>`;
+          ? `<div class="user-avatar aura-${avatarFrame}" style="width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><img src="${avatarUrl}" alt="${displayName}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span style="display:none;">${initial}</span></div>`
+          : `<div class="user-avatar aura-${avatarFrame}" style="width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</div>`;
 
         drawerAuthHeader.innerHTML = `
           <a href="/profile.html" style="text-decoration: none; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
@@ -1740,7 +1762,7 @@
       }
     } else {
       if (authHeader) {
-        authHeader.innerHTML = `<a href="login.html" class="btn btn-secondary btn-small">Sign In</a>`;
+        authHeader.innerHTML = `<a href="login.html" class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-xs sm:text-label-sm font-semibold transition-all cursor-pointer shrink-0">Sign In</a>`;
       }
       if (drawerAuthHeader) {
         drawerAuthHeader.innerHTML = `
@@ -1758,6 +1780,11 @@
   }
 
   function setupMobileMenu() {
+    // If master navbar.js already handles mobileDrawer, don't double-bind
+    if (document.getElementById('mobileDrawer')) {
+      return;
+    }
+
     const toggle = document.getElementById('mobileMenuToggle');
     const navbar = document.getElementById('mainNavbar');
     const closeBtn = document.getElementById('closeDrawer');

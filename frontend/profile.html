@@ -247,15 +247,15 @@
        FIXED CYBERPUNK CINEMA HEADER
        ========================================================================= -->
   <header
-    class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)] border-b border-surface-container-high/40"
+    class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)] border-b border-surface-container-high/40 transition-all"
     id="siteHeader">
-    <div class="h-20 w-full px-gutter flex items-center justify-between gap-space-md">
+    <div class="h-16 sm:h-20 w-full px-3 sm:px-gutter flex items-center justify-between gap-2 sm:gap-space-md">
       <!-- Brand Logo & Desktop Navigation -->
-      <div class="flex items-center gap-space-lg flex-shrink-0">
-        <a class="flex items-center gap-space-sm group" href="index.html">
+      <div class="flex items-center gap-space-md xl:gap-space-lg flex-shrink-0">
+        <a class="flex items-center gap-space-xs sm:gap-space-sm group" href="index.html">
           <div
-            class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300">
-            <svg class="w-6 h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300"
+            class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-surface-container-high/80 shadow-[0_0_18px_rgba(0,238,252,0.4)] group-hover:shadow-[0_0_24px_rgba(0,238,252,0.6)] transition-all duration-300">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 transform -rotate-12 group-hover:scale-110 transition-transform duration-300"
               fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M18.178 8c-1.38 0-2.61.644-3.414 1.645C13.606 8.167 11.758 7 9.5 7 5.91 7 3 9.91 3 13.5S5.91 20 9.5 20c2.258 0 4.106-1.167 5.264-2.645C15.568 18.356 16.798 19 18.178 19 20.84 19 23 16.84 23 14.178c0-2.662-2.16-4.178-4.822-4.178zm-8.678 9.5c-2.206 0-4-1.794-4-4s1.794-4 4-4c1.862 0 3.398 1.282 3.824 3.013a5.55 5.55 0 0 1 0 1.974c-.426 1.731-1.962 3.013-3.824 3.013zm8.678-1c-1.396 0-2.533-.946-2.85-2.23a4.015 4.015 0 0 1 0-1.54c.317-1.284 1.454-2.23 2.85-2.23 1.556 0 2.822 1.266 2.822 2.822 0 1.556-1.266 2.822-2.822 2.822z"
@@ -265,8 +265,8 @@
           </div>
           <div class="flex flex-col">
             <span
-              class="font-headline-sm text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">
-              INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-1">ANIME</span>
+              class="font-headline-sm text-sm sm:text-headline-sm tracking-wider font-extrabold text-secondary-container drop-shadow-[0_0_12px_rgba(0,238,252,0.6)]">
+              INFINX<span class="text-primary-container drop-shadow-[0_0_12px_rgba(255,80,110,0.6)] ml-0.5 sm:ml-1">ANIME</span>
             </span>
           </div>
         </a>
@@ -306,92 +306,31 @@
       </div>
 
       <!-- Right Action Cluster & Dynamic Auth -->
-      <div class="flex items-center gap-space-md flex-shrink-0">
-        <!-- VIP Pass Pill (Hidden) -->
-        <a class="relative hidden items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-low text-primary shadow-[0_0_14px_rgba(255,80,110,0.35)] hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 group"
-          href="view.html#vip" style="display: none !important;">
-          <span
-            class="material-symbols-outlined text-[16px] text-primary group-hover:text-on-primary-container">local_fire_department</span>
-          <span class="font-label-sm text-label-sm tracking-wider uppercase font-bold">VIP PASS</span>
-        </a>
-
-        <!-- Passport Trigger Button in Header -->
-        <button type="button"
-          class="p-2 rounded-full text-secondary-container hover:bg-surface-container transition-all" id="headerQrBtn"
-          onclick="document.getElementById('passport-modal')?.classList.remove('hidden')" title="Scan Otaku Passport">
-          <span class="material-symbols-outlined text-[22px]">qr_code_2</span>
+      <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-space-md flex-shrink-0">
+        <!-- Mobile Quick Search Trigger -->
+        <button class="md:hidden p-1.5 sm:p-2 text-outline hover:text-white transition-colors cursor-pointer shrink-0"
+          id="mobileHeaderSearchBtn" aria-label="Open Search" type="button"
+          onclick="window.location.href='view.html#search'">
+          <span class="material-symbols-outlined text-[22px] sm:text-[24px]">search</span>
         </button>
 
-        <!-- Dynamic Auth Header Hook (Populated by profile.js) -->
-        <div id="authHeader" class="auth-buttons flex items-center gap-2">
+        <!-- Dynamic Auth Header Hook (Populated by navbar.js / profile.js) -->
+        <div id="authHeader" class="auth-buttons flex items-center gap-1.5 sm:gap-2 shrink-0">
           <a href="login.html"
-            class="px-4 py-2 rounded-full font-label-md text-label-md font-bold bg-secondary-container text-on-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.4)] hover:shadow-[0_0_24px_rgba(0,238,252,0.7)] transition-all">
+            class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-xs sm:text-label-sm font-semibold transition-all cursor-pointer shrink-0">
             Sign In
           </a>
         </div>
 
         <!-- Mobile Menu Toggle Button -->
         <button id="mobileMenuToggle"
-          class="xl:hidden p-2 rounded-xl bg-surface-container-low text-on-surface hover:text-secondary-container transition-colors"
-          aria-label="Toggle mobile menu">
-          <span class="material-symbols-outlined text-[24px]">menu</span>
+          class="inline-flex xl:hidden p-1.5 sm:p-2 text-outline hover:text-secondary-container active:scale-95 transition-all cursor-pointer mobile-toggle shrink-0"
+          aria-label="Toggle mobile menu" type="button">
+          <span class="material-symbols-outlined text-[24px] sm:text-[26px]">menu</span>
         </button>
       </div>
     </div>
   </header>
-
-  <!-- Mobile Drawer Overlay & Sliding Navigation Menu -->
-  <div id="navOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-40 hidden xl:hidden transition-opacity">
-  </div>
-  <aside id="mainNavbar"
-    class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-surface-container-lowest/95 backdrop-blur-2xl border-l border-white/10 z-50 p-6 flex flex-col justify-between transform translate-x-full transition-transform duration-300 xl:hidden">
-    <div>
-      <div class="flex items-center justify-between pb-6 border-b border-white/10 mb-6">
-        <span class="font-headline-sm text-headline-sm font-extrabold text-secondary-container">MENU</span>
-        <button id="closeDrawer"
-          class="p-2 rounded-lg text-outline hover:text-white hover:bg-white/5 transition-colors">
-          <span class="material-symbols-outlined text-[24px]">close</span>
-        </button>
-      </div>
-      <!-- Mobile Auth State Container -->
-      <div id="drawerAuthHeader" class="mb-6"></div>
-      <nav class="flex flex-col gap-2">
-        <a href="index.html"
-          class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface hover:bg-surface-container hover:text-secondary-container transition-all">
-          <span class="material-symbols-outlined text-[20px]">home</span>
-          <span class="font-label-lg text-label-lg font-bold">Home</span>
-        </a>
-        <a href="anime.html"
-          class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface hover:bg-surface-container hover:text-secondary-container transition-all">
-          <span class="material-symbols-outlined text-[20px]">grid_view</span>
-          <span class="font-label-lg text-label-lg font-bold">Catalog / Browse</span>
-        </a>
-        <a href="view.html"
-          class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface hover:bg-surface-container hover:text-secondary-container transition-all">
-          <span class="material-symbols-outlined text-[20px]">video_library</span>
-          <span class="font-label-lg text-label-lg font-bold">Watchlist &amp; Hub</span>
-        </a>
-        <a href="download.html"
-          class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface hover:bg-surface-container hover:text-secondary-container transition-all">
-          <span class="material-symbols-outlined text-[20px]">download</span>
-          <span class="font-label-lg text-label-lg font-bold">Get App</span>
-        </a>
-        <a href="profile.html"
-          class="nav-link active flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary-container/15 text-secondary-container shadow-[0_0_16px_rgba(0,238,252,0.25)] transition-all">
-          <span class="material-symbols-outlined text-[20px]">badge</span>
-          <span class="font-label-lg text-label-lg font-bold">Otaku Passport</span>
-        </a>
-        <a href="admin.html"
-          class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface hover:bg-surface-container hover:text-secondary-container transition-all">
-          <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-          <span class="font-label-lg text-label-lg font-bold">Admin Studio</span>
-        </a>
-      </nav>
-    </div>
-    <div class="pt-6 border-t border-white/10 text-center">
-      <span class="font-label-sm text-label-sm text-outline">INFINX TOKYO STREAM ENGINE 10G</span>
-    </div>
-  </aside>
 
   <!-- =========================================================================
        LOADING STATE (Controlled by profile.js)
@@ -434,11 +373,11 @@
   <!-- =========================================================================
        MAIN PROFILE CONTENT (Controlled by profile.js)
        ========================================================================= -->
-  <main class="w-full pt-20 bg-surface-container-lowest min-h-screen" id="profileMainContent" style="display: none;">
+  <main class="w-full pt-16 sm:pt-20 bg-surface-container-lowest min-h-screen overflow-x-hidden" id="profileMainContent" style="display: none;">
     <div class="flex flex-col w-full">
 
       <!-- Top Profile Hero Scrim & Glass Passport Header -->
-      <section class="relative w-full overflow-hidden bg-surface-container-lowest pb-space-xl">
+      <section class="relative w-full overflow-hidden bg-surface-container-lowest pb-space-lg sm:pb-space-xl">
         <!-- Atmospheric Ambient Neon Cones -->
         <div
           class="absolute -top-32 left-1/4 w-96 h-96 bg-secondary-container/10 rounded-full blur-[128px] pointer-events-none">
@@ -451,7 +390,7 @@
         </div>
 
         <!-- Cinematic Backdrop Banner with Tokyo Cyber Ingestion Overlay -->
-        <div class="relative w-full h-80 lg:h-96 overflow-hidden">
+        <div class="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden">
           <img id="profileBannerImg"
             class="w-full h-full object-cover object-center filter brightness-75 contrast-125 transform scale-105 transition-transform duration-1000 ease-out"
             src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1400&auto=format&fit=crop&q=80"
@@ -462,7 +401,7 @@
 
           <!-- Banner Level Tag Display -->
           <div
-            class="absolute bottom-6 right-6 hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-lowest/80 backdrop-blur-md border border-white/10"
+            class="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-lowest/80 backdrop-blur-md border border-white/10"
             id="profileBannerLevelTag">
             <span class="material-symbols-outlined text-secondary-container text-[16px]">military_tech</span>
             <span id="bannerLevelText" class="font-label-sm text-label-sm text-on-surface font-mono">Lv. 50 Monarch
@@ -471,24 +410,24 @@
 
           <!-- Change Banner Action Button -->
           <button type="button"
-            class="absolute top-6 left-6 px-4 py-2 rounded-full bg-surface-container-lowest/80 backdrop-blur-md border border-white/10 hover:border-secondary-container text-on-surface flex items-center gap-2 font-label-md text-label-md transition-all shadow-lg hover:shadow-[0_0_16px_rgba(0,238,252,0.3)] cursor-pointer"
+            class="absolute top-3 left-3 sm:top-6 sm:left-6 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-label-md rounded-full bg-surface-container-lowest/80 backdrop-blur-md border border-white/10 hover:border-secondary-container text-on-surface flex items-center gap-1.5 sm:gap-2 font-label-md transition-all shadow-lg hover:shadow-[0_0_16px_rgba(0,238,252,0.3)] cursor-pointer"
             id="openBannerEditBtn">
-            <span class="material-symbols-outlined text-[18px] text-secondary-container">photo_camera</span>
+            <span class="material-symbols-outlined text-[16px] sm:text-[18px] text-secondary-container">photo_camera</span>
             <span>Change Banner</span>
           </button>
         </div>
 
         <!-- Main Identity Card Overlap -->
-        <div class="relative max-w-7xl mx-auto px-margin-mobile md:px-margin -mt-28 md:-mt-36 z-10">
+        <div class="relative max-w-7xl mx-auto px-3 sm:px-margin-mobile md:px-margin -mt-16 sm:-mt-24 md:-mt-36 z-10">
           <div
-            class="relative p-space-md md:p-space-lg rounded-xl bg-surface-container/70 backdrop-blur-2xl shadow-2xl flex flex-col lg:flex-row lg:items-end justify-between gap-space-lg overflow-hidden border border-white/5">
+            class="relative p-4 sm:p-space-md md:p-space-lg rounded-2xl bg-surface-container/70 backdrop-blur-2xl shadow-2xl flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-space-lg overflow-hidden border border-white/5">
             <!-- Laser Accent Light Strips -->
             <div
               class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary-container via-primary-container to-tertiary-container opacity-90">
             </div>
 
             <!-- Left: Avatar, Level Ring & Identity -->
-            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-space-lg">
+            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-3 sm:gap-space-lg">
               <!-- Stylized Avatar with Circular SVG XP Progress Ring -->
               <div class="relative flex-shrink-0 group">
                 <!-- Neon Glow Base behind Avatar -->
@@ -497,7 +436,7 @@
                 </div>
 
                 <div
-                  class="relative w-32 h-32 md:w-36 md:h-36 rounded-full p-1 bg-surface-container-lowest flex items-center justify-center">
+                  class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full p-1 bg-surface-container-lowest flex items-center justify-center">
                   <!-- Radial Progress SVG Ring -->
                   <svg class="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none"
                     viewBox="0 0 100 100">
@@ -518,61 +457,61 @@
 
                   <!-- Level Hex Badge -->
                   <div
-                    class="profile-level-badge-pill absolute bottom-0 right-0 z-20 px-2.5 py-0.5 rounded-full bg-[#0e0e0e] shadow-[0_0_14px_rgba(0,238,252,0.5)] flex items-center gap-1 border border-secondary-container/60 select-none">
+                    class="profile-level-badge-pill absolute bottom-0 right-0 z-20 px-2 py-0.5 sm:px-2.5 rounded-full bg-[#0e0e0e] shadow-[0_0_14px_rgba(0,238,252,0.5)] flex items-center gap-1 border border-secondary-container/60 select-none">
                     <span
-                      class="material-symbols-outlined text-secondary-container text-[13px] leading-none">shield</span>
-                    <span class="font-label-sm text-xs font-black tracking-wider text-secondary-container leading-none"
+                      class="material-symbols-outlined text-secondary-container text-[12px] sm:text-[13px] leading-none">shield</span>
+                    <span class="font-label-sm text-[11px] sm:text-xs font-black tracking-wider text-secondary-container leading-none"
                       id="profileLevelHexBadge">LV.18</span>
                   </div>
                 </div>
               </div>
 
               <!-- User Title & Credentials -->
-              <div class="flex flex-col text-center sm:text-left">
-                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-space-sm mb-1">
-                  <h1 class="font-headline-lg text-headline-lg font-extrabold text-on-surface tracking-tight"
+              <div class="flex flex-col text-center sm:text-left w-full sm:w-auto">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-space-sm mb-1">
+                  <h1 class="font-headline-lg text-2xl sm:text-headline-lg font-extrabold text-on-surface tracking-tight break-words"
                     id="profileUsername">SupremeHokage</h1>
                   <!-- Dynamic Rank Badge -->
                   <span
-                    class="rank-badge hokage inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm font-black uppercase tracking-wider shadow-[0_0_16px_rgba(255,80,110,0.5)]"
+                    class="rank-badge hokage inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-xs sm:text-label-sm font-black uppercase tracking-wider shadow-[0_0_16px_rgba(255,80,110,0.5)]"
                     id="profileRankBadge">
                     👑 HOKAGE VIP
                   </span>
                   <!-- Private Badge -->
                   <span
-                    class="badge-private-indicator inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-outline font-label-sm text-label-sm"
+                    class="badge-private-indicator inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest text-outline font-label-sm text-xs"
                     id="profilePrivateBadge" style="display: none;">
-                    <i class="fas fa-lock text-[12px]"></i> Private Profile
+                    <i class="fas fa-lock text-[11px]"></i> Private Profile
                   </span>
                   <!-- Viewing Other User Indicator -->
                   <span
-                    class="badge-viewing inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm"
+                    class="badge-viewing inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-xs"
                     id="viewingOtherUserBadge" style="display: none;">
-                    <i class="fas fa-eye text-[12px]"></i> Visiting Profile
+                    <i class="fas fa-eye text-[11px]"></i> Visiting Profile
                   </span>
                 </div>
 
                 <div
-                  class="flex flex-wrap items-center justify-center sm:justify-start gap-x-space-md gap-y-1 font-body-sm text-body-sm text-outline">
-                  <span class="text-secondary-container font-label-md text-label-md" id="profileEmailTag">@SupremeHokage
+                  class="flex flex-wrap items-center justify-center sm:justify-start gap-x-2 sm:gap-x-space-md gap-y-1 font-body-sm text-xs sm:text-body-sm text-outline">
+                  <span class="text-secondary-container font-label-md text-xs sm:text-label-md break-all" id="profileEmailTag">@SupremeHokage
                     • admin@infinx.com</span>
                   <span>•</span>
-                  <span class="text-tertiary-fixed font-label-md text-label-md" id="profileLevelBadge">Level 18 — Otaku
+                  <span class="text-tertiary-fixed font-label-md text-xs sm:text-label-md" id="profileLevelBadge">Level 18 — Otaku
                     Grandmaster</span>
-                  <span>•</span>
-                  <span class="flex items-center gap-1">
+                  <span class="hidden sm:inline">•</span>
+                  <span class="hidden sm:flex items-center gap-1">
                     <span class="material-symbols-outlined text-[15px] text-outline">calendar_month</span>
                     Member since Nov 2023
                   </span>
                 </div>
 
-                <p class="font-body-sm text-body-sm text-on-surface-variant max-w-xl mt-2 line-clamp-2" id="profileBio">
+                <p class="font-body-sm text-xs sm:text-body-sm text-on-surface-variant max-w-xl mt-2 line-clamp-2 break-words" id="profileBio">
                   Shinobi streaming enthusiast. Exploring infinite anime worlds on Infinx Anime.
                 </p>
 
                 <!-- XP Progress Track -->
-                <div class="mt-space-md w-full max-w-md flex flex-col gap-1.5">
-                  <div class="flex items-center justify-between font-label-sm text-label-sm">
+                <div class="mt-3 sm:mt-space-md w-full max-w-md flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between font-label-sm text-xs sm:text-label-sm">
                     <span class="text-on-surface-variant font-semibold">XP PROGRESS</span>
                     <span class="text-secondary tracking-wide font-mono" id="profileXpRatio">8,450 / 10,000 XP
                       (84%)</span>
@@ -582,8 +521,8 @@
                       class="h-full rounded-full bg-gradient-to-r from-secondary-container via-tertiary-container to-primary-container shadow-[0_0_12px_rgba(0,238,252,0.7)] transition-all duration-500"
                       id="profileXpFill" style="width: 84%"></div>
                   </div>
-                  <div class="font-label-sm text-[11px] text-outline flex items-center gap-1 mt-0.5">
-                    <span class="material-symbols-outlined text-secondary-container text-[13px]">bolt</span>
+                  <div class="font-label-sm text-[10px] sm:text-[11px] text-outline flex items-center gap-1 mt-0.5">
+                    <span class="material-symbols-outlined text-secondary-container text-[12px] sm:text-[13px]">bolt</span>
                     <span>Earn +10 XP per episode • +25 XP in Watch Party rooms</span>
                   </div>
                 </div>
@@ -591,22 +530,22 @@
             </div>
 
             <!-- Right: Passport Action Suite -->
-            <div class="flex flex-wrap sm:flex-nowrap items-center justify-center gap-space-sm w-full lg:w-auto">
+            <div class="flex items-center justify-center gap-2 sm:gap-space-sm w-full lg:w-auto mt-2 lg:mt-0">
               <button type="button"
-                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-space-md py-2.5 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-lg text-label-lg shadow-md transition-all duration-200 cursor-pointer"
+                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-lg text-xs sm:text-label-lg shadow-md transition-all duration-200 cursor-pointer"
                 id="openEditProfileBtn">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
+                <span class="material-symbols-outlined text-[16px] sm:text-[18px]">edit</span>
                 <span>Edit Profile</span>
               </button>
               <button type="button"
-                class="p-2.5 rounded-full bg-surface-container-high hover:bg-surface-bright text-outline hover:text-on-surface transition-colors cursor-pointer"
+                class="p-2 sm:p-2.5 rounded-full bg-surface-container-high hover:bg-surface-bright text-outline hover:text-on-surface transition-colors cursor-pointer shrink-0"
                 id="shareProfileBtn" title="Share Otaku Passport Link">
-                <span class="material-symbols-outlined text-[20px]">share</span>
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">share</span>
               </button>
               <a href="admin.html"
-                class="p-2.5 rounded-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
+                class="p-2 sm:p-2.5 rounded-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors shrink-0"
                 id="profileAdminLinkBtn" style="display: none;" title="Admin Studio Dashboard">
-                <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">admin_panel_settings</span>
               </a>
             </div>
           </div>
@@ -616,77 +555,77 @@
       <!-- =======================================================================
            TELEMETRY & STREAM METRICS HUB (4 Dynamic Metric Cards)
            ======================================================================= -->
-      <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin w-full -mt-6 z-20">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+      <section class="max-w-7xl mx-auto px-3 sm:px-margin-mobile md:px-margin w-full mt-2 sm:-mt-6 z-20">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-space-md">
           <!-- Metric 1: Watch Time -->
           <div
-            class="relative p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
+            class="relative p-3 sm:p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
             <div class="flex items-center justify-between">
-              <span class="font-label-sm text-label-sm text-outline tracking-wider uppercase font-semibold">WATCH
+              <span class="font-label-sm text-[10px] sm:text-label-sm text-outline tracking-wider uppercase font-semibold">WATCH
                 TIME</span>
-              <span class="material-symbols-outlined text-secondary-container text-[20px]">schedule</span>
+              <span class="material-symbols-outlined text-secondary-container text-[18px] sm:text-[20px]">schedule</span>
             </div>
-            <div class="my-space-sm">
-              <div class="font-headline-lg text-headline-lg font-black text-on-surface tracking-tight"
+            <div class="my-2 sm:my-space-sm">
+              <div class="font-headline-lg text-lg sm:text-2xl lg:text-headline-lg font-black text-on-surface tracking-tight"
                 id="statWatchTime">1,136.5 hrs</div>
             </div>
-            <div class="flex items-center gap-1 font-label-sm text-label-sm text-secondary-container">
-              <span class="material-symbols-outlined text-[14px]">trending_up</span>
-              <span>Top 2.4% Archive Depth</span>
+            <div class="flex items-center gap-1 font-label-sm text-[10px] sm:text-label-sm text-secondary-container truncate">
+              <span class="material-symbols-outlined text-[13px] sm:text-[14px]">trending_up</span>
+              <span class="truncate">Top 2.4% Archive Depth</span>
             </div>
           </div>
 
           <!-- Metric 2: Episodes Watched -->
           <div
-            class="relative p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
+            class="relative p-3 sm:p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
             <div class="flex items-center justify-between">
-              <span class="font-label-sm text-label-sm text-outline tracking-wider uppercase font-semibold">EPISODES
+              <span class="font-label-sm text-[10px] sm:text-label-sm text-outline tracking-wider uppercase font-semibold">EPISODES
                 WATCHED</span>
-              <span class="material-symbols-outlined text-primary-container text-[20px]">movie</span>
+              <span class="material-symbols-outlined text-primary-container text-[18px] sm:text-[20px]">movie</span>
             </div>
-            <div class="my-space-sm">
-              <div class="font-headline-lg text-headline-lg font-black text-on-surface tracking-tight"
+            <div class="my-2 sm:my-space-sm">
+              <div class="font-headline-lg text-lg sm:text-2xl lg:text-headline-lg font-black text-on-surface tracking-tight"
                 id="statEpisodes">2,840</div>
             </div>
-            <div class="flex items-center gap-1 font-label-sm text-label-sm text-primary-fixed">
-              <span class="material-symbols-outlined text-[14px]">bolt</span>
-              <span>Zero Filler Skips Detected</span>
+            <div class="flex items-center gap-1 font-label-sm text-[10px] sm:text-label-sm text-primary-fixed truncate">
+              <span class="material-symbols-outlined text-[13px] sm:text-[14px]">bolt</span>
+              <span class="truncate">Zero Filler Skips Detected</span>
             </div>
           </div>
 
           <!-- Metric 3: In Watchlist -->
           <div
-            class="relative p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
+            class="relative p-3 sm:p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
             <div class="flex items-center justify-between">
-              <span class="font-label-sm text-label-sm text-outline tracking-wider uppercase font-semibold">IN
+              <span class="font-label-sm text-[10px] sm:text-label-sm text-outline tracking-wider uppercase font-semibold">IN
                 WATCHLIST</span>
-              <span class="material-symbols-outlined text-tertiary-container text-[20px]">bookmark</span>
+              <span class="material-symbols-outlined text-tertiary-container text-[18px] sm:text-[20px]">bookmark</span>
             </div>
-            <div class="my-space-sm">
-              <div class="font-headline-lg text-headline-lg font-black text-on-surface tracking-tight"
+            <div class="my-2 sm:my-space-sm">
+              <div class="font-headline-lg text-lg sm:text-2xl lg:text-headline-lg font-black text-on-surface tracking-tight"
                 id="statWatchlist">48</div>
             </div>
-            <div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
-              <span class="material-symbols-outlined text-[14px]">equalizer</span>
-              <span>Tokyo Night Shift Sync</span>
+            <div class="flex items-center gap-1 font-label-sm text-[10px] sm:text-label-sm text-tertiary truncate">
+              <span class="material-symbols-outlined text-[13px] sm:text-[14px]">equalizer</span>
+              <span class="truncate">Tokyo Night Shift Sync</span>
             </div>
           </div>
 
           <!-- Metric 4: Otaku Standing -->
           <div
-            class="relative p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
+            class="relative p-3 sm:p-space-md rounded-xl bg-surface-container/60 backdrop-blur-xl shadow-lg flex flex-col justify-between overflow-hidden group hover:bg-surface-container/90 transition-all border border-white/5">
             <div class="flex items-center justify-between">
-              <span class="font-label-sm text-label-sm text-outline tracking-wider uppercase font-semibold">OTAKU
+              <span class="font-label-sm text-[10px] sm:text-label-sm text-outline tracking-wider uppercase font-semibold">OTAKU
                 STANDING</span>
-              <span class="material-symbols-outlined text-secondary text-[20px]">military_tech</span>
+              <span class="material-symbols-outlined text-secondary text-[18px] sm:text-[20px]">military_tech</span>
             </div>
-            <div class="my-space-sm">
-              <div class="font-headline-lg text-headline-lg font-black text-on-surface tracking-tight"
+            <div class="my-2 sm:my-space-sm">
+              <div class="font-headline-lg text-lg sm:text-2xl lg:text-headline-lg font-black text-on-surface tracking-tight"
                 id="statStanding">Top 1% Shinobi</div>
             </div>
-            <div class="flex items-center gap-1 font-label-sm text-label-sm text-secondary">
-              <span class="material-symbols-outlined text-[14px]">memory</span>
-              <span>AV1 CineMaster Engine</span>
+            <div class="flex items-center gap-1 font-label-sm text-[10px] sm:text-label-sm text-secondary truncate">
+              <span class="material-symbols-outlined text-[13px] sm:text-[14px]">memory</span>
+              <span class="truncate">AV1 CineMaster Engine</span>
             </div>
           </div>
         </div>
@@ -695,29 +634,29 @@
       <!-- =======================================================================
            HALL OF FAME SPOTLIGHT SHOWCASE (Managed by profile.js)
            ======================================================================= -->
-      <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin w-full py-space-xl" id="hallOfFameSection">
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-space-lg gap-space-sm">
+      <section class="max-w-7xl mx-auto px-3 sm:px-margin-mobile md:px-margin w-full py-6 sm:py-space-xl" id="hallOfFameSection">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 sm:mb-space-lg gap-3">
           <div class="flex flex-col">
             <div class="flex items-center gap-2 mb-1">
-              <span class="font-label-sm text-label-sm uppercase tracking-widest text-primary-fixed">PERSONAL
+              <span class="font-label-sm text-xs sm:text-label-sm uppercase tracking-widest text-primary-fixed">PERSONAL
                 ARCHIVE</span>
-              <span class="h-px w-10 bg-primary-container"></span>
+              <span class="h-px w-8 sm:w-10 bg-primary-container"></span>
             </div>
-            <h2 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">Hall of Fame
+            <h2 class="font-headline-lg text-xl sm:text-headline-lg text-on-surface font-extrabold tracking-tight">Hall of Fame
               Showcase</h2>
           </div>
           <div class="flex items-center gap-space-sm">
             <button type="button"
-              class="customize-showcase-btn inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-secondary-container font-label-md text-label-md font-bold transition-all border border-secondary-container/30 shadow-[0_0_12px_rgba(0,238,252,0.15)] cursor-pointer"
+              class="customize-showcase-btn inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-secondary-container font-label-md text-xs sm:text-label-md font-bold transition-all border border-secondary-container/30 shadow-[0_0_12px_rgba(0,238,252,0.15)] cursor-pointer"
               id="openShowcaseModalBtn">
-              <span class="material-symbols-outlined text-[18px]">tune</span>
+              <span class="material-symbols-outlined text-[16px] sm:text-[18px]">tune</span>
               <span>Customize Showcase</span>
             </button>
           </div>
         </div>
 
         <!-- Hall of Fame Grid Container -->
-        <div class="hall-of-fame-grid grid grid-cols-1 md:grid-cols-3 gap-space-lg" id="hallOfFameGrid">
+        <div class="hall-of-fame-grid grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-space-lg" id="hallOfFameGrid">
           <!-- Dynamically populated by profile.js: real completed anime or interactive empty slots -->
         </div>
       </section>
@@ -725,7 +664,7 @@
       <!-- =======================================================================
            EPISODES & WATCHLIST TABS (Managed by profile.js)
            ======================================================================= -->
-      <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin w-full pb-space-xl">
+      <section class="max-w-7xl mx-auto px-3 sm:px-margin-mobile md:px-margin w-full pb-16 sm:pb-space-xl">
         <div class="profile-tabs-nav">
           <button type="button" class="tab-btn active" data-target="history">
             <i class="fas fa-history text-secondary-container"></i>
@@ -1212,45 +1151,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- Mobile Bottom Tab Bar -->
-  <nav class="mobile-tab-bar">
-    <a href="index.html" class="tab-item" id="tabHome"><i class="fas fa-home"></i><span>Home</span></a>
-    <a href="anime.html" class="tab-item" id="tabAnime"><i class="fas fa-tv"></i><span>Anime</span></a>
-    <a href="view.html#search" class="tab-item" id="tabSearch"><i class="fas fa-search"></i><span>Search</span></a>
-    <a href="index.html#publicLiveChatSection" class="tab-item" id="tabChat"><i
-        class="fas fa-comments"></i><span>Chat</span></a>
-    <a href="view.html#watchlist" class="tab-item" id="tabWatchlist"><i
-        class="fas fa-heart"></i><span>Watchlist</span></a>
-    <a href="profile.html" class="tab-item active" id="tabProfile"><i
-        class="fas fa-user-ninja"></i><span>Profile</span></a>
-  </nav>
-
-  <!-- Inline Micro-Interactions Script for Passport QR Modal -->
-  <script>
-    (function initPassportModal() {
-      const qrBtn = document.getElementById('qr-trigger-btn');
-      const headerQrBtn = document.getElementById('headerQrBtn');
-      const modal = document.getElementById('passport-modal');
-      const closeBtn = document.getElementById('close-modal-btn');
-
-      function openModal() {
-        if (modal) modal.classList.remove('hidden');
-      }
-      function closeModal() {
-        if (modal) modal.classList.add('hidden');
-      }
-
-      if (qrBtn) qrBtn.addEventListener('click', openModal);
-      if (headerQrBtn) headerQrBtn.addEventListener('click', openModal);
-      if (closeBtn) closeBtn.addEventListener('click', closeModal);
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeModal();
-        });
-      }
-    })();
-  </script>
 
   <!-- Core Profile Engine Script -->
   <script src="navbar.js?v=2.6"></script>
