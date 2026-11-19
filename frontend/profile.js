@@ -603,6 +603,28 @@
     document.getElementById('profileEmailTag').innerText = p.email ? `@${p.username || p.email.split('@')[0]} • ${p.email}` : `@${p.username}`;
     document.getElementById('profileBio').innerText = p.bio || 'Shinobi streaming enthusiast. Exploring infinite anime worlds on Infinx Anime.';
 
+    // Member Since / Join Date (Authentic database createdAt)
+    const joinDateContainer = document.getElementById('profileJoinDateContainer');
+    const joinDateDot = document.getElementById('profileJoinDateDot');
+    const joinDateEl = document.getElementById('profileJoinDate');
+    if (joinDateContainer && joinDateEl) {
+      if (p.createdAt) {
+        const createdDate = new Date(p.createdAt);
+        if (!isNaN(createdDate.getTime())) {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          joinDateEl.innerText = `Member since ${monthNames[createdDate.getMonth()]} ${createdDate.getFullYear()}`;
+          joinDateContainer.style.display = 'inline-flex';
+          if (joinDateDot) joinDateDot.style.display = 'inline';
+        } else {
+          joinDateContainer.style.display = 'none';
+          if (joinDateDot) joinDateDot.style.display = 'none';
+        }
+      } else {
+        joinDateContainer.style.display = 'none';
+        if (joinDateDot) joinDateDot.style.display = 'none';
+      }
+    }
+
     const badgeConfig = getRankBadgeConfig(p.vipRank);
     const badgeEl = document.getElementById('profileRankBadge');
     badgeEl.className = `rank-badge ${badgeConfig.class}`;
