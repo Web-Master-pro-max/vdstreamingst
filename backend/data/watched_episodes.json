@@ -194,17 +194,45 @@
       "showTitle": "ONE PIECE",
       "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
       "banner": "",
-      "progress": 1262,
+      "progress": 1211,
       "duration": 1430,
       "completed": true,
-      "lastWatchedAt": "2026-11-18T15:27:48.902Z",
+      "lastWatchedAt": "2026-11-19T06:05:44.305Z",
       "amount": 10,
       "reason": "episode_watched",
       "inWatchParty": false,
-      "watchTime": 299,
-      "watchCoverage": 0.24,
+      "watchTime": 0,
+      "watchCoverage": 0,
       "xpAwarded": true,
-      "xpAwardedAt": "2026-11-18T15:27:22.880Z"
+      "xpAwardedAt": "2026-11-19T06:03:38.449Z"
+    },
+    "lunar-159042-1": {
+      "episodeKey": "lunar-159042-1",
+      "episodeId": "lunar-159042-1",
+      "lunarId": "159042",
+      "episodeNumber": 1,
+      "episodeTitle": "The Floating Island",
+      "showTitle": "Reincarnated as a Sword Season 2",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
+      "banner": "",
+      "progress": 393,
+      "duration": 1422,
+      "completed": false,
+      "lastWatchedAt": "2026-11-18T18:05:02.790Z"
+    },
+    "lunar-21-1093": {
+      "episodeKey": "lunar-21-1093",
+      "episodeId": "lunar-21-1093",
+      "lunarId": "21",
+      "episodeNumber": 1093,
+      "episodeTitle": "The Winner Takes All! Law vs. Blackbeard!",
+      "showTitle": "ONE PIECE",
+      "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
+      "banner": "",
+      "progress": 140,
+      "duration": 1430,
+      "completed": false,
+      "lastWatchedAt": "2026-11-19T06:18:13.827Z"
     }
   }
 }

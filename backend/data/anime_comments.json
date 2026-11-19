@@ -1,1 +1,22 @@
-{}
+{
+  "22092": [
+    {
+      "id": 1795019354542,
+      "episodeId": "22092",
+      "userId": 1,
+      "user": {
+        "id": 1,
+        "email": "admin@infinx.com",
+        "username": "SUPRIMEHOKAGE",
+        "role": "ADMIN",
+        "vipRank": "HOKAGE_VIP"
+      },
+      "content": "hiii",
+      "parentId": null,
+      "isPinned": true,
+      "likes": [],
+      "createdAt": "2026-11-18T16:29:14.423Z",
+      "updatedAt": "2026-11-18T16:29:16.586Z"
+    }
+  ]
+}

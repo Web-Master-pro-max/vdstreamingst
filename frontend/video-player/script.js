@@ -767,11 +767,10 @@ document.addEventListener('DOMContentLoaded', async function () {
           const isActive = s.id === activeServerId;
           const pill = document.createElement('button');
           pill.type = 'button';
-          pill.className = `cdn-server-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all font-label-sm text-label-sm cursor-pointer ${
-            isActive
-              ? 'active bg-primary-container text-on-primary-container shadow-[0_0_14px_rgba(255,80,110,0.4)] font-bold'
-              : 'bg-surface-container-high/60 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest font-medium'
-          }`;
+          pill.className = `cdn-server-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all font-label-sm text-label-sm cursor-pointer ${isActive
+            ? 'active bg-primary-container text-on-primary-container shadow-[0_0_14px_rgba(255,80,110,0.4)] font-bold'
+            : 'bg-surface-container-high/60 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest font-medium'
+            }`;
           pill.setAttribute('data-server-id', s.id);
           const icon = s.id === 'server-1' ? 'bolt' : (s.id === 'server-2' ? 'record_voice_over' : (s.id === 'server-3' ? 'dns' : 'speed'));
           pill.innerHTML = `
@@ -863,18 +862,31 @@ document.addEventListener('DOMContentLoaded', async function () {
               const sData = await sRes.json();
               if (sData.streamUrl) {
                 target.url = sData.streamUrl;
-                if (sData.intro || sData.outro) {
-                  const validIntro = sanitizeIntroOutro(sData.intro);
-                  const validOutro = sanitizeIntroOutro(sData.outro);
-                  if (validIntro || validOutro) {
-                    streamIntroOutro = { intro: validIntro, outro: validOutro };
-                    detectedIntroOutro = computeIntroOutroWindows();
-                    updateTimelineMarkers();
-                  }
+                if (Array.isArray(sData.chapters) && sData.chapters.length > 0 && currentEpisode) {
+                  currentEpisode.chapters = sData.chapters;
+                }
+                const validIntro = sanitizeIntroOutro(sData.intro);
+                const validOutro = sanitizeIntroOutro(sData.outro);
+                if (validIntro || validOutro) {
+                  streamIntroOutro = { intro: validIntro, outro: validOutro };
+                  detectedIntroOutro = computeIntroOutroWindows();
+                  updateTimelineMarkers();
                 }
                 if (sData.subtitles && sData.subtitles.length > 0) {
-                  subtitleTracks = sData.subtitles;
+                  subtitleTracks = sData.subtitles.filter(s => {
+                    const l = (s.lang || s.label || s.language || '').toLowerCase();
+                    return !l.includes('thumb');
+                  });
                   updateSubtitleOptions();
+                  const subsPref = localStorage.getItem('infinx_subtitles_enabled');
+                  if (subsPref !== 'false' || currentAudioType === 'sub' || currentSubtitleTrack !== -1) {
+                    const defaultIdx = subtitleTracks.findIndex(t => {
+                      const lang = (t.lang || t.language || '').toLowerCase();
+                      const label = (t.label || t.name || '').toLowerCase();
+                      return !lang.includes('thumb') && !label.includes('thumb') && (t.default || lang.startsWith('en') || label.includes('english'));
+                    });
+                    setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
+                  }
                 }
                 if (sData.isFallbackSub && currentAudioType === 'dub') {
                   showPlayerToast('English Dub not available for this episode. Playing Japanese Sub.');
@@ -1098,6 +1110,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             const sData = await sRes.json();
             if (sData.streamUrl) {
               streamUrl = sData.streamUrl;
+              if (Array.isArray(sData.chapters) && sData.chapters.length > 0 && currentEpisode) {
+                currentEpisode.chapters = sData.chapters;
+              }
               const validIntro = sanitizeIntroOutro(sData.intro);
               const validOutro = sanitizeIntroOutro(sData.outro);
               if (validIntro || validOutro) {
@@ -1106,8 +1121,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updateTimelineMarkers();
               }
               if (sData.subtitles && sData.subtitles.length > 0) {
-                subtitleTracks = sData.subtitles;
+                subtitleTracks = sData.subtitles.filter(s => {
+                  const l = (s.lang || s.label || s.language || '').toLowerCase();
+                  return !l.includes('thumb');
+                });
                 updateSubtitleOptions();
+                const subsPref = localStorage.getItem('infinx_subtitles_enabled');
+                if (subsPref !== 'false' || currentAudioType === 'sub' || currentSubtitleTrack !== -1) {
+                  const defaultIdx = subtitleTracks.findIndex(t => {
+                    const lang = (t.lang || t.language || '').toLowerCase();
+                    const label = (t.label || t.name || '').toLowerCase();
+                    return !lang.includes('thumb') && !label.includes('thumb') && (t.default || lang.startsWith('en') || label.includes('english'));
+                  });
+                  setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
+                }
               }
             }
           }
@@ -1356,10 +1383,26 @@ document.addEventListener('DOMContentLoaded', async function () {
           }
 
           if (hls.subtitleTracks && hls.subtitleTracks.length > 0) {
-            subtitleTracks = hls.subtitleTracks;
+            const hasDirectVtt = subtitleTracks && subtitleTracks.length > 0 && subtitleTracks[0].url;
+            if (!hasDirectVtt) {
+              subtitleTracks = hls.subtitleTracks;
+            }
             updateSubtitleOptions();
           } else {
             updateSubtitleOptions();
+          }
+
+          // Restore or auto-activate subtitles
+          const subsPref = localStorage.getItem('infinx_subtitles_enabled');
+          if (currentSubtitleTrack >= 0 && subtitleTracks && subtitleTracks[currentSubtitleTrack]) {
+            setSubtitle(currentSubtitleTrack);
+          } else if (subsPref !== 'false' && subtitleTracks && subtitleTracks.length > 0) {
+            const defaultIdx = subtitleTracks.findIndex(t => {
+              const lang = (t.lang || t.language || '').toLowerCase();
+              const label = (t.label || t.name || '').toLowerCase();
+              return !lang.includes('thumb') && !label.includes('thumb') && (t.default || lang.startsWith('en') || label.includes('english'));
+            });
+            setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
           }
 
           // Restore position when switching servers or resume saved progress (supports ?t=seconds)
@@ -1437,8 +1480,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, function (event, data) {
+          // Guard: If direct VTT subtitles are active, protect currentSubtitleTrack from being wiped to -1 by HLS.js
+          if (currentSubtitleTrack >= 0 && (activeSubCues?.length > 0 || subtitleTracks?.[currentSubtitleTrack]?.url)) {
+            if (data.id === -1) {
+              return;
+            }
+          }
           currentSubtitleTrack = data.id;
-          document.querySelectorAll('.subtitle-option').forEach(option => {
+          document.querySelectorAll('.subtitle-option, #settings-subtitle-pills .settings-pill').forEach(option => {
             option.classList.remove('active');
             const optionIndex = option.getAttribute('data-subtitle');
             if (parseInt(optionIndex) === data.id) {
@@ -1452,7 +1501,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             const activeLevel = (qualities && qualities[data.level]) ? qualities[data.level] : null;
             if (activeLevel && activeLevel.height) {
               document.querySelectorAll('.current-quality').forEach(el => {
-                el.textContent = `Auto (${activeLevel.height}p)`;
+                if (window.innerWidth <= 640 && el.classList.contains('current-quality-pill')) {
+                  el.textContent = `${activeLevel.height}p`;
+                } else {
+                  el.textContent = `Auto (${activeLevel.height}p)`;
+                }
               });
             }
           }
@@ -2240,26 +2293,68 @@ document.addEventListener('DOMContentLoaded', async function () {
         'ko': 'Korean',
         'spa': 'Spanish',
         'es': 'Spanish',
+        'spanish': 'Spanish',
+        'por': 'Portuguese',
+        'pt': 'Portuguese',
+        'portuguese': 'Portuguese',
         'fra': 'French',
         'fr': 'French',
+        'french': 'French',
         'deu': 'German',
         'de': 'German',
+        'german': 'German',
+        'ita': 'Italian',
+        'it': 'Italian',
+        'italian': 'Italian',
         'rus': 'Russian',
-        'ru': 'Russian'
+        'ru': 'Russian',
+        'russian': 'Russian',
+        'ara': 'Arabic',
+        'ar': 'Arabic',
+        'ind': 'Indonesian',
+        'id': 'Indonesian',
+        'vie': 'Vietnamese',
+        'vi': 'Vietnamese',
+        'tha': 'Thai',
+        'th': 'Thai',
+        'pol': 'Polish',
+        'pl': 'Polish',
+        'tur': 'Turkish',
+        'tr': 'Turkish'
       };
       return languageMap[cleanCode] || cleanCode.toUpperCase();
     }
 
     function getTrackDisplayName(track, fallbackIndex, isSub = false) {
       if (!track) return isSub ? `Subtitle ${fallbackIndex + 1}` : `Track ${fallbackIndex + 1}`;
-      const label = track.label || track.name || '';
-      const langCode = track.lang || track.language || '';
+      let label = (track.label || track.name || '').trim();
+      const langCode = (track.lang || track.language || '').trim();
       const friendlyLang = getFriendlyLanguageName(langCode);
-      if (label && friendlyLang && label.toLowerCase() !== friendlyLang.toLowerCase()) {
-        if (!label.toLowerCase().includes('vegamovies')) {
-          return `${friendlyLang} (${label})`;
+
+      // Clean up provider branding and ads
+      label = label.replace(/vegamovies[^\s\]\)]*/gi, '').trim();
+
+      // Clean up repetitive or redundant track patterns
+      // E.g. "Track 1 (ENG)", "Track 8 (ENG)", "(Track 5 (POR))", "[Track 1]"
+      const isGenericTrackLabel = /^\[?\(?Track\s*\d+(\s*[\(\[][A-Za-z]{2,4}[\)\]])?\)?\]?$/i.test(label);
+      if (isGenericTrackLabel) {
+        label = '';
+      } else {
+        // Strip out embedded "(Track X (LANG))" or "[Track X]" inside longer labels
+        label = label.replace(/\[?\(?Track\s*\d+(\s*[\(\[][A-Za-z]{2,4}[\)\]])?\)?\]?/gi, '').trim();
+        label = label.replace(/^[-:–—\s\[\(]+|[-:–—\s\]\)]+$/g, '').trim();
+      }
+
+      if (label && friendlyLang) {
+        if (label.toLowerCase() === friendlyLang.toLowerCase()) {
+          return friendlyLang;
         }
-        return friendlyLang;
+        if (label.toLowerCase().startsWith(friendlyLang.toLowerCase())) {
+          let suffix = label.slice(friendlyLang.length).trim();
+          suffix = suffix.replace(/^[-:–—\s\[\(]+|[-:–—\s\]\)]+$/g, '').trim();
+          return suffix ? `${friendlyLang} (${suffix})` : friendlyLang;
+        }
+        return `${friendlyLang} (${label})`;
       }
       if (friendlyLang) return friendlyLang;
       if (label) return label;
@@ -2520,6 +2615,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const activeServer = (availableServers && availableServers.find(s => s.id === activeServerId)) || (availableServers && availableServers[0]);
             if (activeServer) activeServer.url = data.streamUrl;
+
+            // Reset intro/outro state for fresh stream
+            introAutoSkipped = false;
+            outroDismissed = false;
+
+            if (Array.isArray(data.chapters) && data.chapters.length > 0 && currentEpisode) {
+              currentEpisode.chapters = data.chapters;
+            }
+
             const validIntro = sanitizeIntroOutro(data.intro);
             const validOutro = sanitizeIntroOutro(data.outro);
             if (validIntro || validOutro) {
@@ -2530,11 +2634,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (data.subtitles && data.subtitles.length > 0) {
               subtitleTracks = data.subtitles;
               updateSubtitleOptions();
-              if (targetType === 'sub') {
+              const subsPref = localStorage.getItem('infinx_subtitles_enabled');
+              const shouldEnableSubs = subsPref !== 'false' || targetType === 'sub';
+              if (shouldEnableSubs) {
                 const defaultIdx = subtitleTracks.findIndex(t => {
                   const lang = (t.lang || t.language || '').toLowerCase();
                   const label = (t.label || t.name || '').toLowerCase();
-                  return t.default || lang.startsWith('en') || label.includes('english');
+                  return !lang.includes('thumb') && !label.includes('thumb') && (t.default || lang.startsWith('en') || label.includes('english'));
                 });
                 setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
               } else {
@@ -2626,7 +2732,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         document.querySelectorAll('.current-quality').forEach(el => {
-          el.textContent = displayLabel;
+          if (window.innerWidth <= 640 && el.classList.contains('current-quality-pill') && displayLabel.startsWith('Auto (')) {
+            el.textContent = displayLabel.replace(/^Auto \((.+)\)$/, '$1');
+          } else {
+            el.textContent = displayLabel;
+          }
         });
 
         const qualityBadge = document.getElementById('settings-quality-badge');
@@ -2765,11 +2875,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
       // 5. Restore safe formatting tags so <i>, <b>, <u> render properly as styled text
-      s = s.replace(/&lt;(\/?)i(?:\s+[^&>]*)?&gt;/gi, '<$1i>');
-      s = s.replace(/&lt;(\/?)em(?:\s+[^&>]*)?&gt;/gi, '<$1em>');
-      s = s.replace(/&lt;(\/?)b(?:\s+[^&>]*)?&gt;/gi, '<$1b>');
-      s = s.replace(/&lt;(\/?)strong(?:\s+[^&>]*)?&gt;/gi, '<$1strong>');
-      s = s.replace(/&lt;(\/?)u(?:\s+[^&>]*)?&gt;/gi, '<$1u>');
+      s = s.replace(/&lt;(\/?)i(?:\s+[^&>]*)?&gt;/gi, (_, slash) => `<${slash}i>`);
+      s = s.replace(/&lt;(\/?)em(?:\s+[^&>]*)?&gt;/gi, (_, slash) => `<${slash}em>`);
+      s = s.replace(/&lt;(\/?)b(?:\s+[^&>]*)?&gt;/gi, (_, slash) => `<${slash}b>`);
+      s = s.replace(/&lt;(\/?)strong(?:\s+[^&>]*)?&gt;/gi, (_, slash) => `<${slash}strong>`);
+      s = s.replace(/&lt;(\/?)u(?:\s+[^&>]*)?&gt;/gi, (_, slash) => `<${slash}u>`);
 
       // 6. Ensure matching closing tags for open formatting tags
       ['i', 'b', 'u', 'em', 'strong'].forEach(tag => {
@@ -2846,9 +2956,49 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function parseVttCues(vttText) {
-      if (!vttText) return [];
+      if (!vttText || typeof vttText !== 'string') return [];
       const cues = [];
       const rawLines = vttText.replace(/\r\n|\r/g, '\n').split('\n');
+
+      // 1. Detect and parse ASS / SSA Subtitle Format ([Script Info] / [Events] / Dialogue:)
+      if (vttText.includes('[Script Info]') || vttText.includes('Dialogue:') || vttText.includes('[Events]')) {
+        for (let i = 0; i < rawLines.length; i++) {
+          const line = rawLines[i].trim();
+          if (line.startsWith('Dialogue:')) {
+            const withoutPrefix = line.substring(9).trim();
+            const parts = [];
+            let cur = '';
+            let commaCount = 0;
+            for (let j = 0; j < withoutPrefix.length; j++) {
+              if (withoutPrefix[j] === ',' && commaCount < 9) {
+                parts.push(cur.trim());
+                cur = '';
+                commaCount++;
+              } else {
+                cur += withoutPrefix[j];
+              }
+            }
+            parts.push(cur.trim());
+
+            if (parts.length >= 10) {
+              const start = parseVttTimestamp(parts[1]);
+              const end = parseVttTimestamp(parts[2]);
+              const text = parts[9]
+                .replace(/\\N/g, '\n')
+                .replace(/\\n/g, '\n')
+                .replace(/\\h/g, ' ')
+                .replace(/\{[^}\n]*\}/g, '')
+                .trim();
+              if (text && end > start) {
+                cues.push({ start, end, text });
+              }
+            }
+          }
+        }
+        if (cues.length > 0) return cues;
+      }
+
+      // 2. Detect and parse WebVTT & SRT Formats (cues with -->)
       let i = 0;
       while (i < rawLines.length) {
         const line = rawLines[i].trim();
@@ -2863,7 +3013,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               textLines.push(rawLines[i].trim());
               i++;
             }
-            if (textLines.length > 0) {
+            if (textLines.length > 0 && end > start) {
               cues.push({ start, end, text: textLines.join('\n') });
             }
           }
@@ -2878,18 +3028,56 @@ document.addEventListener('DOMContentLoaded', async function () {
         hideCaption();
         return;
       }
-      if (!activeSubCues || activeSubCues.length === 0) {
-        return;
-      }
       if (!mainVideo) return;
       const cur = mainVideo.currentTime;
-      const matches = activeSubCues.filter(c => cur >= (c.start - 0.05) && cur <= (c.end + 0.05));
-      if (matches.length > 0) {
-        const text = matches.map(c => c.text).join('\n');
-        showCaption(text);
-      } else {
+
+      // 1. Direct JS-parsed subtitle cues (instant & highest accuracy)
+      if (activeSubCues && activeSubCues.length > 0) {
+        const matches = activeSubCues.filter(c => cur >= (c.start - 0.05) && cur <= (c.end + 0.05));
+        if (matches.length > 0) {
+          const uniqueTexts = [];
+          matches.forEach(m => {
+            const trimmed = (m.text || '').trim();
+            if (trimmed && !uniqueTexts.includes(trimmed)) {
+              uniqueTexts.push(trimmed);
+            }
+          });
+          if (uniqueTexts.length > 0) {
+            showCaption(uniqueTexts.join('\n'));
+            return;
+          }
+        }
         hideCaption();
+        return;
       }
+
+      // 1b. Auto-fetch direct VTT cues if track is active but cues haven't loaded yet
+      if (currentSubtitleTrack >= 0 && subtitleTracks && subtitleTracks[currentSubtitleTrack]) {
+        const trk = subtitleTracks[currentSubtitleTrack];
+        const subCand = trk.url || trk.file || trk.rawUrl || '';
+        if (subCand && !activeSubUrl) {
+          setSubtitle(currentSubtitleTrack);
+        }
+      }
+
+      // 2. Native textTracks fallback (from HLS.js or <track>)
+      if (mainVideo.textTracks && mainVideo.textTracks.length > 0) {
+        for (let i = 0; i < mainVideo.textTracks.length; i++) {
+          const t = mainVideo.textTracks[i];
+          if ((t.mode === 'showing' || t.mode === 'hidden') && t.activeCues && t.activeCues.length > 0) {
+            const activeTexts = [];
+            for (let c = 0; c < t.activeCues.length; c++) {
+              if (t.activeCues[c].text) activeTexts.push(t.activeCues[c].text);
+            }
+            if (activeTexts.length > 0) {
+              showCaption(activeTexts.join('\n'));
+              return;
+            }
+          }
+        }
+      }
+
+      hideCaption();
     }
 
     // Update subtitle options in all panels (all-in-one pills, bottom bar dropdown, mobile)
@@ -2921,9 +3109,16 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       if (subtitlePills) {
         const offPill = document.createElement('button');
-        offPill.className = 'settings-pill' + (currentSubtitleTrack === -1 ? ' active' : '');
+        offPill.type = 'button';
+        offPill.className = 'settings-pill sub-track-pill' + (currentSubtitleTrack === -1 ? ' active' : '');
         offPill.setAttribute('data-subtitle', 'off');
-        offPill.textContent = 'Off';
+        offPill.innerHTML = `
+          <span class="flex items-center gap-2 truncate min-w-0">
+            <i class="fas fa-ban text-[11px] opacity-70 flex-shrink-0"></i>
+            <span class="truncate">Off</span>
+          </span>
+          <span class="material-symbols-outlined check-icon">check</span>
+        `;
         offPill.onclick = (e) => { e.stopPropagation(); setSubtitle(-1); };
         subtitlePills.appendChild(offPill);
       }
@@ -2953,9 +3148,18 @@ document.addEventListener('DOMContentLoaded', async function () {
 
           if (subtitlePills) {
             const pill = document.createElement('button');
-            pill.className = 'settings-pill' + (isAct ? ' active' : '');
+            pill.type = 'button';
+            pill.className = 'settings-pill sub-track-pill' + (isAct ? ' active' : '');
             pill.setAttribute('data-subtitle', index);
-            pill.textContent = trackName;
+            pill.setAttribute('data-track-index', index);
+            pill.title = trackName;
+            pill.innerHTML = `
+              <span class="flex items-center gap-2 truncate min-w-0">
+                <i class="fas fa-closed-captioning text-[11px] opacity-70 flex-shrink-0"></i>
+                <span class="truncate">${trackName}</span>
+              </span>
+              <span class="material-symbols-outlined check-icon">check</span>
+            `;
             pill.onclick = (e) => { e.stopPropagation(); setSubtitle(index); };
             subtitlePills.appendChild(pill);
           }
@@ -3012,13 +3216,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         detachAllTextTrackListeners();
         hideCaption();
         currentSubtitleTrack = -1;
+        try { localStorage.setItem('infinx_subtitles_enabled', 'false'); } catch (e) { }
         document.querySelectorAll('.current-subtitle').forEach(el => { el.textContent = 'Off'; });
+        document.querySelectorAll('.current-sub-badge').forEach(el => { el.textContent = 'OFF'; });
         if (subtitleBtn) {
           subtitleBtn.classList.remove('active');
-          const subBadge = subtitleBtn.querySelector('.current-sub-badge');
-          if (subBadge) {
-            subBadge.textContent = 'OFF';
-          } else {
+          if (!subtitleBtn.querySelector('.current-sub-badge')) {
             subtitleBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">closed_caption</span><span class="font-bold current-sub-badge text-[11px]">OFF</span>';
           }
         }
@@ -3027,14 +3230,26 @@ document.addEventListener('DOMContentLoaded', async function () {
         const trackInfo = subtitleTracks[trackIndex];
         const trackName = getTrackDisplayName(trackInfo, trackIndex, true);
 
-        // Keep all native textTracks completely disabled so they never render duplicate native cues or cause flicker
         removeCustomTrackElement();
         detachAllTextTrackListeners();
 
-        if (trackInfo && trackInfo.url) {
-          const rawUrl = (trackInfo.url.startsWith('http://') || trackInfo.url.startsWith('https://'))
-            ? trackInfo.url
-            : `${SERVER_ORIGIN}${trackInfo.url.startsWith('/') ? '' : '/'}${trackInfo.url}`;
+        // 1. Activate in HLS.js if stream uses HLS in-band subtitles
+        if (hls && typeof hls.subtitleTrack !== 'undefined') {
+          try { hls.subtitleTrack = trackIndex; } catch (e) { }
+        }
+
+        // 2. Fetch and parse direct subtitle track (WebVTT, ASS, SRT)
+        const subCandidate = trackInfo.url || trackInfo.file || trackInfo.rawUrl || '';
+        if (subCandidate && !subCandidate.includes('.m3u8')) {
+          let rawUrl = '';
+          if (subCandidate.startsWith('http://') || subCandidate.startsWith('https://')) {
+            rawUrl = subCandidate;
+          } else {
+            const origin = (SERVER_ORIGIN && SERVER_ORIGIN.trim())
+              ? SERVER_ORIGIN
+              : (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null' ? 'http://localhost:8000' : window.location.origin);
+            rawUrl = `${origin}${subCandidate.startsWith('/') ? '' : '/'}${subCandidate}`;
+          }
           const fetchUrl = sanitizeStreamUrl(rawUrl);
           activeSubUrl = fetchUrl;
           fetch(fetchUrl)
@@ -3045,7 +3260,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             .then(text => {
               if (activeSubUrl === fetchUrl) {
                 activeSubCues = parseVttCues(text);
-                console.log(`[Player Subtitles] Direct VTT engine loaded ${activeSubCues.length} cues for: ${trackName}`);
+                console.log(`[Player Subtitles] Subtitle engine loaded ${activeSubCues.length} cues for: ${trackName}`);
                 currentRenderedCaptionText = '';
                 updateActiveSubtitleDisplay();
                 if (!detectedIntroOutro?.introVerified || !detectedIntroOutro?.outroVerified) {
@@ -3056,10 +3271,42 @@ document.addEventListener('DOMContentLoaded', async function () {
             })
             .catch(err => {
               console.warn('[Player Subtitles] Direct fetch failed:', err);
+              // Fallback: If fetch failed due to origin/port mismatch, retry with backend host
+              if (subCandidate.startsWith('/api/') && !fetchUrl.includes(':8000')) {
+                const fbUrl = `http://localhost:8000${subCandidate}`;
+                fetch(fbUrl)
+                  .then(r => r.text())
+                  .then(t => {
+                    activeSubCues = parseVttCues(t);
+                    console.log(`[Player Subtitles] Fallback loaded ${activeSubCues.length} cues`);
+                    currentRenderedCaptionText = '';
+                    updateActiveSubtitleDisplay();
+                  })
+                  .catch(() => { });
+              }
             });
+
+          // Add native <track> with mode = 'hidden' for browser synchronization fallback
+          try {
+            const trackEl = document.createElement('track');
+            trackEl.id = 'custom-subtitle-track';
+            trackEl.kind = 'subtitles';
+            trackEl.label = trackName;
+            trackEl.srclang = trackInfo.lang || 'en';
+            trackEl.src = fetchUrl;
+            trackEl.default = true;
+            mainVideo.appendChild(trackEl);
+            if (trackEl.track) {
+              trackEl.track.mode = 'hidden';
+              trackEl.track.oncuechange = function () {
+                updateActiveSubtitleDisplay();
+              };
+            }
+          } catch (trackErr) { }
         }
 
         currentSubtitleTrack = trackIndex;
+        try { localStorage.setItem('infinx_subtitles_enabled', 'true'); } catch (e) { }
         document.querySelectorAll('.current-subtitle').forEach(el => { el.textContent = trackName; });
         if (subtitleBtn) {
           subtitleBtn.classList.add('active');
@@ -3070,10 +3317,8 @@ document.addEventListener('DOMContentLoaded', async function () {
           else if (trackName && trackName.trim().length <= 4) shortBadge = trackName.trim().toUpperCase();
           else if (trackName) shortBadge = trackName.trim().slice(0, 3).toUpperCase();
 
-          const subBadge = subtitleBtn.querySelector('.current-sub-badge');
-          if (subBadge) {
-            subBadge.textContent = shortBadge;
-          } else {
+          document.querySelectorAll('.current-sub-badge').forEach(el => { el.textContent = shortBadge; });
+          if (!subtitleBtn.querySelector('.current-sub-badge')) {
             subtitleBtn.innerHTML = `<span class="material-symbols-outlined text-[16px]">closed_caption</span><span class="font-bold current-sub-badge text-[11px]">${shortBadge}</span>`;
           }
         }
@@ -3363,10 +3608,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       // 3. Embedded Video Chapters
       if (currentEpisode && Array.isArray(currentEpisode.chapters) && currentEpisode.chapters.length > 0) {
         if (!intro) {
-          const opCh = currentEpisode.chapters.find(c => /\b(op|opening|intro|theme)\b/i.test(c.title || c.name || ''));
+          const opCh = currentEpisode.chapters.find(c => /\b(op|opening(\s*theme|\s*song)?|theme|theme\s*song|title\s*sequence)\b/i.test(c.title || c.name || '')) ||
+            currentEpisode.chapters.find(c => /\bintro\b/i.test(c.title || c.name || ''));
           if (opCh) {
-            const s = Number(opCh.startTime ?? opCh.start ?? 0);
-            const e = Number(opCh.endTime ?? opCh.end ?? (s + 90));
+            const s = Number(opCh.startTime ?? opCh.start ?? opCh.start_time ?? 0);
+            const e = Number(opCh.endTime ?? opCh.end ?? opCh.end_time ?? (s + 90));
             const chIntro = sanitizeIntroOutro({ start: s, end: Math.min(dur, e) });
             if (chIntro) {
               intro = chIntro;
@@ -3376,10 +3622,13 @@ document.addEventListener('DOMContentLoaded', async function () {
           }
         }
         if (!outro) {
-          const edCh = currentEpisode.chapters.find(c => /\b(ed|ending|outro|credits)\b/i.test(c.title || c.name || ''));
+          const edCh = currentEpisode.chapters.find(c => {
+            const s = Number(c.startTime ?? c.start ?? c.start_time ?? 0);
+            return (s > 180) && /\b(ed|ending(\s*theme|\s*song)?|outro|credits?|closing(\s*credits?|\s*theme)?)\b/i.test(c.title || c.name || '');
+          });
           if (edCh) {
-            const s = Number(edCh.startTime ?? edCh.start ?? (dur - 90));
-            const e = Number(edCh.endTime ?? edCh.end ?? dur);
+            const s = Number(edCh.startTime ?? edCh.start ?? edCh.start_time ?? (dur - 90));
+            const e = Number(edCh.endTime ?? edCh.end ?? edCh.end_time ?? dur);
             const chOutro = sanitizeIntroOutro({ start: Math.max(0, s), end: Math.min(dur, e) });
             if (chOutro) {
               outro = chOutro;
@@ -3552,8 +3801,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         outroMarker.setAttribute('title', `Ending (Outro): ${formatTime(outro.start)} - ${formatTime(outro.end)}`);
         if (edBadge) {
           edBadge.textContent = outroLabel;
-          edBadge.style.display = 'inline-flex';
-          edBadge.title = 'Click to seek to Ending';
+          edBadge.style.display = 'none';
         }
       } else {
         if (outroMarker) outroMarker.style.display = 'none';
@@ -3616,7 +3864,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (skipCont) skipCont.classList.add('hidden');
 
       if (mainVideo.paused) {
-        mainVideo.play().catch(() => {});
+        mainVideo.play().catch(() => { });
       }
 
       showUndoSkipToast();
@@ -3632,7 +3880,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           mainVideo.currentTime = preSkipTime;
           preSkipTime = null;
           if (mainVideo.paused) {
-            mainVideo.play().catch(() => {});
+            mainVideo.play().catch(() => { });
           }
         }
         const toast = document.getElementById('undo-skip-toast');
@@ -4716,7 +4964,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-    mainVideo.addEventListener('timeupdate', updateTime);
+    mainVideo.addEventListener('timeupdate', () => {
+      updateTime();
+      updateActiveSubtitleDisplay();
+    });
     mainVideo.addEventListener('seeking', () => {
       lastActivePlaybackTick = null;
       updateActiveSubtitleDisplay();
@@ -4853,7 +5104,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       });
     });
 
-    const playerSubtitleBtn = document.querySelector('.control-btn.subtitle-btn');
+    const playerSubtitleBtn = document.getElementById('player-subtitle-btn') || document.querySelector('.control-btn.subtitle-btn');
     if (playerSubtitleBtn) {
       playerSubtitleBtn.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -4865,7 +5116,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           const defaultIdx = subtitleTracks.findIndex(t => {
             const lang = (t.lang || t.language || '').toLowerCase();
             const label = (t.label || t.name || '').toLowerCase();
-            return t.default || lang.startsWith('en') || label.includes('english');
+            return !lang.includes('thumb') && !label.includes('thumb') && (t.default || lang.startsWith('en') || label.includes('english'));
           });
           setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
         } else {
@@ -5122,7 +5373,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     window.switchSettingsView = switchSettingsView;
 
+    function switchSettingsTab(tabKey) {
+      const tabBtns = document.querySelectorAll('.settings-tab-btn');
+      const panes = document.querySelectorAll('.settings-tab-pane');
+      tabBtns.forEach(btn => {
+        const isMatch = btn.getAttribute('data-tab') === tabKey;
+        btn.classList.toggle('active', isMatch);
+      });
+      panes.forEach(pane => {
+        const isMatch = pane.getAttribute('data-tab-pane') === tabKey;
+        pane.style.display = isMatch ? 'flex' : 'none';
+      });
+    }
+    window.switchSettingsTab = switchSettingsTab;
+
     function setupAllInOneSettingsMenu() {
+      // 1. Close button & Mobile grab handle
       const closeBtn = document.getElementById('settings-panel-close-btn');
       if (closeBtn) {
         closeBtn.addEventListener('click', function (e) {
@@ -5131,6 +5397,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
       }
 
+      const mobileGrabHandle = document.querySelector('.mobile-grab-handle');
+      if (mobileGrabHandle) {
+        mobileGrabHandle.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closeSettingsDropdown();
+        });
+      }
+
+      // 2. Tab switching
+      document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const tabKey = this.getAttribute('data-tab');
+          if (tabKey) switchSettingsTab(tabKey);
+        });
+      });
+
+      // 3. Full Subtitle Customizer Modal Trigger
       const openCaptionBtn = document.getElementById('open-caption-settings');
       if (openCaptionBtn) {
         openCaptionBtn.addEventListener('click', function (e) {
@@ -5141,6 +5425,69 @@ document.addEventListener('DOMContentLoaded', async function () {
           }
         });
       }
+
+      // 4. Quick Subtitle Appearance Controls (Color, Size, Backdrop)
+      const savedColor = localStorage.getItem('@infinx_caption_color') || '#ffffff';
+      const savedSize = localStorage.getItem('@infinx_caption_size') || '18px';
+      const savedBg = localStorage.getItem('@infinx_caption_bg') || '0.5';
+
+      document.documentElement.style.setProperty('--caption-text-color', savedColor);
+      document.documentElement.style.setProperty('--caption-font-size', savedSize);
+      document.documentElement.style.setProperty('--caption-bg', parseFloat(savedBg) === 0 ? 'transparent' : `rgba(0,0,0,${savedBg})`);
+
+      // Subtitle Color Pills
+      document.querySelectorAll('.sub-color-pill').forEach(b => {
+        const isMatch = b.getAttribute('data-color') === savedColor;
+        b.classList.toggle('scale-110', isMatch);
+        b.classList.toggle('ring-2', isMatch);
+        b.classList.toggle('ring-secondary-container', isMatch);
+        b.classList.toggle('opacity-75', !isMatch);
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const c = this.getAttribute('data-color');
+          if (!c) return;
+          document.documentElement.style.setProperty('--caption-text-color', c);
+          localStorage.setItem('@infinx_caption_color', c);
+          document.querySelectorAll('.sub-color-pill').forEach(el => {
+            const active = el.getAttribute('data-color') === c;
+            el.classList.toggle('scale-110', active);
+            el.classList.toggle('ring-2', active);
+            el.classList.toggle('ring-secondary-container', active);
+            el.classList.toggle('opacity-75', !active);
+          });
+        });
+      });
+
+      // Subtitle Size Pills
+      document.querySelectorAll('.sub-size-pill').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-size') === savedSize);
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const s = this.getAttribute('data-size');
+          if (!s) return;
+          document.documentElement.style.setProperty('--caption-font-size', s);
+          localStorage.setItem('@infinx_caption_size', s);
+          document.querySelectorAll('.sub-size-pill').forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-size') === s);
+          });
+        });
+      });
+
+      // Subtitle Backdrop Pills
+      document.querySelectorAll('.sub-bg-pill').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-bg') === String(savedBg));
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const bgVal = parseFloat(this.getAttribute('data-bg'));
+          if (isNaN(bgVal)) return;
+          const bgRgba = bgVal === 0 ? 'transparent' : `rgba(0, 0, 0, ${bgVal})`;
+          document.documentElement.style.setProperty('--caption-bg', bgRgba);
+          localStorage.setItem('@infinx_caption_bg', String(bgVal));
+          document.querySelectorAll('.sub-bg-pill').forEach(el => {
+            el.classList.toggle('active', parseFloat(el.getAttribute('data-bg')) === bgVal);
+          });
+        });
+      });
 
       setupSpeedPills();
 
@@ -5501,7 +5848,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
       }
 
-      playlistContainer.innerHTML = '';
+      const targetPlaylistContainer = playlistContainer || document.getElementById('playlist-items-container') || document.querySelector('.playlist-items');
+      if (targetPlaylistContainer) targetPlaylistContainer.innerHTML = '';
       const drawerEpisodesList = document.getElementById('drawer-episodes-list');
       if (drawerEpisodesList) drawerEpisodesList.innerHTML = '';
 
@@ -5518,8 +5866,22 @@ document.addEventListener('DOMContentLoaded', async function () {
       const descriptionText = document.querySelector('.description-text');
       if (descriptionText) descriptionText.textContent = stripHtmlTags(currentEpisode.show?.description || currentEpisode.description || '');
 
+      // Resilient sibling episodes check
+      if (!siblingEpisodes || !Array.isArray(siblingEpisodes) || siblingEpisodes.length === 0) {
+        if (currentEpisode) {
+          siblingEpisodes = [{
+            id: currentEpisode.id || (lunarId ? `lunar-${lunarId}-${epNum}` : episodeId),
+            episodeNumber: currentEpisode.episodeNumber || epNum || 1,
+            title: currentEpisode.title || `Episode ${epNum || 1}`,
+            thumbnail: currentEpisode.thumbnail || currentEpisode.show?.poster || '',
+            duration: currentEpisode.duration || '24m'
+          }];
+        }
+      }
+
       const totalEpisodes = (siblingEpisodes && Array.isArray(siblingEpisodes)) ? siblingEpisodes.length : 0;
-      document.querySelector('.episode-count').textContent = `(${totalEpisodes} episodes)`;
+      const epCountEl = document.querySelector('.episode-count');
+      if (epCountEl) epCountEl.textContent = `(${totalEpisodes} episodes)`;
       const drawerCountEl = document.getElementById('drawer-episode-count');
       if (drawerCountEl) drawerCountEl.textContent = `(${totalEpisodes})`;
 
@@ -5602,7 +5964,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         const buildItemHtml = () => `
-          <div class="item-thumbnail" style="position: relative; overflow: hidden;">
+          <div class="item-thumbnail" style="position: relative; overflow: hidden; width: 92px; min-width: 92px; height: 52px; min-height: 52px; flex-shrink: 0;">
             <img class="playlist-item-img" src="${fallbackPoster}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500';">
             <div class="item-overlay"><i class="fas fa-play"></i></div>
             <div class="item-duration">Ep ${ep.episodeNumber || ep.number}</div>
@@ -5611,7 +5973,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           <div class="item-info">
             <h4 class="item-title">Episode ${ep.episodeNumber || ep.number}: ${ep.title}</h4>
             <div class="item-meta">
-              <span class="item-duration">${ep.duration || '24m'} • HD Streaming</span>
+              <span class="item-meta-duration">${ep.duration || '24m'} • HD Streaming</span>
             </div>
             ${badgeHtml}
           </div>
@@ -5637,7 +5999,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         playlistItem.className = `playlist-item ${isCurrentActive ? 'active' : ''}`;
         playlistItem.innerHTML = buildItemHtml();
         playlistItem.addEventListener('click', playAction);
-        playlistContainer.appendChild(playlistItem);
+        if (targetPlaylistContainer) targetPlaylistContainer.appendChild(playlistItem);
 
         // 2. In-Player Drawer item
         if (drawerEpisodesList) {
@@ -6436,6 +6798,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (sData.streamUrl) {
               initialVideoUrl = sData.streamUrl;
               if (initialServer) initialServer.url = sData.streamUrl;
+              if (Array.isArray(sData.chapters) && sData.chapters.length > 0 && currentEpisode) {
+                currentEpisode.chapters = sData.chapters;
+              }
               const validIntro = sanitizeIntroOutro(sData.intro);
               const validOutro = sanitizeIntroOutro(sData.outro);
               if (validIntro || validOutro) {
@@ -6444,13 +6809,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updateTimelineMarkers();
               }
               if (sData.subtitles && sData.subtitles.length > 0) {
-                subtitleTracks = sData.subtitles;
+                subtitleTracks = sData.subtitles.filter(s => {
+                  const l = (s.lang || s.label || s.language || '').toLowerCase();
+                  return !l.includes('thumb');
+                });
                 updateSubtitleOptions();
-                if (currentAudioType === 'sub') {
+
+                const subsPref = localStorage.getItem('infinx_subtitles_enabled');
+                const shouldAutoEnable = subsPref !== 'false' || currentAudioType === 'sub';
+
+                if (shouldAutoEnable) {
                   const defaultIdx = subtitleTracks.findIndex(t => {
                     const lang = (t.lang || t.language || '').toLowerCase();
                     const label = (t.label || t.name || '').toLowerCase();
-                    return t.default || lang.startsWith('en') || label.includes('english');
+                    return !lang.includes('thumb') && !label.includes('thumb') && (t.default || lang.startsWith('en') || label.includes('english'));
                   });
                   setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
                 }
@@ -6481,6 +6853,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                   });
                   updateAudioOptions();
                   if (initialServer) initialServer.url = fbData.streamUrl;
+                  if (Array.isArray(fbData.chapters) && fbData.chapters.length > 0 && currentEpisode) {
+                    currentEpisode.chapters = fbData.chapters;
+                  }
                   const validIntro = sanitizeIntroOutro(fbData.intro);
                   const validOutro = sanitizeIntroOutro(fbData.outro);
                   if (validIntro || validOutro) {
@@ -6489,8 +6864,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                     updateTimelineMarkers();
                   }
                   if (fbData.subtitles && fbData.subtitles.length > 0) {
-                    subtitleTracks = fbData.subtitles;
+                    subtitleTracks = fbData.subtitles.filter(s => {
+                      const l = (s.lang || s.label || s.language || '').toLowerCase();
+                      return !l.includes('thumb');
+                    });
                     updateSubtitleOptions();
+                    const defaultIdx = subtitleTracks.findIndex(t => {
+                      const lang = (t.lang || t.language || '').toLowerCase();
+                      const label = (t.label || t.name || '').toLowerCase();
+                      return t.default || lang.startsWith('en') || label.includes('english');
+                    });
+                    setSubtitle(defaultIdx >= 0 ? defaultIdx : 0);
                   }
                   showPlayerToast('English Dub not available. Playing Japanese Sub.');
                 }

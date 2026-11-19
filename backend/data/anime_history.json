@@ -1,19 +1,34 @@
 {
   "1": [
     {
-      "id": "lunar-21-1092",
+      "id": "lunar-21-1093",
       "userId": 1,
       "isLunar": true,
       "lunarId": "21",
-      "episodeId": "lunar-21-1092",
-      "episodeNumber": 1092,
-      "episodeTitle": "Bonney`s Lamentation! Darkness Lurking on the Future Island",
+      "episodeId": "lunar-21-1093",
+      "episodeNumber": 1093,
+      "episodeTitle": "The Winner Takes All! Law vs. Blackbeard!",
       "showTitle": "ONE PIECE",
       "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
       "banner": "",
-      "progress": 1262,
+      "progress": 140,
       "duration": 1430,
-      "watchedAt": "2026-11-18T15:27:48.901Z"
+      "watchedAt": "2026-11-19T06:18:13.826Z"
+    },
+    {
+      "id": "lunar-159042-1",
+      "userId": 1,
+      "isLunar": true,
+      "lunarId": "159042",
+      "episodeId": "lunar-159042-1",
+      "episodeNumber": 1,
+      "episodeTitle": "The Floating Island",
+      "showTitle": "Reincarnated as a Sword Season 2",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/410378/posters/6335c1e53b83a.jpg",
+      "banner": "",
+      "progress": 393,
+      "duration": 1422,
+      "watchedAt": "2026-11-18T18:05:02.788Z"
     },
     {
       "id": "lunar-195539-1",

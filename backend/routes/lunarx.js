@@ -679,6 +679,68 @@ router.get(['/hls/segment.ts', '/proxy/segment'], async (req, res) => {
   }
 });
 
+// Helper to convert ASS/SSA subtitles to standard WebVTT
+function convertAssToVtt(assText) {
+  function assTimeToVtt(timeStr) {
+    if (!timeStr) return '00:00:00.000';
+    const parts = timeStr.trim().split(':');
+    let h = '00', m = '00', s = '00.000';
+    if (parts.length === 3) {
+      h = parts[0].padStart(2, '0');
+      m = parts[1].padStart(2, '0');
+      const secParts = parts[2].split('.');
+      const sec = secParts[0].padStart(2, '0');
+      const ms = (secParts[1] || '0').padEnd(3, '0').slice(0, 3);
+      s = `${sec}.${ms}`;
+    } else if (parts.length === 2) {
+      m = parts[0].padStart(2, '0');
+      const secParts = parts[1].split('.');
+      const sec = secParts[0].padStart(2, '0');
+      const ms = (secParts[1] || '0').padEnd(3, '0').slice(0, 3);
+      s = `${sec}.${ms}`;
+    }
+    return `${h}:${m}:${s}`;
+  }
+
+  const lines = assText.replace(/\r\n|\r/g, '\n').split('\n');
+  const vttLines = ['WEBVTT\n'];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('Dialogue:')) {
+      const withoutPrefix = line.substring(9).trim();
+      let commaCount = 0;
+      const parts = [];
+      let cur = '';
+      for (let j = 0; j < withoutPrefix.length; j++) {
+        if (withoutPrefix[j] === ',' && commaCount < 9) {
+          parts.push(cur.trim());
+          cur = '';
+          commaCount++;
+        } else {
+          cur += withoutPrefix[j];
+        }
+      }
+      parts.push(cur.trim());
+
+      if (parts.length >= 10) {
+        const start = assTimeToVtt(parts[1]);
+        const end = assTimeToVtt(parts[2]);
+        const text = parts[9]
+          .replace(/\\N/g, '\n')
+          .replace(/\\n/g, '\n')
+          .replace(/\\h/g, ' ')
+          .replace(/\{[^}\n]*\}/g, '')
+          .trim();
+        if (text) {
+          vttLines.push(`${start} --> ${end}\n${text}\n`);
+        }
+      }
+    }
+  }
+  return vttLines.join('\n');
+}
+
 // 9. Subtitle VTT Proxy (Decodes encrypted token and streams clean VTT)
 router.get(['/hls/sub.vtt', '/proxy/subtitle'], async (req, res) => {
   try {
@@ -712,14 +774,25 @@ router.get(['/hls/sub.vtt', '/proxy/subtitle'], async (req, res) => {
     const { headers } = getUpstreamHeaders(targetUrl, reqRef, reqOrig);
     const { res: upstreamRes } = await fetchWithRedirects(targetUrl, headers);
 
-    res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    let rawBody = '';
+    upstreamRes.setEncoding('utf8');
+    upstreamRes.on('data', chunk => { rawBody += chunk; });
+    upstreamRes.on('end', () => {
+      let finalVtt = rawBody;
+      if (rawBody.includes('[Script Info]') || rawBody.includes('Dialogue:')) {
+        finalVtt = convertAssToVtt(rawBody);
+      } else if (!rawBody.trim().startsWith('WEBVTT')) {
+        finalVtt = `WEBVTT\n\n${rawBody.trim()}`;
+      }
 
-    res.status(upstreamRes.statusCode);
-    upstreamRes.pipe(res);
+      res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+
+      res.status(upstreamRes.statusCode || 200).send(finalVtt);
+    });
   } catch (err) {
     console.error('Subtitle proxy error:', err.message);
     if (!res.headersSent) res.status(502).send('Subtitle fetch error');

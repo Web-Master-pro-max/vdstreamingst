@@ -18,6 +18,8 @@ class LunarXService {
     this.pitch = DEFAULT_PITCH;
     this.globalKeys = null;
     this.cache = new Map();
+    this.malIdCache = new Map();
+    this.aniSkipCache = new Map();
     this.cacheTTL = 15 * 60 * 1000; // 15 minutes TTL for metadata
     this.loadCachedKeysFromDisk();
   }
@@ -390,6 +392,7 @@ class LunarXService {
     const gqlQuery = `query ($id: Int) {
       Media(id: $id) {
         id
+        idMal
         title { english romaji userPreferred }
         coverImage { extraLarge large }
         bannerImage
@@ -482,8 +485,13 @@ class LunarXService {
               });
             }
 
+            if (m.id && m.idMal) {
+              this.malIdCache.set(m.id, m.idMal);
+            }
+
             resolve({
               anilistId: m.id,
+              malId: m.idMal || null,
               title: title,
               englishTitle: m.title?.english,
               romajiTitle: m.title?.romaji,
@@ -1026,6 +1034,145 @@ class LunarXService {
     });
   }
 
+  // Resolve MyAnimeList (MAL) ID from AniList ID for AniSkip API lookup
+  async getMalId(anilistId) {
+    const id = parseInt(anilistId, 10);
+    if (!id) return null;
+    if (this.malIdCache && this.malIdCache.has(id)) {
+      return this.malIdCache.get(id);
+    }
+    if (!this.malIdCache) this.malIdCache = new Map();
+
+    try {
+      const res = await fetch('https://graphql.anilist.co', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+        body: JSON.stringify({
+          query: 'query ($id: Int) { Media(id: $id) { id idMal } }',
+          variables: { id }
+        }),
+        signal: AbortSignal.timeout(5000)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const malId = json.data?.Media?.idMal;
+        if (malId) {
+          this.malIdCache.set(id, malId);
+          return malId;
+        }
+      }
+    } catch (e) {
+      console.warn(`[AniSkip] Could not resolve MAL ID for AniList #${id}:`, e.message);
+    }
+    return null;
+  }
+
+  // Fetch frame-accurate community-verified OP & ED skip intervals from AniSkip API
+  async fetchAniSkipTimes(malId, epNum, approxDuration = 0) {
+    const mId = parseInt(malId, 10);
+    const ep = parseInt(epNum, 10);
+    if (!mId || !ep) return { intro: null, outro: null };
+
+    const cacheKey = `${mId}:${ep}`;
+    if (!this.aniSkipCache) this.aniSkipCache = new Map();
+    if (this.aniSkipCache.has(cacheKey)) {
+      return this.aniSkipCache.get(cacheKey);
+    }
+
+    try {
+      const durParam = Math.round(approxDuration) || 0;
+      const url = `https://api.aniskip.com/v2/skip-times/${mId}/${ep}?types[]=op&types[]=ed&episodeLength=${durParam}`;
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(5000)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.found && Array.isArray(json.results)) {
+          let intro = null;
+          let outro = null;
+          for (const item of json.results) {
+            if (item.skipType === 'op' && item.interval) {
+              const s = Math.round(Number(item.interval.startTime) * 10) / 10;
+              const e = Math.round(Number(item.interval.endTime) * 10) / 10;
+              if (e > s && (e - s) >= 15) {
+                intro = { start: Math.max(0, s), end: e };
+              }
+            } else if (item.skipType === 'ed' && item.interval) {
+              const s = Math.round(Number(item.interval.startTime) * 10) / 10;
+              const e = Math.round(Number(item.interval.endTime) * 10) / 10;
+              if (e > s && (e - s) >= 15) {
+                outro = { start: Math.max(0, s), end: e };
+              }
+            }
+          }
+          const result = { intro, outro };
+          this.aniSkipCache.set(cacheKey, result);
+          return result;
+        }
+      }
+    } catch (e) {
+      console.warn(`[AniSkip] Lookup failed for MAL #${mId} Ep #${ep}:`, e.message);
+    }
+    const emptyResult = { intro: null, outro: null };
+    this.aniSkipCache.set(cacheKey, emptyResult);
+    return emptyResult;
+  }
+
+  // Parse Opening and Ending timestamps from stream chapter metadata
+  parseChaptersIntroOutro(chapters) {
+    if (!Array.isArray(chapters) || chapters.length === 0) {
+      return { intro: null, outro: null };
+    }
+    let intro = null;
+    let outro = null;
+
+    // 1. First pass for OP: Look for explicit Opening / OP / Theme Song
+    for (const ch of chapters) {
+      const title = String(ch.title || ch.name || '').trim().toLowerCase();
+      const s = typeof ch.start_time === 'number' ? ch.start_time : (typeof ch.startTime === 'number' ? ch.startTime : (typeof ch.start === 'number' ? ch.start : null));
+      const e = typeof ch.end_time === 'number' ? ch.end_time : (typeof ch.endTime === 'number' ? ch.endTime : (typeof ch.end === 'number' ? ch.end : null));
+      if (s === null) continue;
+      const dur = (e !== null && e > s) ? (e - s) : 90;
+
+      if (!intro && /\b(op|opening(\s*theme|\s*song)?|theme\s*song|title\s*sequence)\b/i.test(title)) {
+        intro = { start: Math.max(0, Math.round(s * 10) / 10), end: Math.round((e || (s + dur)) * 10) / 10 };
+      }
+    }
+
+    // 2. Second pass for Intro if explicit OP was not found (matches "Intro" unless it's a tiny < 30s cold open)
+    if (!intro) {
+      for (const ch of chapters) {
+        const title = String(ch.title || ch.name || '').trim().toLowerCase();
+        const s = typeof ch.start_time === 'number' ? ch.start_time : (typeof ch.startTime === 'number' ? ch.startTime : (typeof ch.start === 'number' ? ch.start : null));
+        const e = typeof ch.end_time === 'number' ? ch.end_time : (typeof ch.endTime === 'number' ? ch.endTime : (typeof ch.end === 'number' ? ch.end : null));
+        if (s === null) continue;
+        const dur = (e !== null && e > s) ? (e - s) : 90;
+
+        if (/\bintro\b/i.test(title)) {
+          intro = { start: Math.max(0, Math.round(s * 10) / 10), end: Math.round((e || (s + dur)) * 10) / 10 };
+          break;
+        }
+      }
+    }
+
+    // 3. Look for Outro / Ending / Credits (occurring in second half of episode, > 180s)
+    for (const ch of chapters) {
+      const title = String(ch.title || ch.name || '').trim().toLowerCase();
+      const s = typeof ch.start_time === 'number' ? ch.start_time : (typeof ch.startTime === 'number' ? ch.startTime : (typeof ch.start === 'number' ? ch.start : null));
+      const e = typeof ch.end_time === 'number' ? ch.end_time : (typeof ch.endTime === 'number' ? ch.endTime : (typeof ch.end === 'number' ? ch.end : null));
+      if (s === null) continue;
+      const dur = (e !== null && e > s) ? (e - s) : 90;
+
+      if (s > 180 && /\b(ed|ending(\s*theme|\s*song)?|outro|credits?|closing(\s*credits?|\s*theme)?|end\s*credits?)\b/i.test(title)) {
+        outro = { start: Math.max(0, Math.round(s * 10) / 10), end: Math.round((e || (s + dur)) * 10) / 10 };
+        break;
+      }
+    }
+
+    return { intro, outro };
+  }
+
   // Helper to resolve and decrypt 3rdprovider stream (Flixcloud / Zen)
   async resolve3rdProvider(id, ep, liveAxis, livePitch, fallbackSubtitles = [], type = 'sub') {
     const aParam = type === 'dub' ? '1' : '0';
@@ -1086,18 +1233,22 @@ class LunarXService {
               default: !!s.is_default || idx === 0
             }));
 
-          // Parse intro / outro from chapters if available
-          let intro = null;
-          let outro = null;
-          if (Array.isArray(res3rd.stream_data?.chapters)) {
-            for (const ch of res3rd.stream_data.chapters) {
-              const title = String(ch.title || '').toLowerCase();
-              if ((title.includes('opening') || title.includes('intro')) && typeof ch.start_time === 'number') {
-                intro = { start: ch.start_time, end: ch.end_time || (ch.start_time + 90) };
-              } else if ((title.includes('ending') || title.includes('outro')) && typeof ch.start_time === 'number') {
-                outro = { start: ch.start_time, end: ch.end_time || (ch.start_time + 90) };
-              }
+          // Parse intro / outro from stream chapters
+          const rawChapters = Array.isArray(res3rd.stream_data?.chapters) ? res3rd.stream_data.chapters : [];
+          const chapterTimes = this.parseChaptersIntroOutro(rawChapters);
+          let intro = chapterTimes.intro;
+          let outro = chapterTimes.outro;
+
+          // AniSkip lookup for frame-accurate, community-verified OP/ED skip times
+          try {
+            const malId = await this.getMalId(id);
+            if (malId) {
+              const aniSkipTimes = await this.fetchAniSkipTimes(malId, ep);
+              if (aniSkipTimes.intro) intro = aniSkipTimes.intro;
+              if (aniSkipTimes.outro) outro = aniSkipTimes.outro;
             }
+          } catch (skipErr) {
+            console.warn(`[LunarX] AniSkip lookup error for Anime #${id} Ep #${ep}:`, skipErr.message);
           }
 
           const token = encryptStreamToken({
@@ -1119,6 +1270,7 @@ class LunarXService {
             isM3U8: true,
             intro: intro,
             outro: outro,
+            chapters: rawChapters,
             subtitles: subs.length > 0 ? subs : fallbackSubtitles,
             availableHosts: ['zuna', 'yuki', 'sora', 'loli', '3rdprovider']
           };
@@ -1288,6 +1440,21 @@ class LunarXService {
             });
             const finalStreamUrl = `/api/stream/hls/live.m3u8?t=${token}`;
 
+            let streamIntro = res.data.intro || null;
+            let streamOutro = res.data.outro || null;
+
+            // Enhance with AniSkip for frame-accurate OP/ED times (especially if provider returned generic/naive 0-90s)
+            try {
+              const malId = await this.getMalId(id);
+              if (malId) {
+                const aniSkipTimes = await this.fetchAniSkipTimes(malId, ep);
+                if (aniSkipTimes.intro) streamIntro = aniSkipTimes.intro;
+                if (aniSkipTimes.outro) streamOutro = aniSkipTimes.outro;
+              }
+            } catch (skipErr) {
+              // keep streamIntro/streamOutro
+            }
+
             return {
               success: true,
               anilistId: id,
@@ -1297,8 +1464,9 @@ class LunarXService {
               streamUrl: finalStreamUrl,
               quality: rawSource?.quality || 'auto',
               isM3U8: true,
-              intro: res.data.intro || null,
-              outro: res.data.outro || null,
+              intro: streamIntro,
+              outro: streamOutro,
+              chapters: Array.isArray(res.data.chapters) ? res.data.chapters : [],
               subtitles: subtitles.length > 0 ? subtitles : fallbackSubtitles,
               availableHosts: ['zuna', 'yuki', 'sora', 'loli', '3rdprovider']
             };
