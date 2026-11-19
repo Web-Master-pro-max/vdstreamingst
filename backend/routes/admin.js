@@ -892,11 +892,298 @@ router.delete('/episodes/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/shows/:id/feature - Fully customize banner overrides
+// =========================================================================
+// HOMEPAGE CAROUSEL BANNER & SPOTLIGHT CUSTOMIZER
+// Supports both Anime (LunarX / AniList) and Local Database Shows.
+// Slide #1 is permanently reserved for the designated Spotlight Banner.
+// =========================================================================
+const CAROUSEL_BANNERS_FILE = path.join(__dirname, '../data/carousel_banners.json');
+
+async function getStoredBanners() {
+  try {
+    if (fs.existsSync(CAROUSEL_BANNERS_FILE)) {
+      const content = fs.readFileSync(CAROUSEL_BANNERS_FILE, 'utf8');
+      if (content && content.trim()) {
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error reading carousel_banners.json:', e);
+  }
+
+  // Auto-initialize from existing featured shows in Prisma database if file doesn't exist
+  try {
+    const featuredShows = await prisma.show.findMany({
+      where: { isFeatured: true },
+      take: 10,
+      orderBy: { rating: 'desc' }
+    });
+
+    if (featuredShows.length > 0) {
+      const initial = featuredShows.map((show, idx) => ({
+        id: `show-${show.id}`,
+        type: 'show',
+        showId: show.id,
+        anilistId: null,
+        title: show.title,
+        description: show.description || '',
+        poster: show.poster || '',
+        banner: show.banner || show.poster || '',
+        rating: show.rating ? String(show.rating) : '9.8',
+        year: show.year ? String(show.year) : '2024',
+        badge: show.badge || '4K UHD',
+        isSpotlight: idx === 0, // Reserve first slide as Spotlight
+        isLunar: false,
+        createdAt: new Date().toISOString()
+      }));
+      saveStoredBanners(initial);
+      return initial;
+    }
+  } catch (e) {
+    console.error('Error auto-initializing banners from prisma:', e);
+  }
+
+  return [];
+}
+
+function saveStoredBanners(banners) {
+  try {
+    const dir = path.dirname(CAROUSEL_BANNERS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const tempFile = path.join(dir, `carousel_banners_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`);
+    fs.writeFileSync(tempFile, JSON.stringify(banners, null, 2), 'utf8');
+    fs.renameSync(tempFile, CAROUSEL_BANNERS_FILE);
+    return true;
+  } catch (e) {
+    console.error('Error saving carousel_banners.json:', e);
+    return false;
+  }
+}
+
+function normalizeSpotlightBannerOrder(banners) {
+  if (!Array.isArray(banners) || banners.length === 0) return [];
+
+  // Find designated spotlight banner
+  const spotlightIdx = banners.findIndex(b => b.isSpotlight);
+
+  if (spotlightIdx > 0) {
+    // Move the designated spotlight banner to position 0 (Slide #1)
+    const [spotlightItem] = banners.splice(spotlightIdx, 1);
+    banners.unshift(spotlightItem);
+  } else if (spotlightIdx === -1) {
+    // If none explicitly marked, the first slide is reserved as Spotlight!
+    banners[0].isSpotlight = true;
+  }
+
+  // Ensure ONLY index 0 has isSpotlight = true
+  banners.forEach((b, idx) => {
+    b.isSpotlight = (idx === 0);
+  });
+
+  return banners;
+}
+
+// GET /api/admin/banners - Get all active carousel slides
+router.get('/banners', authenticate, requireAdmin, async (req, res) => {
+  try {
+    let banners = await getStoredBanners();
+    banners = normalizeSpotlightBannerOrder(banners);
+    res.json({ banners });
+  } catch (error) {
+    console.error('Error fetching admin banners:', error);
+    res.status(500).json({ error: 'Failed to fetch banner slides' });
+  }
+});
+
+// POST /api/admin/banners - Add or update a carousel banner (Anime or Local Show)
+router.post('/banners', authenticate, requireAdmin, imageUpload.fields([{ name: 'banner', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), async (req, res) => {
+  try {
+    const {
+      id: existingId,
+      type = 'anime',
+      anilistId,
+      showId,
+      title,
+      description,
+      poster: posterUrlParam,
+      banner: bannerUrlParam,
+      rating,
+      year,
+      badge,
+      isSpotlight
+    } = req.body;
+
+    const isSpotlightBool = isSpotlight === true || isSpotlight === 'true' || isSpotlight === '1';
+
+    let finalBannerUrl = bannerUrlParam || null;
+    if (req.files && req.files['banner'] && req.files['banner'][0]) {
+      const bannerFile = req.files['banner'][0];
+      const bannerKey = `banners/${Date.now()}-${bannerFile.originalname}`;
+      finalBannerUrl = await uploadToS3(bannerKey, bannerFile.buffer, bannerFile.mimetype);
+    }
+
+    let finalPosterUrl = posterUrlParam || null;
+    if (req.files && req.files['poster'] && req.files['poster'][0]) {
+      const posterFile = req.files['poster'][0];
+      const posterKey = `posters/${Date.now()}-${posterFile.originalname}`;
+      finalPosterUrl = await uploadToS3(posterKey, posterFile.buffer, posterFile.mimetype);
+    }
+
+    let banners = await getStoredBanners();
+
+    // Determine banner ID
+    const bannerId = existingId || (type === 'anime' && anilistId ? `anime-${anilistId}` : (type === 'show' && showId ? `show-${showId}` : `banner-${Date.now()}`));
+
+    // Check if banner already exists
+    const existingIndex = banners.findIndex(b => b.id === bannerId || (type === 'anime' && anilistId && b.anilistId == anilistId) || (type === 'show' && showId && b.showId == showId));
+
+    const bannerData = {
+      id: bannerId,
+      type: type === 'show' ? 'show' : 'anime',
+      anilistId: anilistId ? parseInt(anilistId, 10) : null,
+      showId: showId ? parseInt(showId, 10) : null,
+      title: title || 'Untitled Presentation',
+      description: description || '',
+      poster: finalPosterUrl || (existingIndex >= 0 ? banners[existingIndex].poster : ''),
+      banner: finalBannerUrl || (existingIndex >= 0 ? banners[existingIndex].banner : (finalPosterUrl || '')),
+      rating: rating ? String(rating) : '9.8',
+      year: year ? String(year) : '2025',
+      badge: badge || (type === 'show' ? '4K UHD' : 'SIMULCAST'),
+      isSpotlight: isSpotlightBool,
+      isLunar: type === 'anime',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      banners[existingIndex] = { ...banners[existingIndex], ...bannerData };
+    } else {
+      bannerData.createdAt = new Date().toISOString();
+      if (isSpotlightBool) {
+        banners.unshift(bannerData);
+      } else {
+        banners.push(bannerData);
+      }
+    }
+
+    banners = normalizeSpotlightBannerOrder(banners);
+    saveStoredBanners(banners);
+
+    // If local show, sync with Prisma
+    if (type === 'show' && showId) {
+      try {
+        await prisma.show.update({
+          where: { id: parseInt(showId, 10) },
+          data: {
+            isFeatured: true,
+            banner: finalBannerUrl || undefined
+          }
+        });
+      } catch (e) { }
+    }
+
+    res.json({ message: 'Banner saved successfully', banner: bannerData, banners });
+  } catch (error) {
+    console.error('Error creating/updating banner:', error);
+    res.status(500).json({ error: error.message || 'Failed to save banner' });
+  }
+});
+
+// DELETE /api/admin/banners/:id - Remove a banner slide
+router.delete('/banners/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    let banners = await getStoredBanners();
+    const target = banners.find(b => b.id === id);
+
+    banners = banners.filter(b => b.id !== id);
+    banners = normalizeSpotlightBannerOrder(banners);
+    saveStoredBanners(banners);
+
+    if (target && target.type === 'show' && target.showId) {
+      try {
+        await prisma.show.update({
+          where: { id: parseInt(target.showId, 10) },
+          data: { isFeatured: false }
+        });
+      } catch (e) { }
+    }
+
+    res.json({ message: 'Banner removed successfully', banners });
+  } catch (error) {
+    console.error('Error deleting banner:', error);
+    res.status(500).json({ error: 'Failed to delete banner' });
+  }
+});
+
+// POST /api/admin/banners/:id/spotlight - Designate as the reserved Spotlight Banner (Slide #1)
+router.post('/banners/:id/spotlight', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    let banners = await getStoredBanners();
+    const targetIdx = banners.findIndex(b => b.id === id);
+
+    if (targetIdx === -1) {
+      return res.status(404).json({ error: 'Banner not found' });
+    }
+
+    banners.forEach(b => { b.isSpotlight = false; });
+    banners[targetIdx].isSpotlight = true;
+
+    banners = normalizeSpotlightBannerOrder(banners);
+    saveStoredBanners(banners);
+
+    res.json({ message: 'Banner is now reserved as the Spotlight banner (Slide #1)', banners });
+  } catch (error) {
+    console.error('Error designating spotlight banner:', error);
+    res.status(500).json({ error: 'Failed to update spotlight banner' });
+  }
+});
+
+// POST /api/admin/banners/reorder - Reorder carousel slides
+router.post('/banners/reorder', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids)) {
+      return res.status(400).json({ error: 'ids array required' });
+    }
+
+    let banners = await getStoredBanners();
+    const map = new Map(banners.map(b => [b.id, b]));
+
+    const reordered = [];
+    ids.forEach(id => {
+      if (map.has(id)) {
+        reordered.push(map.get(id));
+        map.delete(id);
+      }
+    });
+
+    map.forEach(val => reordered.push(val));
+
+    if (reordered.length > 0) {
+      reordered.forEach((b, idx) => {
+        b.isSpotlight = (idx === 0);
+      });
+    }
+
+    saveStoredBanners(reordered);
+    res.json({ message: 'Banners reordered successfully', banners: reordered });
+  } catch (error) {
+    console.error('Error reordering banners:', error);
+    res.status(500).json({ error: 'Failed to reorder banners' });
+  }
+});
+
+// POST /api/admin/shows/:id/feature - Fully customize banner overrides (Backwards compatibility)
 router.post('/shows/:id/feature', authenticate, requireAdmin, imageUpload.fields([{ name: 'banner', maxCount: 1 }]), async (req, res) => {
   try {
     const showId = parseInt(req.params.id);
-    const { titleOverride, descriptionOverride, isFeatured } = req.body;
+    const { titleOverride, descriptionOverride, isFeatured, isSpotlight } = req.body;
 
     const show = await prisma.show.findUnique({ where: { id: showId } });
     if (!show) {
@@ -919,6 +1206,48 @@ router.post('/shows/:id/feature', authenticate, requireAdmin, imageUpload.fields
         banner: bannerUrl
       }
     });
+
+    // Synchronize with carousel_banners.json
+    try {
+      let banners = await getStoredBanners();
+      const existingIdx = banners.findIndex(b => b.showId === showId || b.id === `show-${showId}`);
+      if (isFeatured === 'false') {
+        if (existingIdx >= 0) {
+          banners.splice(existingIdx, 1);
+        }
+      } else {
+        const bannerItem = {
+          id: `show-${showId}`,
+          type: 'show',
+          showId: showId,
+          anilistId: null,
+          title: titleOverride || show.title,
+          description: descriptionOverride || show.description || '',
+          poster: show.poster || '',
+          banner: bannerUrl || show.banner || show.poster || '',
+          rating: show.rating ? String(show.rating) : '9.8',
+          year: show.year ? String(show.year) : '2025',
+          badge: show.badge || '4K UHD',
+          isSpotlight: isSpotlight === true || isSpotlight === 'true',
+          isLunar: false,
+          updatedAt: new Date().toISOString()
+        };
+        if (existingIdx >= 0) {
+          banners[existingIdx] = { ...banners[existingIdx], ...bannerItem };
+        } else {
+          bannerItem.createdAt = new Date().toISOString();
+          if (bannerItem.isSpotlight) {
+            banners.unshift(bannerItem);
+          } else {
+            banners.push(bannerItem);
+          }
+        }
+      }
+      banners = normalizeSpotlightBannerOrder(banners);
+      saveStoredBanners(banners);
+    } catch (syncErr) {
+      console.error('Error syncing show to carousel_banners:', syncErr);
+    }
 
     res.json({ message: 'Show featured settings updated successfully.', show: updatedShow });
   } catch (error) {

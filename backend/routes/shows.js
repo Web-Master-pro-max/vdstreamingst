@@ -28,9 +28,84 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get featured shows for carousel
+// Get featured shows for carousel (guarantees Slide #1 is reserved for Spotlight)
+const CAROUSEL_BANNERS_FILE = path.join(__dirname, '../data/carousel_banners.json');
+
 router.get('/carousel', async (req, res) => {
   try {
+    let banners = [];
+    if (fs.existsSync(CAROUSEL_BANNERS_FILE)) {
+      try {
+        const raw = fs.readFileSync(CAROUSEL_BANNERS_FILE, 'utf8');
+        if (raw && raw.trim()) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            banners = parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Error reading carousel_banners.json:', e);
+      }
+    }
+
+    if (banners.length > 0) {
+      // Find explicit spotlight banner or designate Slide #1
+      const spotlightIdx = banners.findIndex(b => b.isSpotlight);
+      if (spotlightIdx > 0) {
+        const [spotlightItem] = banners.splice(spotlightIdx, 1);
+        banners.unshift(spotlightItem);
+      } else if (spotlightIdx === -1) {
+        banners[0].isSpotlight = true;
+      }
+      banners.forEach((b, idx) => {
+        b.isSpotlight = (idx === 0);
+      });
+
+      // Hydrate local show records with Prisma episodes and categories
+      const hydrated = await Promise.all(banners.map(async (banner, idx) => {
+        if (banner.type === 'show' && banner.showId) {
+          try {
+            const showRecord = await prisma.show.findUnique({
+              where: { id: parseInt(banner.showId, 10) },
+              include: {
+                categories: { include: { category: true } },
+                episodes: { orderBy: { episodeNumber: 'asc' } }
+              }
+            });
+            if (showRecord) {
+              return {
+                ...showRecord,
+                ...banner,
+                id: showRecord.id,
+                showId: showRecord.id,
+                title: banner.title || showRecord.title,
+                description: banner.description || showRecord.description,
+                banner: banner.banner || showRecord.banner,
+                poster: banner.poster || showRecord.poster,
+                rating: banner.rating || showRecord.rating,
+                year: banner.year || showRecord.year,
+                episodes: showRecord.episodes,
+                categories: showRecord.categories,
+                isSpotlight: idx === 0,
+                isLunar: false
+              };
+            }
+          } catch (e) { }
+        }
+
+        const aid = banner.anilistId || (typeof banner.id === 'string' && banner.id.startsWith('anime-') ? parseInt(banner.id.replace('anime-', ''), 10) : null);
+        return {
+          ...banner,
+          anilistId: aid,
+          isLunar: banner.type === 'anime' || !!aid,
+          isSpotlight: idx === 0
+        };
+      }));
+
+      return res.json(hydrated);
+    }
+
+    // Fallback if no carousel_banners configured yet
     const featuredShows = await prisma.show.findMany({
       where: { isFeatured: true },
       take: 5,
@@ -47,26 +122,28 @@ router.get('/carousel', async (req, res) => {
       },
     });
 
-    // If no featured shows exist, fallback to top rated shows
-    if (featuredShows.length === 0) {
-      const topShows = await prisma.show.findMany({
-        take: 5,
-        orderBy: { rating: 'desc' },
-        include: {
-          categories: {
-            include: {
-              category: true,
-            },
-          },
-          episodes: {
-            orderBy: { episodeNumber: 'asc' },
-          },
-        },
-      });
-      return res.json(topShows);
+    if (featuredShows.length > 0) {
+      featuredShows.forEach((s, idx) => { s.isSpotlight = (idx === 0); });
+      return res.json(featuredShows);
     }
 
-    res.json(featuredShows);
+    // Secondary fallback to top rated shows
+    const topShows = await prisma.show.findMany({
+      take: 5,
+      orderBy: { rating: 'desc' },
+      include: {
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        episodes: {
+          orderBy: { episodeNumber: 'asc' },
+        },
+      },
+    });
+    topShows.forEach((s, idx) => { s.isSpotlight = (idx === 0); });
+    res.json(topShows);
   } catch (error) {
     console.error('Error fetching carousel shows:', error);
     res.status(500).json({ error: 'Internal server error.' });

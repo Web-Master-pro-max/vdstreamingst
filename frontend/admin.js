@@ -1199,147 +1199,555 @@
             }
         }
 
+        // =========================================================================
+        // BANNER CUSTOMIZER & SPOTLIGHT MANAGEMENT
+        // Allows adding both Anime (LunarX / AniList) and Local Shows to Homepage.
+        // Slide #1 is permanently reserved for the designated Spotlight Banner.
+        // =========================================================================
+        let currentBannerSource = 'anime';
+        let activeBannerSlides = [];
+        let animeSearchTimeout = null;
+
+        // Switch between Anime Catalog source and Local Show Library source
+        function switchBannerSource(source) {
+            currentBannerSource = source;
+            const tabAnime = document.getElementById('tabBannerAnime');
+            const tabShow = document.getElementById('tabBannerShow');
+            const secAnime = document.getElementById('animeSourceSection');
+            const secShow = document.getElementById('showSourceSection');
+
+            if (source === 'anime') {
+                if (tabAnime) {
+                    tabAnime.style.borderColor = 'var(--primary)';
+                    tabAnime.style.background = 'rgba(255, 80, 110, 0.15)';
+                    tabAnime.style.color = '#fff';
+                }
+                if (tabShow) {
+                    tabShow.style.borderColor = 'var(--gray-border)';
+                    tabShow.style.background = 'var(--surface-bright)';
+                    tabShow.style.color = 'var(--gray-text)';
+                }
+                if (secAnime) secAnime.style.display = 'block';
+                if (secShow) secShow.style.display = 'none';
+            } else {
+                if (tabShow) {
+                    tabShow.style.borderColor = 'var(--primary)';
+                    tabShow.style.background = 'rgba(255, 80, 110, 0.15)';
+                    tabShow.style.color = '#fff';
+                }
+                if (tabAnime) {
+                    tabAnime.style.borderColor = 'var(--gray-border)';
+                    tabAnime.style.background = 'var(--surface-bright)';
+                    tabAnime.style.color = 'var(--gray-text)';
+                }
+                if (secAnime) secAnime.style.display = 'none';
+                if (secShow) secShow.style.display = 'block';
+            }
+        }
+        window.switchBannerSource = switchBannerSource;
+
+        // Select an anime from live search or trending results
+        function selectAnimeForBanner(anime) {
+            if (!anime) return;
+            const anilistId = anime.anilistId || anime.id;
+            const title = anime.title?.english || anime.title?.romaji || anime.title || anime.englishTitle || 'Selected Anime';
+            const subtitle = anime.romajiTitle || anime.nativeTitle || anime.title?.romaji || '';
+            const poster = anime.poster || anime.coverImage?.large || anime.coverImage?.extraLarge || '';
+            const banner = anime.banner || anime.bannerImage || poster;
+            const rating = anime.rating || anime.averageScore ? ((anime.averageScore ? anime.averageScore / 10 : anime.rating) || '9.8') : '9.8';
+            const year = anime.year || (anime.startDate ? anime.startDate.year : '2025');
+            const desc = (anime.description || '').replace(/<[^>]*>?/gm, '').trim();
+
+            document.getElementById('bannerAnimeAnilistId').value = anilistId;
+            document.getElementById('bannerAnimePosterUrl').value = poster;
+            document.getElementById('bannerAnimeBannerUrl').value = banner;
+            document.getElementById('bannerAnimeRating').value = rating;
+            document.getElementById('bannerAnimeYear').value = year;
+
+            document.getElementById('bannerTitleOverride').value = title;
+            document.getElementById('bannerDescOverride').value = desc;
+            document.getElementById('bannerBadgeOverride').value = 'SIMULCAST';
+
+            // Preview UI
+            const coverEl = document.getElementById('selectedAnimeCover');
+            if (coverEl) coverEl.src = poster || 'Postes/spyfamS3p.jpg';
+            const titleEl = document.getElementById('selectedAnimeTitle');
+            if (titleEl) titleEl.textContent = title;
+            const idBadge = document.getElementById('selectedAnimeIdBadge');
+            if (idBadge) idBadge.textContent = `AniList #${anilistId}`;
+            const subEl = document.getElementById('selectedAnimeSubtitle');
+            if (subEl) subEl.textContent = subtitle;
+            const metaEl = document.getElementById('selectedAnimeMeta');
+            if (metaEl) {
+                metaEl.innerHTML = `<span><i class="fas fa-star" style="color:var(--warning);"></i> ${rating}</span> <span>• Year ${year}</span> <span>• Simulcast</span>`;
+            }
+
+            const card = document.getElementById('selectedAnimeCard');
+            if (card) card.style.display = 'flex';
+
+            const resultsDropdown = document.getElementById('bannerAnimeSearchResults');
+            if (resultsDropdown) resultsDropdown.style.display = 'none';
+
+            const customLabel = document.getElementById('bannerCustomLabel');
+            if (customLabel) {
+                customLabel.textContent = banner ? 'Official High-Res Anime Backdrop Attached (Click to override with custom file)' : 'Drag & drop landscape backdrop image/video or click to select';
+            }
+        }
+        window.selectAnimeForBanner = selectAnimeForBanner;
+
+        // Clear currently selected anime
+        function clearSelectedAnime() {
+            document.getElementById('bannerAnimeAnilistId').value = '';
+            document.getElementById('bannerAnimePosterUrl').value = '';
+            document.getElementById('bannerAnimeBannerUrl').value = '';
+            document.getElementById('bannerAnimeRating').value = '';
+            document.getElementById('bannerAnimeYear').value = '';
+            document.getElementById('bannerTitleOverride').value = '';
+            document.getElementById('bannerDescOverride').value = '';
+            document.getElementById('bannerBadgeOverride').value = '';
+
+            const card = document.getElementById('selectedAnimeCard');
+            if (card) card.style.display = 'none';
+            const searchInput = document.getElementById('bannerAnimeSearch');
+            if (searchInput) searchInput.value = '';
+            const customLabel = document.getElementById('bannerCustomLabel');
+            if (customLabel) customLabel.textContent = 'Drag & drop landscape backdrop image/video or click to select';
+        }
+        window.clearSelectedAnime = clearSelectedAnime;
+
+        // Quick pick from Trending Anime list
+        async function loadTrendingAnimeForBanner() {
+            const resultsDropdown = document.getElementById('bannerAnimeSearchResults');
+            const spinner = document.getElementById('bannerAnimeSearchSpinner');
+            if (!resultsDropdown) return;
+
+            resultsDropdown.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--gray-text); font-size: 1.25rem;"><i class="fas fa-spinner fa-spin"></i> Fetching trending anime...</div>`;
+            resultsDropdown.style.display = 'block';
+            if (spinner) spinner.style.display = 'inline-block';
+
+            try {
+                const res = await fetch(`${API_BASE}/lunarx/trending`);
+                if (res.ok) {
+                    const list = await res.json();
+                    if (Array.isArray(list) && list.length > 0) {
+                        resultsDropdown.innerHTML = `
+                            <div style="padding: 10px 14px; background: rgba(0, 238, 252, 0.08); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.15rem; font-weight: 700; color: #00eefc; display: flex; justify-content: space-between; align-items: center;">
+                                <span><i class="fas fa-fire"></i> TOP TRENDING ANIME (CLICK TO SELECT)</span>
+                                <span style="font-size: 1.1rem; color: var(--gray-text); cursor: pointer;" onclick="document.getElementById('bannerAnimeSearchResults').style.display='none'">Close &times;</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column;">
+                                ${list.slice(0, 10).map((a, i) => {
+                                    const safeTitle = (a.title?.english || a.title?.romaji || a.title || 'Untitled Anime').replace(/'/g, "\\'");
+                                    const poster = a.poster || a.coverImage?.large || 'Postes/spyfamS3p.jpg';
+                                    const rating = a.rating || '9.8';
+                                    const year = a.year || '2024';
+                                    const anilistId = a.anilistId || a.id;
+                                    return `
+                                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" onclick='selectAnimeForBanner(${JSON.stringify(a).replace(/'/g, "&#39;")})'>
+                                            <span style="font-weight: 800; font-size: 1.25rem; color: ${i === 0 ? '#ff506e' : '#00eefc'}; width: 22px;">#${i + 1}</span>
+                                            <img src="${poster}" style="width: 36px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='Postes/spyfamS3p.jpg';">
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-size: 1.35rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(a.title?.english || a.title?.romaji || a.title || '')}</div>
+                                                <div style="font-size: 1.15rem; color: var(--gray-text); margin-top: 2px;">
+                                                    <span style="color: var(--warning);"><i class="fas fa-star"></i> ${rating}</span> &bull; <span>${year}</span> &bull; <span style="color:#00eefc;">AniList #${anilistId}</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" style="background: rgba(0,238,252,0.15); border: 1px solid rgba(0,238,252,0.3); color: #00eefc; padding: 4px 10px; border-radius: 4px; font-size: 1.15rem; font-weight: 600;">Select</button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    } else {
+                        resultsDropdown.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--gray-text); font-size: 1.25rem;">No trending anime found.</div>`;
+                    }
+                } else {
+                    resultsDropdown.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--danger); font-size: 1.25rem;">Failed to load trending anime.</div>`;
+                }
+            } catch (err) {
+                console.error(err);
+                resultsDropdown.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--danger); font-size: 1.25rem;">Connection error loading trending anime.</div>`;
+            } finally {
+                if (spinner) spinner.style.display = 'none';
+            }
+        }
+        window.loadTrendingAnimeForBanner = loadTrendingAnimeForBanner;
+
+        // Setup real-time debounced anime search input listener
+        function initBannerAnimeSearch() {
+            const searchInput = document.getElementById('bannerAnimeSearch');
+            const resultsDropdown = document.getElementById('bannerAnimeSearchResults');
+            const spinner = document.getElementById('bannerAnimeSearchSpinner');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function () {
+                const query = this.value.trim();
+                clearTimeout(animeSearchTimeout);
+
+                if (!query) {
+                    if (resultsDropdown) resultsDropdown.style.display = 'none';
+                    return;
+                }
+
+                animeSearchTimeout = setTimeout(async () => {
+                    if (spinner) spinner.style.display = 'inline-block';
+                    if (resultsDropdown) {
+                        resultsDropdown.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--gray-text); font-size: 1.2rem;"><i class="fas fa-spinner fa-spin"></i> Searching anime catalog...</div>`;
+                        resultsDropdown.style.display = 'block';
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/lunarx/search?q=${encodeURIComponent(query)}&limit=8`);
+                        if (res.ok) {
+                            const results = await res.json();
+                            if (Array.isArray(results) && results.length > 0) {
+                                resultsDropdown.innerHTML = results.map(anime => {
+                                    const title = anime.title?.english || anime.title?.romaji || anime.title || 'Untitled Anime';
+                                    const poster = anime.poster || anime.coverImage?.large || 'Postes/spyfamS3p.jpg';
+                                    const rating = anime.rating || '9.8';
+                                    const year = anime.year || (anime.startDate ? anime.startDate.year : '2025');
+                                    const anilistId = anime.anilistId || anime.id;
+
+                                    return `
+                                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" onclick='selectAnimeForBanner(${JSON.stringify(anime).replace(/'/g, "&#39;")})'>
+                                            <img src="${poster}" style="width: 36px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='Postes/spyfamS3p.jpg';">
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-size: 1.35rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(title)}</div>
+                                                <div style="font-size: 1.15rem; color: var(--gray-text); margin-top: 2px;">
+                                                    <span style="color: var(--warning);"><i class="fas fa-star"></i> ${rating}</span> &bull; <span>${year}</span> &bull; <span style="color:#00eefc;">AniList #${anilistId}</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" style="background: rgba(0,238,252,0.15); border: 1px solid rgba(0,238,252,0.3); color: #00eefc; padding: 4px 10px; border-radius: 4px; font-size: 1.15rem; font-weight: 600;">Select</button>
+                                        </div>
+                                    `;
+                                }).join('');
+                            } else {
+                                resultsDropdown.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--gray-text); font-size: 1.25rem;">No anime found matching "${escapeHtml(query)}".</div>`;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Anime search error:', err);
+                        if (resultsDropdown) resultsDropdown.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--danger); font-size: 1.2rem;">Failed to search anime.</div>`;
+                    } finally {
+                        if (spinner) spinner.style.display = 'none';
+                    }
+                }, 250);
+            });
+
+            // Close search results on outside click
+            document.addEventListener('click', (e) => {
+                if (resultsDropdown && !resultsDropdown.contains(e.target) && e.target !== searchInput) {
+                    resultsDropdown.style.display = 'none';
+                }
+            });
+        }
+
         // Load and populate the Banner Customizer tab
         async function loadBannerCustomizer() {
             const token = localStorage.getItem('infinx_token');
             const showSelect = document.getElementById('bannerShowSelect');
             const listBody = document.getElementById('featuredBannerList');
 
-            // Set loading indicators
-            showSelect.innerHTML = `<option value="">Loading shows...</option>`;
-            listBody.innerHTML = `
-                <tr>
-                    <td><div class="skeleton skeleton-text" style="height: 16px; width: 120px;"></div></td>
-                    <td><div class="skeleton skeleton-text" style="height: 14px; width: 80px;"></div></td>
-                    <td><div class="skeleton" style="width: 40px; height: 60px; border-radius: 4px;"></div></td>
-                    <td><div class="skeleton" style="width: 90px; height: 60px; border-radius: 4px;"></div></td>
-                    <td><div class="skeleton skeleton-pill" style="height: 28px; width: 70px;"></div></td>
-                </tr>
-            `;
+            if (showSelect) showSelect.innerHTML = `<option value="">Loading shows...</option>`;
+            if (listBody) {
+                listBody.innerHTML = `
+                    <tr>
+                        <td><div class="skeleton skeleton-pill" style="height: 24px; width: 100px;"></div></td>
+                        <td><div class="skeleton skeleton-pill" style="height: 22px; width: 60px;"></div></td>
+                        <td><div class="skeleton skeleton-text" style="height: 16px; width: 150px;"></div></td>
+                        <td><div class="skeleton" style="width: 40px; height: 55px; border-radius: 4px;"></div></td>
+                        <td><div class="skeleton" style="width: 100px; height: 55px; border-radius: 4px;"></div></td>
+                        <td><div class="skeleton skeleton-pill" style="height: 24px; width: 110px;"></div></td>
+                        <td><div class="skeleton skeleton-pill" style="height: 28px; width: 70px;"></div></td>
+                    </tr>
+                `;
+            }
 
             try {
-                // Fetch all shows
-                const res = await fetch(`${API_BASE}/admin/shows`, {
+                // Initialize anime search listener once
+                initBannerAnimeSearch();
+
+                // Fetch local shows for local show selector
+                try {
+                    const showsRes = await fetch(`${API_BASE}/admin/shows`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (showsRes.ok && showSelect) {
+                        const shows = await showsRes.json();
+                        showSelect.innerHTML = `<option value="">-- Choose Anime / Show --</option>` +
+                            shows.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+                    }
+                } catch (e) {
+                    console.error('Error loading shows for selector:', e);
+                }
+
+                // Fetch active banner slides
+                const res = await fetch(`${API_BASE}/admin/banners`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (res.ok) {
-                    const shows = await res.json();
+                    const data = await res.json();
+                    activeBannerSlides = data.banners || [];
 
-                    // Populate dropdown with all shows
-                    showSelect.innerHTML = `<option value="">-- Choose Anime --</option>` +
-                        shows.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-
-                    // Populate featured shows list table
-                    const featured = shows.filter(s => s.isFeatured);
-
-                    if (featured.length === 0) {
-                        listBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--gray-text);">No active banner slideshow entries. Use the form above to feature shows!</td></tr>`;
+                    if (activeBannerSlides.length === 0) {
+                        listBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--gray-text); padding: 30px 10px;">No active banner slideshow entries. Use the form above to add an anime or local show!</td></tr>`;
                         return;
                     }
 
-                    listBody.innerHTML = featured.map(show => {
-                        const fallbackImage = 'Postes/infinit-cas11.jpg';
-                        const posterUrl = window.formatMediaUrl(show.poster) || fallbackImage;
-                        const bannerUrl = window.formatMediaUrl(show.banner) || fallbackImage;
+                    listBody.innerHTML = activeBannerSlides.map((banner, index) => {
+                        const fallbackImage = 'Postes/spyfamS3p.jpg';
+                        const posterUrl = window.formatMediaUrl(banner.poster) || fallbackImage;
+                        const bannerUrl = window.formatMediaUrl(banner.banner) || fallbackImage;
+                        const isSpotlight = (index === 0) || !!banner.isSpotlight;
+                        const isAnime = banner.type === 'anime' || !!banner.anilistId;
+                        const total = activeBannerSlides.length;
 
                         return `
-                            <tr>
-                                <td><strong style="font-size: 1.4rem; color: white;">${escapeHtml(show.title)}</strong></td>
-                                <td><span style="color: var(--warning);"><i class="fas fa-star"></i> ${show.rating}</span> <span style="margin-left: 8px; color: var(--gray-text); font-size: 1.2rem;">(${show.year})</span></td>
-                                <td><img src="${posterUrl}" style="height: 60px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover; aspect-ratio: 2/3;" onerror="this.onerror=null; this.src='${fallbackImage}';"></td>
-                                <td><img src="${bannerUrl}" style="height: 60px; width: 120px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover;" onerror="this.onerror=null; this.src='${fallbackImage}';"></td>
+                            <tr style="${isSpotlight ? 'background: rgba(255, 80, 110, 0.05);' : ''}">
                                 <td>
-                                    <button onclick="removeFeatured(${show.id}, '${show.title.replace(/'/g, "\\'")}')" style="background: rgba(231, 76, 60, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 6px;"><i class="fas fa-trash-alt"></i> Remove</button>
+                                    ${isSpotlight ? `
+                                        <span style="padding: 4px 10px; border-radius: 9999px; background: rgba(255, 80, 110, 0.2); border: 1px solid rgba(255, 80, 110, 0.6); color: #ff506e; font-weight: 800; font-size: 1.15rem; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 0 12px rgba(255, 80, 110, 0.4);">
+                                            <i class="fas fa-crown"></i> SPOTLIGHT (#1)
+                                        </span>
+                                    ` : `
+                                        <span style="padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); color: #8e8e8e; font-weight: 600; font-size: 1.15rem;">
+                                            Slide #${index + 1}
+                                        </span>
+                                    `}
+                                </td>
+                                <td>
+                                    ${isAnime ? `
+                                        <span style="padding: 3px 8px; border-radius: 4px; background: rgba(0, 238, 252, 0.15); border: 1px solid rgba(0, 238, 252, 0.35); color: #00eefc; font-size: 1.1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="fas fa-tv"></i> Anime
+                                        </span>
+                                    ` : `
+                                        <span style="padding: 3px 8px; border-radius: 4px; background: rgba(160, 120, 255, 0.15); border: 1px solid rgba(160, 120, 255, 0.35); color: #a078ff; font-size: 1.1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="fas fa-film"></i> Show
+                                        </span>
+                                    `}
+                                </td>
+                                <td>
+                                    <div style="font-size: 1.35rem; font-weight: 700; color: white;">${escapeHtml(banner.title)}</div>
+                                    <div style="font-size: 1.15rem; color: var(--gray-text); margin-top: 2px;">
+                                        <span style="color: var(--warning);"><i class="fas fa-star"></i> ${banner.rating || '9.8'}</span>
+                                        <span style="margin: 0 6px;">&bull;</span>
+                                        <span>${banner.year || '2025'}</span>
+                                        <span style="margin: 0 6px;">&bull;</span>
+                                        <span style="color: ${isAnime ? '#00eefc' : '#a078ff'}; font-family: monospace;">${isAnime ? `AniList #${banner.anilistId || banner.id}` : `ID #${banner.showId || banner.id}`}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <img src="${posterUrl}" style="height: 55px; width: 38px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover;" onerror="this.onerror=null; this.src='${fallbackImage}';">
+                                </td>
+                                <td>
+                                    <img src="${bannerUrl}" style="height: 55px; width: 110px; border-radius: var(--radius-xs); border: 1px solid var(--gray-border); object-fit: cover;" onerror="this.onerror=null; this.src='${fallbackImage}';">
+                                </td>
+                                <td>
+                                    ${isSpotlight ? `
+                                        <span style="color: #ff506e; font-weight: 700; font-size: 1.15rem; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="fas fa-check-circle"></i> Slide #1 Reserved
+                                        </span>
+                                    ` : `
+                                        <button type="button" onclick="setBannerSpotlight('${banner.id}')" style="background: rgba(255, 80, 110, 0.12); border: 1px solid rgba(255, 80, 110, 0.45); color: #ff506e; padding: 5px 11px; border-radius: 4px; cursor: pointer; font-size: 1.15rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;">
+                                            <i class="fas fa-star"></i> Set as Spotlight
+                                        </button>
+                                    `}
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <button type="button" onclick="moveBanner('${banner.id}', -1)" title="Move Up" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; ${index === 0 ? 'opacity: 0.3; cursor: not-allowed;' : 'cursor: pointer;'}" ${index === 0 ? 'disabled' : ''}>
+                                            <i class="fas fa-arrow-up" style="font-size: 11px;"></i>
+                                        </button>
+                                        <button type="button" onclick="moveBanner('${banner.id}', 1)" title="Move Down" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; ${index === total - 1 ? 'opacity: 0.3; cursor: not-allowed;' : 'cursor: pointer;'}" ${index === total - 1 ? 'disabled' : ''}>
+                                            <i class="fas fa-arrow-down" style="font-size: 11px;"></i>
+                                        </button>
+                                        <button type="button" onclick="removeBanner('${banner.id}', '${banner.title.replace(/'/g, "\\'")}')" title="Remove Slide" style="background: rgba(231, 76, 60, 0.12); border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 1.15rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="fas fa-trash-alt"></i> Remove
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
                     }).join('');
                 }
             } catch (e) {
-                console.error(e);
-                listBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Failed to load banner list.</td></tr>`;
+                console.error('Error loading banner customizer:', e);
+                if (listBody) {
+                    listBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 25px;">Failed to load carousel banners.</td></tr>`;
+                }
             }
         }
+        window.loadBannerCustomizer = loadBannerCustomizer;
 
-        // Handle Customize Banner Form Submission
+        // Handle Customize Banner Form Submission (Supports Anime and Local Show)
         async function handleCustomizeBanner(e) {
             e.preventDefault();
             const btn = document.getElementById('btnFeatureSubmit');
             const originalHtml = btn.innerHTML;
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Settings...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Banner Slide...';
             btn.disabled = true;
 
-            const showId = document.getElementById('bannerShowSelect').value;
-            const titleOverride = document.getElementById('bannerTitleOverride').value;
-            const descriptionOverride = document.getElementById('bannerDescOverride').value;
-            const bannerFile = document.getElementById('bannerCustomFile').files[0];
-
+            const token = localStorage.getItem('infinx_token');
             const formData = new FormData();
-            formData.append('titleOverride', titleOverride);
-            formData.append('descriptionOverride', descriptionOverride);
-            formData.append('isFeatured', 'true');
-            if (bannerFile) {
-                formData.append('banner', bannerFile);
+
+            const titleOverride = document.getElementById('bannerTitleOverride').value.trim();
+            const badgeOverride = document.getElementById('bannerBadgeOverride').value.trim();
+            const descriptionOverride = document.getElementById('bannerDescOverride').value.trim();
+            const bannerFile = document.getElementById('bannerCustomFile').files[0];
+            const isSpotlight = document.getElementById('bannerIsSpotlight').checked;
+
+            formData.append('isSpotlight', isSpotlight ? 'true' : 'false');
+            if (titleOverride) formData.append('title', titleOverride);
+            if (badgeOverride) formData.append('badge', badgeOverride);
+            if (descriptionOverride) formData.append('description', descriptionOverride);
+            if (bannerFile) formData.append('banner', bannerFile);
+
+            if (currentBannerSource === 'anime') {
+                const anilistId = document.getElementById('bannerAnimeAnilistId').value.trim();
+                const posterUrl = document.getElementById('bannerAnimePosterUrl').value.trim();
+                const bannerUrl = document.getElementById('bannerAnimeBannerUrl').value.trim();
+                const rating = document.getElementById('bannerAnimeRating').value.trim();
+                const year = document.getElementById('bannerAnimeYear').value.trim();
+
+                if (!anilistId && !titleOverride) {
+                    alert('Please search and select an anime or enter an AniList ID/title to feature.');
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    return;
+                }
+
+                formData.append('type', 'anime');
+                if (anilistId) formData.append('anilistId', anilistId);
+                if (posterUrl) formData.append('poster', posterUrl);
+                if (bannerUrl && !bannerFile) formData.append('banner', bannerUrl);
+                if (rating) formData.append('rating', rating);
+                if (year) formData.append('year', year);
+            } else {
+                const showSelect = document.getElementById('bannerShowSelect');
+                const showId = showSelect ? showSelect.value : null;
+
+                if (!showId) {
+                    alert('Please select an anime or show from your local library.');
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    return;
+                }
+
+                formData.append('type', 'show');
+                formData.append('showId', showId);
             }
 
-            const token = localStorage.getItem('infinx_token');
-
             try {
-                const res = await fetch(`${API_BASE}/admin/shows/${showId}/feature`, {
+                const res = await fetch(`${API_BASE}/admin/banners`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
 
                 if (res.ok) {
-                    alert('Show banner overrides saved and featured successfully!');
+                    alert(isSpotlight
+                        ? '★ Spotlight banner slide saved successfully! (Pinned as Slide #1 on Homepage)'
+                        : 'Homepage carousel banner added successfully!');
                     document.getElementById('customizeBannerForm').reset();
-                    document.getElementById('bannerCustomLabel').textContent = 'Drag & drop landscape backdrop image or click to select';
+                    clearSelectedAnime();
                     loadBannerCustomizer();
                 } else {
                     const err = await res.json();
-                    alert(`Failed to save settings: ${err.error || 'Server error'}`);
+                    alert(`Failed to save banner: ${err.error || 'Server error'}`);
                 }
             } catch (e) {
                 console.error(e);
-                alert('Connection error trying to feature show.');
+                alert('Connection error trying to save carousel banner.');
             } finally {
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }
         }
+        window.handleCustomizeBanner = handleCustomizeBanner;
 
-        // Remove show from featured list
-        async function removeFeatured(showId, showTitle) {
-            if (!confirm(`Are you sure you want to remove "${showTitle}" from the Homepage Banner Slideshow?`)) {
+        // Set an existing slide as the reserved Spotlight Banner (Slide #1)
+        async function setBannerSpotlight(bannerId) {
+            const token = localStorage.getItem('infinx_token');
+            try {
+                const res = await fetch(`${API_BASE}/admin/banners/${encodeURIComponent(bannerId)}/spotlight`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    loadBannerCustomizer();
+                } else {
+                    const err = await res.json();
+                    alert(`Failed to set Spotlight banner: ${err.error || 'Server error'}`);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection error setting Spotlight banner.');
+            }
+        }
+        window.setBannerSpotlight = setBannerSpotlight;
+
+        // Reorder banner slide up or down
+        async function moveBanner(bannerId, direction) {
+            const index = activeBannerSlides.findIndex(b => b.id === bannerId);
+            if (index === -1) return;
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= activeBannerSlides.length) return;
+
+            const copy = [...activeBannerSlides];
+            const [item] = copy.splice(index, 1);
+            copy.splice(targetIndex, 0, item);
+
+            const ids = copy.map(b => b.id);
+            const token = localStorage.getItem('infinx_token');
+
+            try {
+                const res = await fetch(`${API_BASE}/admin/banners/reorder`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids })
+                });
+
+                if (res.ok) {
+                    loadBannerCustomizer();
+                }
+            } catch (e) {
+                console.error('Error reordering banners:', e);
+            }
+        }
+        window.moveBanner = moveBanner;
+
+        // Remove slide from carousel
+        async function removeBanner(bannerId, bannerTitle) {
+            if (!confirm(`Are you sure you want to remove "${bannerTitle}" from the Homepage Slideshow?`)) {
                 return;
             }
 
             const token = localStorage.getItem('infinx_token');
-            const formData = new FormData();
-            formData.append('isFeatured', 'false');
-
             try {
-                const res = await fetch(`${API_BASE}/admin/shows/${showId}/feature`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
+                const res = await fetch(`${API_BASE}/admin/banners/${encodeURIComponent(bannerId)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (res.ok) {
-                    alert(`Removed "${showTitle}" from homepage slideshow successfully.`);
                     loadBannerCustomizer();
                 } else {
                     const err = await res.json();
-                    alert(`Failed to remove: ${err.error || 'Server error'}`);
+                    alert(`Failed to remove banner: ${err.error || 'Server error'}`);
                 }
             } catch (e) {
                 console.error(e);
-                alert("Connection error trying to remove featured show.");
+                alert('Connection error trying to remove banner slide.');
             }
         }
+        window.removeBanner = removeBanner;
+        window.removeFeatured = removeBanner;
 
 
         // ======= USER MANAGEMENT & OTAKU RANK PROMOTION =======
