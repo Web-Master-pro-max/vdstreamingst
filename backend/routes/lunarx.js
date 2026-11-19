@@ -190,9 +190,12 @@ function getUpstreamHeaders(targetUrl, reqReferer, reqOrigin) {
     referer.includes('vercel.app') ||
     referer.includes('localhost') ||
     referer.includes('13.202.95.5') ||
+    referer.includes('16.179.30.197') ||
     referer.includes('127.0.0.1') ||
     referer.includes('anime-shubh') ||
-    referer.includes('/api/lunarx')
+    referer.includes('/api/lunarx') ||
+      referer.includes('/watch') ||
+      referer.includes('/video-player')
   )) {
     referer = null;
     origin = null;
