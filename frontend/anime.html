@@ -2270,53 +2270,26 @@
       }
 
       try {
-        const params = new URLSearchParams({
-          page: currentPage,
-          limit: 24,
-          sort: currentFilters.sort
-        });
-
-        if (currentFilters.search) params.append('search', currentFilters.search);
-        if (currentFilters.genre && currentFilters.genre !== 'all') params.append('genre', currentFilters.genre);
-        if (currentFilters.format && currentFilters.format !== 'all') params.append('format', currentFilters.format);
-        if (currentFilters.season && currentFilters.season !== 'all') params.append('season', currentFilters.season);
-        if (currentFilters.year && currentFilters.year !== 'all') params.append('year', currentFilters.year);
-        if (currentFilters.status && currentFilters.status !== 'all') params.append('status', currentFilters.status);
-
-        const res = await fetch(`${API_BASE}/lunarx/browse?${params.toString()}`);
-        if (!res.ok) throw new Error(`API error ${res.status}`);
-        const data = await res.json();
-
-        const media = data.media || [];
-        const pageInfo = data.pageInfo || {};
-        totalPages = pageInfo.lastPage || Math.ceil((pageInfo.total || 0) / 24) || 1;
-
-        if (resultsCountBadge) {
-          const totalCount = pageInfo.total ? pageInfo.total.toLocaleString() : media.length;
-          resultsCountBadge.textContent = `${totalCount} TITLES`;
-          if (currentFilters.category && currentFilters.category !== 'all' && currentFilters.category !== 'anime-hub') {
-            await loadCategoryCatalog(currentFilters.category);
-          } else {
-            await loadLunarCatalog();
-          }
-
-          renderAnimeCards(media);
-          updatePagination(pageInfo);
-        } catch (err) {
-          console.error('Catalog load error:', err);
-          if (currentPage === 1) {
-            animeGrid.innerHTML = `
+        if (currentFilters.category && currentFilters.category !== 'all' && currentFilters.category !== 'anime-hub') {
+          await loadCategoryCatalog(currentFilters.category);
+        } else {
+          await loadLunarCatalog();
+        }
+      } catch (err) {
+        console.error('Catalog load error:', err);
+        if (currentPage === 1) {
+          animeGrid.innerHTML = `
             <div class="col-span-full py-16 text-center text-error font-body-md text-sm">
               <i class="fas fa-exclamation-triangle text-2xl mb-2 block"></i>
               Transmission stream error. Please check your network connection.
             </div>
           `;
-          }
-        } finally {
-          isLoadingCatalog = false;
-          if (mobileSyncingIndicator) mobileSyncingIndicator.style.display = 'none';
         }
+      } finally {
+        isLoadingCatalog = false;
+        if (mobileSyncingIndicator) mobileSyncingIndicator.style.display = 'none';
       }
+    }
 
     // Master Anime / Lunar Catalog loader
     async function loadLunarCatalog() {
@@ -3252,7 +3225,7 @@
   <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
 
   <!-- External Engine Scripts -->
-  <script src="navbar.js"></script>
+  <script src="navbar.js?v=2.6"></script>
   <script src="show-details-modal.js"></script>
   <script src="welcome.js"></script>
 

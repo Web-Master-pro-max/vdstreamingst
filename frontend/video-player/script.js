@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       : (isLocalFrontendPort
         ? (savedServer || 'http://localhost:8000')
         : ((window.location.protocol === 'file:' || window.location.origin === 'null' || !window.location.origin.includes(':'))
-            ? (savedServer || 'http://16.179.30.197:8000')
-            : ''));
+          ? (savedServer || 'http://16.179.30.197:8000')
+          : ''));
     const API_BASE = `${SERVER_ORIGIN}/api`;
 
     // Strict Horizontal Viewport Lock: Guarantee window and document never scroll horizontally
