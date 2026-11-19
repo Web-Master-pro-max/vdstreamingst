@@ -229,10 +229,52 @@
       "showTitle": "ONE PIECE",
       "poster": "https://artworks.thetvdb.com/banners/series/81797/posters/5eec847d52a04.jpg",
       "banner": "",
-      "progress": 154,
+      "progress": 140,
       "duration": 1430,
       "completed": false,
-      "lastWatchedAt": "2026-11-19T06:41:45.605Z"
+      "lastWatchedAt": "2026-11-19T06:51:06.498Z"
+    },
+    "lunar-21475-1": {
+      "episodeKey": "lunar-21475-1",
+      "episodeId": "lunar-21475-1",
+      "lunarId": "21475",
+      "episodeNumber": 1,
+      "episodeTitle": "Episode 1",
+      "showTitle": "Ero Manga! H mo Manga mo Step-up♪",
+      "poster": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/21475-bs67KimRLqXP.png",
+      "banner": "",
+      "progress": 939,
+      "duration": 1808,
+      "completed": false,
+      "lastWatchedAt": "2026-11-19T07:07:10.202Z"
+    },
+    "lunar-191656-1": {
+      "episodeKey": "lunar-191656-1",
+      "episodeId": "lunar-191656-1",
+      "lunarId": "191656",
+      "episodeNumber": 1,
+      "episodeTitle": "オスガキにも穴はあるんだよな…／かいちょーは梅くんに貰われました",
+      "showTitle": "Even the Student Council Has Its Holes!",
+      "poster": "https://artworks.thetvdb.com/banners/v4/series/463051/posters/680e1e60858db.jpg",
+      "banner": "",
+      "progress": 516,
+      "duration": 1419,
+      "completed": false,
+      "lastWatchedAt": "2026-11-19T07:14:16.239Z"
+    },
+    "lunar-101021-1": {
+      "episodeKey": "lunar-101021-1",
+      "episodeId": "lunar-101021-1",
+      "lunarId": "101021",
+      "episodeNumber": 1,
+      "episodeTitle": "Episode 1",
+      "showTitle": "Tsun M!: Gyutto Shibatte Shidoushite THE ANIMATION",
+      "poster": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101021-Aos9u0966UQA.jpg",
+      "banner": "",
+      "progress": 744,
+      "duration": 1529,
+      "completed": false,
+      "lastWatchedAt": "2026-11-19T07:16:51.226Z"
     }
   }
 }

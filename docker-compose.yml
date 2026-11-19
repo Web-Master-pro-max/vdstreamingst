@@ -60,6 +60,7 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./frontend:/app/frontend
+      - ./backend/data:/app/data
       - ./worker:/worker
       - ./worker:/app/worker
 

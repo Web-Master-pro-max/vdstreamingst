@@ -5,7 +5,7 @@ const getLocalBackend = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8000';
   }
-  return 'http://13.202.95.5:8000';
+  return 'http://16.179.30.197:8000';
 };
 const DEFAULT_BACKEND = getLocalBackend();
 const isHttps = window.location.protocol === 'https:';

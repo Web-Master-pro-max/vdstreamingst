@@ -619,7 +619,16 @@ router.get(['/hls/segment.ts', '/proxy/segment'], async (req, res) => {
     if (fetchResult.res.statusCode === 403) {
       // 1. If key.bin on flixcloud.cc failed with 403 (Cloudflare datacenter challenge), try known CDN vaults
       if (targetUrl.includes('flixcloud.cc') && (targetUrl.includes('key.bin') || targetUrl.endsWith('.bin'))) {
-        const vaultHosts = ['vault-94.surgecdn.top', 'vault-92.prismcdn.top', 'vault-91.surgecdn.top', 'vault-93.surgecdn.top'];
+        const vaultHosts = [
+          'vault-92.vividcdn.top',
+          'vault-91.vividcdn.top',
+          'vault-93.vividcdn.top',
+          'vault-94.vividcdn.top',
+          'vault-94.surgecdn.top',
+          'vault-92.prismcdn.top',
+          'vault-91.surgecdn.top',
+          'vault-93.surgecdn.top'
+        ];
         for (const vHost of vaultHosts) {
           const altTarget = targetUrl.replace(/[a-zA-Z0-9-]+\.flixcloud\.cc/, vHost);
           try {

@@ -7,8 +7,8 @@ const { execSync } = require('child_process');
 const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = 'LqVVXhKGmruGmMDZyIWW5ZTkKz3IMChM6BzpJI2w02E9u8ivKdxYxxPgqMpPAVvUhjkk3WFYDirMyxLTDvbuq97FeotHEaHk';
-const DEFAULT_PITCH = 'HPt5vdm6L9e2IWeEXYbfP62Skug3nwvYiXUEey4OuGHy0nxV4GbXErmQNhQaF4N5KzKxwhqvutvkSFfh';
+const DEFAULT_AXIS = 'gT7Xzj6F6sceeskBtG5Z8mGDXEEgZ4L0JoKhChsqXMFCsY0E9QFK7hSlmZVawJeM6lihOPW8NhI8uWnvRiTZwTlVw';
+const DEFAULT_PITCH = 'y2cg7XKIZQsMHpVGt2mvbAXr5zVF8mRMoq4fEjGJoncNh78tMU099nQ0BophO5iKSGBLypQIhqzsLiAElJBke8p9DWI2';
 const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {
@@ -981,6 +981,44 @@ class LunarXService {
         }
       }
     } catch (e) { }
+
+    // 4. Remote repository sync fallback (bypasses Cloudflare block on datacenter/EC2 instances)
+    try {
+      console.log('[LunarX] Fetching verified cipher keys from remote repository...');
+      const remoteRaw = await new Promise((resolve) => {
+        const req = https.get('https://raw.githubusercontent.com/Web-Master-pro-max/vdstreamingst/main/backend/data/lunarx_keys.json', {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' },
+          timeout: 6000
+        }, res => {
+          if (res.statusCode === 200) {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => resolve(body));
+          } else {
+            resolve(null);
+          }
+        });
+        req.on('error', () => resolve(null));
+        req.setTimeout(6000, () => {
+          req.destroy();
+          resolve(null);
+        });
+      });
+
+      if (remoteRaw) {
+        const parsed = JSON.parse(remoteRaw);
+        if (parsed && parsed.axis && parsed.pitch) {
+          console.log('[LunarX] Successfully synced cipher keys from remote repository');
+          this.globalKeys = { axis: parsed.axis, pitch: parsed.pitch, timestamp: parsed.updatedAt || Date.now() };
+          this.axis = parsed.axis;
+          this.pitch = parsed.pitch;
+          this.saveKeysToDisk(parsed.axis, parsed.pitch);
+          return [parsed.axis, parsed.pitch];
+        }
+      }
+    } catch (remoteErr) {
+      console.warn('[LunarX] Remote key sync failed:', remoteErr.message);
+    }
 
     // Fallback to loaded or default keys
     return [this.axis, this.pitch];
