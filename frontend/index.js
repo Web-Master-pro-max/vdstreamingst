@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Load homepage configurations
   initApp();
 
-  // Open login modal if redirected with login=true param
+  // Redirect to login page if redirected with login=true param
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('login') === 'true' && !isLoggedIn()) {
-    setTimeout(() => openModal('login'), 300);
+    window.location.href = 'login.html';
   }
 
   // Header scroll effect
@@ -686,10 +686,10 @@ function updateAuthHeader() {
   } else {
     headerDiv.innerHTML = `
           <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-xs sm:text-label-sm font-semibold transition-all cursor-pointer shrink-0" onclick="openModal('login')">
+            <button class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-xs sm:text-label-sm font-semibold transition-all cursor-pointer shrink-0" onclick="window.location.href='login.html'">
               Sign In
             </button>
-            <button class="hidden sm:inline-block px-3 sm:px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-xs sm:text-label-sm font-bold shadow-[0_0_14px_rgba(255,80,110,0.4)] hover:brightness-110 transition-all cursor-pointer shrink-0" onclick="openModal('register')">
+            <button class="hidden sm:inline-block px-3 sm:px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-xs sm:text-label-sm font-bold shadow-[0_0_14px_rgba(255,80,110,0.4)] hover:brightness-110 transition-all cursor-pointer shrink-0" onclick="window.location.href='login.html#register'">
               Register
             </button>
           </div>
@@ -697,10 +697,10 @@ function updateAuthHeader() {
 
     if (drawerDiv) {
       drawerDiv.innerHTML = `
-            <button class="w-full py-2.5 rounded-xl bg-secondary-container text-on-secondary-fixed font-label-md font-bold shadow-[0_0_16px_rgba(0,238,252,0.35)] cursor-pointer" onclick="closeMobileMenu(); openModal('login')">
+            <button class="w-full py-2.5 rounded-xl bg-secondary-container text-on-secondary-fixed font-label-md font-bold shadow-[0_0_16px_rgba(0,238,252,0.35)] cursor-pointer" onclick="closeMobileMenu(); window.location.href='login.html';">
               Sign In
             </button>
-            <button class="w-full py-2.5 rounded-xl bg-surface-container-high text-on-surface font-label-md font-medium cursor-pointer" onclick="closeMobileMenu(); openModal('register')">
+            <button class="w-full py-2.5 rounded-xl bg-surface-container-high text-on-surface font-label-md font-medium cursor-pointer" onclick="closeMobileMenu(); window.location.href='login.html#register';">
               Create Account
             </button>
           `;
@@ -1222,7 +1222,7 @@ function renderDynamicHomeSections() {
 // Toggle favorite watchlist item
 async function toggleWatchlist(btnOrId, maybeShowId) {
   if (!isLoggedIn()) {
-    openModal('login');
+    window.location.href = 'login.html';
     return;
   }
   let btn = null;
@@ -1286,8 +1286,7 @@ window.requireAuthPlay = function (e, playUrl) {
     if (playUrl && playUrl !== '#') {
       sessionStorage.setItem('infinx_redirect_after_auth', playUrl);
     }
-    // Open registration modal by default to encourage signing up
-    openModal('register');
+    window.location.href = 'login.html';
     return false;
   }
   if (playUrl && playUrl !== '#') {
@@ -1400,6 +1399,14 @@ function handleLogout(e) {
 
 // Modal triggers
 function openModal(type) {
+  if (type === 'login') {
+    window.location.href = 'login.html';
+    return;
+  }
+  if (type === 'register') {
+    window.location.href = 'login.html#register';
+    return;
+  }
   const modal = document.getElementById(`${type}Modal`);
   if (modal) {
     modal.classList.add('active');

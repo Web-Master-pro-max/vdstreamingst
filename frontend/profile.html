@@ -460,14 +460,6 @@
             class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/70 to-transparent">
           </div>
 
-          <!-- Tokyo Telemetry Indicator -->
-          <div
-            class="absolute top-6 right-6 hidden md:flex items-center gap-space-sm px-3.5 py-1.5 rounded-full bg-surface-container-low/80 backdrop-blur-md shadow-lg border border-white/5">
-            <span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#00eefc]"></span>
-            <span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">NODE: SHIBUYA-EAST // 10G
-              BEAM</span>
-          </div>
-
           <!-- Banner Level Tag Display -->
           <div
             class="absolute bottom-6 right-6 hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-lowest/80 backdrop-blur-md border border-white/10"
@@ -511,14 +503,14 @@
                     viewBox="0 0 100 100">
                     <circle cx="50" cy="50" fill="transparent" r="46" stroke="rgba(255,255,255,0.08)" stroke-width="4">
                     </circle>
-                    <circle class="text-secondary-container transition-all duration-1000 ease-out" cx="50" cy="50"
+                    <circle id="profileRadialXpCircle"
+                      class="text-secondary-container transition-all duration-1000 ease-out" cx="50" cy="50"
                       fill="transparent" r="46" stroke="currentColor" stroke-dasharray="289.02"
                       stroke-dashoffset="46.24" stroke-linecap="round" stroke-width="5"></circle>
                   </svg>
 
                   <!-- Animated Aura Frame Container -->
-                  <div
-                    class="avatar-frame-container aura-default w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                  <div class="avatar-frame-container aura-default rounded-full flex items-center justify-center"
                     id="avatarFrameContainer">
                     <img id="profileAvatarImg" class="profile-avatar-img w-full h-full object-cover rounded-full"
                       src="https://api.dicebear.com/7.x/bottts/svg?seed=Shinobi" alt="User Avatar" />
@@ -526,9 +518,10 @@
 
                   <!-- Level Hex Badge -->
                   <div
-                    class="absolute -bottom-1 -right-1 px-2.5 py-1 rounded-full bg-surface-container-lowest shadow-[0_0_12px_rgba(0,238,252,0.6)] flex items-center gap-1 border border-secondary-container/40">
-                    <span class="material-symbols-outlined text-secondary-container text-[14px]">shield</span>
-                    <span class="font-label-sm text-label-sm text-secondary-container font-extrabold tracking-wider"
+                    class="profile-level-badge-pill absolute bottom-0 right-0 z-20 px-2.5 py-0.5 rounded-full bg-[#0e0e0e] shadow-[0_0_14px_rgba(0,238,252,0.5)] flex items-center gap-1 border border-secondary-container/60 select-none">
+                    <span
+                      class="material-symbols-outlined text-secondary-container text-[13px] leading-none">shield</span>
+                    <span class="font-label-sm text-xs font-black tracking-wider text-secondary-container leading-none"
                       id="profileLevelHexBadge">LV.18</span>
                   </div>
                 </div>
@@ -604,12 +597,6 @@
                 id="openEditProfileBtn">
                 <span class="material-symbols-outlined text-[18px]">edit</span>
                 <span>Edit Profile</span>
-              </button>
-              <button type="button"
-                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-space-md py-2.5 rounded-full bg-surface-container-low hover:bg-secondary-container hover:text-on-secondary-container text-secondary font-label-lg text-label-lg shadow-[0_0_16px_rgba(0,238,252,0.2)] transition-all duration-200 cursor-pointer"
-                id="qr-trigger-btn">
-                <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
-                <span>Otaku Passport</span>
               </button>
               <button type="button"
                 class="p-2.5 rounded-full bg-surface-container-high hover:bg-surface-bright text-outline hover:text-on-surface transition-colors cursor-pointer"
@@ -736,159 +723,6 @@
       </section>
 
       <!-- =======================================================================
-           COLLECTIBLE BADGES & ACHIEVEMENTS MATRIX (From Stitch Design)
-           ======================================================================= -->
-      <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin w-full pb-space-xl">
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-space-lg gap-space-sm">
-          <div class="flex flex-col">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary-container">STREAMING
-                HONORS</span>
-              <span class="h-px w-10 bg-secondary-container"></span>
-            </div>
-            <h2 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">Collectible
-              Badges &amp; Trophies</h2>
-          </div>
-          <div class="flex items-center gap-space-sm">
-            <span
-              class="px-3 py-1 rounded-full bg-surface-container-high font-label-sm text-label-sm text-secondary-container font-mono border border-secondary-container/20">
-              5 / 6 UNLOCKED
-            </span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
-          <!-- Badge 1: Night Owl Binge King -->
-          <div
-            class="relative p-space-md rounded-xl bg-surface-container/70 backdrop-blur-md shadow-lg flex items-start gap-space-md transition-all duration-300 hover:bg-surface-container group border border-white/5">
-            <div
-              class="relative flex-shrink-0 w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center shadow-[0_0_18px_rgba(0,238,252,0.35)] group-hover:scale-105 transition-transform">
-              <span class="material-symbols-outlined text-secondary-container text-[28px]">bedtime</span>
-              <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-secondary-container"></span>
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">Night Owl Binge
-                  King</span>
-                <span
-                  class="font-label-sm text-label-sm text-secondary-container font-extrabold uppercase">UNLOCKED</span>
-              </div>
-              <p class="font-body-sm text-body-sm text-outline">Streamed 12 consecutive episodes between 01:00 and 06:00
-                JST.</p>
-              <div class="mt-2 font-label-sm text-label-sm text-secondary tracking-wider font-mono">OBTAINED: JAN 14,
-                2024</div>
-            </div>
-          </div>
-
-          <!-- Badge 2: Tokyo Simulcast First 100 -->
-          <div
-            class="relative p-space-md rounded-xl bg-surface-container/70 backdrop-blur-md shadow-lg flex items-start gap-space-md transition-all duration-300 hover:bg-surface-container group border border-white/5">
-            <div
-              class="relative flex-shrink-0 w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center shadow-[0_0_18px_rgba(255,80,110,0.35)] group-hover:scale-105 transition-transform">
-              <span class="material-symbols-outlined text-primary-container text-[28px]">rocket_launch</span>
-              <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary-container"></span>
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">Tokyo Simulcast First
-                  100</span>
-                <span
-                  class="font-label-sm text-label-sm text-primary-container font-extrabold uppercase">UNLOCKED</span>
-              </div>
-              <p class="font-body-sm text-body-sm text-outline">Connected within 5 seconds of the live Tokyo raw feed
-                airing.</p>
-              <div class="mt-2 font-label-sm text-label-sm text-primary-fixed tracking-wider font-mono">OBTAINED: MAR
-                22, 2024</div>
-            </div>
-          </div>
-
-          <!-- Badge 3: Studio Trigger Zealot -->
-          <div
-            class="relative p-space-md rounded-xl bg-surface-container/70 backdrop-blur-md shadow-lg flex items-start gap-space-md transition-all duration-300 hover:bg-surface-container group border border-white/5">
-            <div
-              class="relative flex-shrink-0 w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center shadow-[0_0_18px_rgba(160,120,255,0.35)] group-hover:scale-105 transition-transform">
-              <span class="material-symbols-outlined text-tertiary-container text-[28px]">electric_bolt</span>
-              <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-tertiary-container"></span>
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">Studio Trigger
-                  Zealot</span>
-                <span
-                  class="font-label-sm text-label-sm text-tertiary-container font-extrabold uppercase">UNLOCKED</span>
-              </div>
-              <p class="font-body-sm text-body-sm text-outline">Completed 100% of Studio Trigger library at master
-                bitrate.</p>
-              <div class="mt-2 font-label-sm text-label-sm text-tertiary tracking-wider font-mono">OBTAINED: APR 05,
-                2024</div>
-            </div>
-          </div>
-
-          <!-- Badge 4: 4K OLED Purist -->
-          <div
-            class="relative p-space-md rounded-xl bg-surface-container/70 backdrop-blur-md shadow-lg flex items-start gap-space-md transition-all duration-300 hover:bg-surface-container group border border-white/5">
-            <div
-              class="relative flex-shrink-0 w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center shadow-[0_0_18px_rgba(0,238,252,0.35)] group-hover:scale-105 transition-transform">
-              <span class="material-symbols-outlined text-secondary-container text-[28px]">tv_gen</span>
-              <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-secondary-container"></span>
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">4K OLED Purist</span>
-                <span
-                  class="font-label-sm text-label-sm text-secondary-container font-extrabold uppercase">UNLOCKED</span>
-              </div>
-              <p class="font-body-sm text-body-sm text-outline">Accumulated over 500+ playback hours in 80Mbps Master
-                feeds.</p>
-              <div class="mt-2 font-label-sm text-label-sm text-secondary tracking-wider font-mono">OBTAINED: JUN 19,
-                2024</div>
-            </div>
-          </div>
-
-          <!-- Badge 5: Danmaku Master -->
-          <div
-            class="relative p-space-md rounded-xl bg-surface-container/70 backdrop-blur-md shadow-lg flex items-start gap-space-md transition-all duration-300 hover:bg-surface-container group border border-white/5">
-            <div
-              class="relative flex-shrink-0 w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center shadow-[0_0_18px_rgba(255,80,110,0.35)] group-hover:scale-105 transition-transform">
-              <span class="material-symbols-outlined text-primary-container text-[28px]">forum</span>
-              <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary-container"></span>
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-headline-sm text-headline-sm text-on-surface font-bold truncate">Danmaku Master</span>
-                <span
-                  class="font-label-sm text-label-sm text-primary-container font-extrabold uppercase">UNLOCKED</span>
-              </div>
-              <p class="font-body-sm text-body-sm text-outline">Authored 1,000+ synchronized live comments during
-                premiere airings.</p>
-              <div class="mt-2 font-label-sm text-label-sm text-primary-fixed tracking-wider font-mono">OBTAINED: SEP
-                02, 2024</div>
-            </div>
-          </div>
-
-          <!-- Badge 6: Isekai Survivor -->
-          <div
-            class="relative p-space-md rounded-xl bg-surface-container/40 backdrop-blur-md shadow-inner flex items-start gap-space-md opacity-75 group hover:opacity-100 transition-opacity border border-white/5">
-            <div
-              class="relative flex-shrink-0 w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center text-outline">
-              <span class="material-symbols-outlined text-[28px]">lock</span>
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-headline-sm text-headline-sm text-outline font-bold truncate">Isekai Survivor</span>
-                <span class="font-label-sm text-label-sm text-outline uppercase font-mono">LOCKED (78%)</span>
-              </div>
-              <p class="font-body-sm text-body-sm text-outline">Survive and watch 50 different reincarnation trope
-                series.</p>
-              <div class="mt-2 w-full h-1.5 rounded-full bg-surface-container-lowest overflow-hidden">
-                <div class="h-full rounded-full bg-secondary-container/50" style="width: 78%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- =======================================================================
            EPISODES & WATCHLIST TABS (Managed by profile.js)
            ======================================================================= -->
       <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin w-full pb-space-xl">
@@ -914,178 +748,6 @@
         <div class="tab-content-panel" id="panel-watchlist">
           <div class="profile-media-grid" id="watchlistGrid">
             <!-- Dynamically populated by profile.js -->
-          </div>
-        </div>
-      </section>
-
-      <!-- =======================================================================
-           CINEMA CALIBRATION & STREAM PREFERENCES HUB (From Stitch)
-           ======================================================================= -->
-      <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin w-full pb-space-xl">
-        <div class="p-space-lg rounded-xl bg-surface-container/50 backdrop-blur-2xl shadow-2xl border border-white/5">
-          <div
-            class="flex flex-col md:flex-row md:items-center justify-between pb-space-lg border-b border-surface-container-high gap-space-md">
-            <div>
-              <h3 class="font-headline-md text-headline-md font-bold text-on-surface">Cinema Calibration &amp; Stream
-                Preferences</h3>
-              <p class="font-body-sm text-body-sm text-outline mt-0.5">Control uncompressed audio passthrough, AV1
-                zero-floor decode, and account linkages.</p>
-            </div>
-            <div class="flex items-center gap-space-sm">
-              <button type="button"
-                class="px-space-md py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_16px_rgba(255,80,110,0.4)] hover:shadow-[0_0_24px_rgba(255,80,110,0.7)] transition-all cursor-pointer">
-                Save Preferences
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-xl mt-space-lg">
-            <!-- Left: AV Engine & Playback Options -->
-            <div class="flex flex-col gap-space-md">
-              <span class="font-label-lg text-label-lg text-secondary-container tracking-wider uppercase font-bold">AV
-                Engine &amp; Player HUD</span>
-
-              <!-- Audio Priority -->
-              <div class="flex flex-col gap-1.5">
-                <label class="font-label-md text-label-md text-on-surface">Default Audio Track</label>
-                <div class="relative">
-                  <select
-                    class="w-full px-4 py-3 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface appearance-none focus:outline-none focus:ring-1 focus:ring-secondary-container transition-all border border-white/5">
-                    <option selected>Japanese (Original Subtitle Master) - FLAC 24-Bit / 96kHz</option>
-                    <option>Dual-Audio (English Cast Dub) - Dolby Atmos 7.1</option>
-                    <option>Director Commentary Stream - Tokyo Feed</option>
-                  </select>
-                  <span
-                    class="material-symbols-outlined absolute right-3 top-3 text-outline pointer-events-none">expand_more</span>
-                </div>
-              </div>
-
-              <!-- Stream Quality -->
-              <div class="flex flex-col gap-1.5">
-                <label class="font-label-md text-label-md text-on-surface">Default Display Feed</label>
-                <div class="relative">
-                  <select
-                    class="w-full px-4 py-3 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface appearance-none focus:outline-none focus:ring-1 focus:ring-secondary-container transition-all border border-white/5">
-                    <option selected>4K UHD Master (Zero-Floor AMOLED Calibration, 80 Mbps)</option>
-                    <option>1080p CinePure (Uncompressed Master Bitrate, 35 Mbps)</option>
-                    <option>Dynamic Adaptive Bitrate (Edge Node Balancing)</option>
-                  </select>
-                  <span
-                    class="material-symbols-outlined absolute right-3 top-3 text-outline pointer-events-none">expand_more</span>
-                </div>
-              </div>
-
-              <!-- Toggles -->
-              <div class="flex flex-col gap-space-sm pt-space-xs">
-                <!-- Autoplay -->
-                <div
-                  class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="font-label-md text-label-md text-on-surface">Autoplay Next Episode</span>
-                    <span class="font-body-sm text-body-sm text-outline">Seamless zero-buffer preloading 30 seconds
-                      before credits.</span>
-                  </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
-                    <input checked class="sr-only peer" type="checkbox" />
-                    <div
-                      class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary-container shadow-inner">
-                    </div>
-                  </label>
-                </div>
-
-                <!-- Skip OP/ED -->
-                <div
-                  class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="font-label-md text-label-md text-on-surface">Automated OP / ED Milestone Skip</span>
-                    <span class="font-body-sm text-body-sm text-outline">Smart timeline skipping based on audio
-                      fingerprint analysis.</span>
-                  </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
-                    <input checked class="sr-only peer" type="checkbox" />
-                    <div
-                      class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container shadow-inner">
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right: Local Sync & API Integrations -->
-            <div class="flex flex-col gap-space-md">
-              <span class="font-label-lg text-label-lg text-primary-fixed tracking-wider uppercase font-bold">Local Sync
-                &amp; API Integrations</span>
-
-              <!-- Storage Target -->
-              <div class="flex flex-col gap-1.5">
-                <label class="font-label-md text-label-md text-on-surface">Offline CineVault Cache Target</label>
-                <div class="relative flex items-center">
-                  <input
-                    class="w-full pl-4 pr-28 py-3 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-outline font-mono focus:outline-none border border-white/5"
-                    readonly type="text" value="/Volumes/NVMe-CineStorage/InfinxAnime/MasterCache" />
-                  <button type="button"
-                    class="absolute right-2 px-3 py-1.5 rounded bg-surface-container-high hover:bg-surface-bright font-label-sm text-label-sm text-on-surface transition-colors cursor-pointer">
-                    Change
-                  </button>
-                </div>
-              </div>
-
-              <!-- Linked Profiles -->
-              <div class="flex flex-col gap-space-sm pt-space-xs">
-                <label class="font-label-md text-label-md text-on-surface">Connected Matrix Profiles</label>
-
-                <!-- Discord Connected -->
-                <div
-                  class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
-                  <div class="flex items-center gap-space-sm">
-                    <div class="w-9 h-9 rounded-lg bg-[#5865F2]/20 flex items-center justify-center text-[#5865F2]">
-                      <span class="material-symbols-outlined text-[20px]">chat</span>
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="font-label-md text-label-md text-on-surface">Discord Rich Presence</span>
-                      <span class="font-body-sm text-body-sm text-outline">Kenshiro#0001 (Broadcasting Live
-                        Episode)</span>
-                    </div>
-                  </div>
-                  <span
-                    class="px-2.5 py-1 rounded bg-secondary-container/10 font-label-sm text-label-sm text-secondary-container font-bold">SYNCED</span>
-                </div>
-
-                <!-- AniList Linked -->
-                <div
-                  class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
-                  <div class="flex items-center gap-space-sm">
-                    <div class="w-9 h-9 rounded-lg bg-[#02A9FF]/20 flex items-center justify-center text-[#02A9FF]">
-                      <span class="material-symbols-outlined text-[20px]">sync</span>
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="font-label-md text-label-md text-on-surface">AniList Auto-Scrobble</span>
-                      <span class="font-body-sm text-body-sm text-outline">Connected as @KenshiroMaster</span>
-                    </div>
-                  </div>
-                  <span
-                    class="px-2.5 py-1 rounded bg-secondary-container/10 font-label-sm text-label-sm text-secondary-container font-bold">SYNCED</span>
-                </div>
-
-                <!-- MyAnimeList Link -->
-                <div
-                  class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
-                  <div class="flex items-center gap-space-sm">
-                    <div class="w-9 h-9 rounded-lg bg-[#2E51A2]/20 flex items-center justify-center text-[#2E51A2]">
-                      <span class="material-symbols-outlined text-[20px]">bookmark</span>
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="font-label-md text-label-md text-on-surface">MyAnimeList Cloud Sync</span>
-                      <span class="font-body-sm text-body-sm text-outline">Bi-directional list synchronizer</span>
-                    </div>
-                  </div>
-                  <button type="button"
-                    class="px-3 py-1 rounded bg-surface-container-high hover:bg-surface-bright font-label-sm text-label-sm text-on-surface transition-colors cursor-pointer">
-                    Link MAL
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

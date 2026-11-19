@@ -971,27 +971,34 @@
             </button>
             <div class="dropdown-menu genres-menu">
               <div class="grid grid-cols-2 gap-1">
-                <a href="anime.html?genre=action" class="dropdown-item"><i class="fas fa-fire"></i><span>Action</span></a>
+                <a href="anime.html?genre=action" class="dropdown-item"><i
+                    class="fas fa-fire"></i><span>Action</span></a>
                 <a href="anime.html?genre=adventure" class="dropdown-item"><i
                     class="fas fa-compass"></i><span>Adventure</span></a>
                 <a href="anime.html?genre=animation" class="dropdown-item"><i
                     class="fas fa-magic"></i><span>Animation</span></a>
                 <a href="anime.html?genre=comedy" class="dropdown-item"><i
                     class="fas fa-laugh-beam"></i><span>Comedy</span></a>
-                <a href="anime.html?genre=crime" class="dropdown-item"><i class="fas fa-user-ninja"></i><span>Crime</span></a>
+                <a href="anime.html?genre=crime" class="dropdown-item"><i
+                    class="fas fa-user-ninja"></i><span>Crime</span></a>
                 <a href="anime.html?genre=drama" class="dropdown-item"><i
                     class="fas fa-theater-masks"></i><span>Drama</span></a>
-                <a href="anime.html?genre=fantasy" class="dropdown-item"><i class="fas fa-dragon"></i><span>Fantasy</span></a>
+                <a href="anime.html?genre=fantasy" class="dropdown-item"><i
+                    class="fas fa-dragon"></i><span>Fantasy</span></a>
                 <a href="anime.html?genre=historical" class="dropdown-item"><i
                     class="fas fa-landmark"></i><span>Historical</span></a>
-                <a href="anime.html?genre=horror" class="dropdown-item"><i class="fas fa-ghost"></i><span>Horror</span></a>
+                <a href="anime.html?genre=horror" class="dropdown-item"><i
+                    class="fas fa-ghost"></i><span>Horror</span></a>
                 <a href="anime.html?genre=mystery" class="dropdown-item"><i
                     class="fas fa-user-secret"></i><span>Mystery</span></a>
                 <a href="anime.html?genre=political" class="dropdown-item"><i
                     class="fas fa-building-columns"></i><span>Political</span></a>
-                <a href="anime.html?genre=romance" class="dropdown-item"><i class="fas fa-heart"></i><span>Romance</span></a>
-                <a href="anime.html?genre=sci-fi" class="dropdown-item"><i class="fas fa-atom"></i><span>Sci-Fi</span></a>
-                <a href="anime.html?genre=thriller" class="dropdown-item"><i class="fas fa-bolt"></i><span>Thriller</span></a>
+                <a href="anime.html?genre=romance" class="dropdown-item"><i
+                    class="fas fa-heart"></i><span>Romance</span></a>
+                <a href="anime.html?genre=sci-fi" class="dropdown-item"><i
+                    class="fas fa-atom"></i><span>Sci-Fi</span></a>
+                <a href="anime.html?genre=thriller" class="dropdown-item"><i
+                    class="fas fa-bolt"></i><span>Thriller</span></a>
               </div>
             </div>
           </div>
@@ -1007,11 +1014,13 @@
             </button>
             <div class="dropdown-menu categories-menu">
               <div class="flex flex-col gap-1">
-                <a href="anime.html?category=south-hindi-dubbed" class="dropdown-item"><i class="fas fa-language"></i><span>South
+                <a href="anime.html?category=south-hindi-dubbed" class="dropdown-item"><i
+                    class="fas fa-language"></i><span>South
                     Hindi Dubbed</span></a>
                 <a href="anime.html?category=hollywood" class="dropdown-item"><i class="fas fa-film"></i><span>Hollywood
                     Movies</span></a>
-                <a href="anime.html?category=bollywood" class="dropdown-item"><i class="fas fa-clapperboard"></i><span>Bollywood
+                <a href="anime.html?category=bollywood" class="dropdown-item"><i
+                    class="fas fa-clapperboard"></i><span>Bollywood
                     Movies</span></a>
                 <a href="anime.html" class="dropdown-item"><i class="fas fa-play-circle"></i><span>Anime Hub</span></a>
                 <a href="anime.html?category=web-series" class="dropdown-item"><i class="fas fa-tv"></i><span>Web
@@ -1098,11 +1107,13 @@
           <button
             class="px-3 sm:px-4 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-xs sm:text-label-sm font-semibold transition-all cursor-pointer shrink-0"
             onclick="openModal('login')" type="button">
+            onclick="window.location.href='login.html'" type="button">
             Sign In
           </button>
           <button
             class="hidden sm:inline-block px-3 sm:px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-xs sm:text-label-sm font-bold shadow-[0_0_14px_rgba(255,80,110,0.4)] hover:brightness-110 transition-all cursor-pointer shrink-0"
             onclick="openModal('register')" type="button">
+            onclick="window.location.href='login.html#register'" type="button">
             Register
           </button>
         </div>
@@ -1285,12 +1296,14 @@
       <button
         class="w-full py-2.5 rounded-xl bg-secondary-container text-on-secondary-fixed font-label-md font-bold shadow-[0_0_16px_rgba(0,238,252,0.35)] cursor-pointer"
         onclick="openModal('login'); if(typeof window.closeMobileMenu==='function') window.closeMobileMenu();"
+        onclick="if(typeof window.closeMobileMenu==='function') window.closeMobileMenu(); window.location.href='login.html';"
         type="button">
         Sign In
       </button>
       <button
         class="w-full py-2 rounded-xl bg-surface-container-high text-on-surface font-label-md font-medium cursor-pointer"
         onclick="openModal('register'); if(typeof window.closeMobileMenu==='function') window.closeMobileMenu();"
+        onclick="if(typeof window.closeMobileMenu==='function') window.closeMobileMenu(); window.location.href='login.html#register';"
         type="button">
         Create Account
       </button>

@@ -638,6 +638,16 @@
     const xpNext = p.xpNextLevel || ((p.level || 1) * 200);
     const xpPct = p.xpPercent !== undefined ? p.xpPercent : Math.min(100, Math.round((xpVal / xpNext) * 100));
     document.getElementById('profileLevelBadge').innerText = `LEVEL ${p.level} • ${p.vipRank ? p.vipRank.replace('_', ' ') : 'GENIN'}`;
+    const hexBadge = document.getElementById('profileLevelHexBadge');
+    if (hexBadge) hexBadge.innerText = `LV.${p.level || 1}`;
+
+    const radialCircle = document.getElementById('profileRadialXpCircle');
+    if (radialCircle) {
+      const circumference = 289.02;
+      const offset = circumference - (circumference * xpPct / 100);
+      radialCircle.style.strokeDashoffset = offset;
+    }
+
     document.getElementById('profileXpRatio').innerText = `${xpVal.toLocaleString()} / ${xpNext.toLocaleString()} XP (${xpPct}%)`;
     document.getElementById('profileXpFill').style.width = `${xpPct}%`;
 
@@ -1730,12 +1740,12 @@
       }
     } else {
       if (authHeader) {
-        authHeader.innerHTML = `<a href="index.html#login" class="btn btn-secondary btn-small">Sign In</a>`;
+        authHeader.innerHTML = `<a href="login.html" class="btn btn-secondary btn-small">Sign In</a>`;
       }
       if (drawerAuthHeader) {
         drawerAuthHeader.innerHTML = `
-          <a href="index.html#login" class="btn btn-primary" style="width: 100%; justify-content: center; text-transform: uppercase; margin-bottom: 8px;"><i class="fas fa-sign-in-alt"></i> Sign In</a>
-          <a href="index.html#register" class="btn btn-secondary" style="width: 100%; justify-content: center; text-transform: uppercase;"><i class="fas fa-user-plus"></i> Register</a>
+          <a href="login.html" class="btn btn-primary" style="width: 100%; justify-content: center; text-transform: uppercase; margin-bottom: 8px;"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+          <a href="login.html#register" class="btn btn-secondary" style="width: 100%; justify-content: center; text-transform: uppercase;"><i class="fas fa-user-plus"></i> Register</a>
         `;
       }
     }
@@ -1890,6 +1900,17 @@
       }
       if (badgeEl && d.level) {
         badgeEl.innerText = `LEVEL ${d.level} • ${(d.vipRank || 'GENIN').replace('_', ' ')}`;
+        const hexBadge = document.getElementById('profileLevelHexBadge');
+        if (hexBadge) hexBadge.innerText = `LV.${d.level}`;
+      }
+      if (d.xp !== undefined) {
+        const next = d.xpNextLevel || ((d.level || 1) * 200);
+        const pct = d.xpPercent !== undefined ? d.xpPercent : Math.min(100, Math.round((d.xp / next) * 100));
+        const radialCircle = document.getElementById('profileRadialXpCircle');
+        if (radialCircle) {
+          const circumference = 289.02;
+          radialCircle.style.strokeDashoffset = circumference - (circumference * pct / 100);
+        }
       }
     }
   });
@@ -1907,9 +1928,16 @@
           const pct = Math.min(100, Math.round((d.xp / next) * 100));
           ratioEl.innerText = `${(d.xp || 0).toLocaleString()} / ${next.toLocaleString()} XP (${pct}%)`;
           if (fillEl) fillEl.style.width = `${pct}%`;
+          const radialCircle = document.getElementById('profileRadialXpCircle');
+          if (radialCircle) {
+            const circumference = 289.02;
+            radialCircle.style.strokeDashoffset = circumference - (circumference * pct / 100);
+          }
         }
         if (badgeEl && d.level) {
           badgeEl.innerText = `LEVEL ${d.level} • ${(d.vipRank || 'GENIN').replace('_', ' ')}`;
+          const hexBadge = document.getElementById('profileLevelHexBadge');
+          if (hexBadge) hexBadge.innerText = `LV.${d.level}`;
         }
       } catch (_) { }
     }

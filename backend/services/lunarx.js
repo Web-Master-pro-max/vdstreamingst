@@ -7,8 +7,8 @@ const { execSync } = require('child_process');
 const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = '5KQwE5T1ARzLoTj9QYFf4ibfb6NN0yLBijrjQ18NicKgu0LPVidxl65iykrqhQbkbbkwLjYdgalOQKXT';
-const DEFAULT_PITCH = '5vTB7k7NHoOeoIHSKgybdBrXbvjRmjfbENVU53SKoEXRqNK4Z01jo';
+const DEFAULT_AXIS = '2Ge3n6UhLVbnG4BhvrnuS9URbYzXvVOuhnTPmxUjhBsP0p9EiSd0eIPQIzBne3U50a8PNw';
+const DEFAULT_PITCH = 'eSJxouAM3xEUwToePzN5WOnjulogC5fs5sZTL6YDEeiqSKGhmtE8oX4RgEvVLJ0OlQKD5';
 const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {

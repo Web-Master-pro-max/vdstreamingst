@@ -64,10 +64,14 @@ def main():
     print(f"Connecting to Redis at: {REDIS_URL}")
     print(f"Connecting to Backend at: {BACKEND_URL}")
     
-    # Establish Redis connection
+    # Establish Redis connection with keepalive and auto-retry
     try:
-        r = redis.Redis.from_url(REDIS_URL)
-        # Test connection
+        r = redis.Redis.from_url(
+            REDIS_URL,
+            retry_on_timeout=True,
+            socket_keepalive=True,
+            health_check_interval=30
+        )
         r.ping()
         print("✅ Connected to Redis successfully.")
     except Exception as e:
@@ -122,13 +126,23 @@ def main():
                     # 3. Update status to FAILED
                     send_webhook_status(episode_id, "FAILED", error_msg=str(ex))
             
-        except redis.exceptions.ConnectionError:
-            print("⚠️ Redis Connection lost. Reconnecting in 5 seconds...")
-            time.sleep(5)
-            try:
-                r = redis.Redis.from_url(REDIS_URL)
-            except Exception:
-                pass
+        except (redis.exceptions.ConnectionError, redis.exceptions.ConnectionResetError):
+            print("⚠️ Redis connection lost. Reconnecting...")
+            time.sleep(3)
+            reconnected = False
+            while not reconnected:
+                try:
+                    r = redis.Redis.from_url(
+                        REDIS_URL,
+                        retry_on_timeout=True,
+                        socket_keepalive=True,
+                        health_check_interval=30
+                    )
+                    r.ping()
+                    print("✅ Reconnected to Redis successfully.")
+                    reconnected = True
+                except Exception:
+                    time.sleep(5)
         except redis.exceptions.TimeoutError:
             pass # Ignore normal blocking pop socket timeouts
         except Exception as e:
