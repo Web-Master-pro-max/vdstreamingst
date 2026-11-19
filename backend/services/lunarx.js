@@ -167,32 +167,136 @@ class LunarXService {
     });
   }
 
-  // Get seasonal trending anime
+  // Get seasonal trending anime (via AniList GraphQL live metrics with upstream fallback)
   async getTrending() {
+    const cacheKey = 'trending:metrics';
+    const cached = this.cache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < this.cacheTTL)) {
+      return cached.data;
+    }
+
+    const formatMedia = (item) => {
+      if (!item) return null;
+      return {
+        anilistId: item.id,
+        title: item.title?.english || item.title?.romaji || item.title?.userPreferred || 'Untitled Anime',
+        romajiTitle: item.title?.romaji,
+        englishTitle: item.title?.english,
+        poster: item.coverImage?.extraLarge || item.coverImage?.large || null,
+        banner: item.bannerImage || null,
+        score: item.averageScore || null,
+        format: item.format || 'TV',
+        seasonYear: item.seasonYear || null,
+        popularity: item.popularity || 0,
+        trending: item.trending || 0,
+        genres: item.genres || [],
+        isLunar: true
+      };
+    };
+
+    // Primary: Query official AniList GraphQL directly (real-time Tokyo & global metrics, 100% reliable)
+    try {
+      const gqlQuery = `
+        query {
+          trending: Page(page: 1, perPage: 12) {
+            media(sort: TRENDING_DESC, type: ANIME, isAdult: false) {
+              id
+              title { english romaji userPreferred }
+              coverImage { extraLarge large }
+              bannerImage
+              averageScore
+              format
+              seasonYear
+              genres
+              episodes
+            }
+          }
+          popular: Page(page: 1, perPage: 12) {
+            media(sort: POPULARITY_DESC, type: ANIME, isAdult: false) {
+              id
+              title { english romaji userPreferred }
+              coverImage { extraLarge large }
+              bannerImage
+              averageScore
+              format
+              seasonYear
+              genres
+              episodes
+            }
+          }
+          upcoming: Page(page: 1, perPage: 12) {
+            media(status: NOT_YET_RELEASED, sort: POPULARITY_DESC, type: ANIME, isAdult: false) {
+              id
+              title { english romaji userPreferred }
+              coverImage { extraLarge large }
+              bannerImage
+              averageScore
+              format
+              seasonYear
+              genres
+              episodes
+            }
+          }
+        }
+      `;
+
+      const aniListData = await new Promise((resolve, reject) => {
+        const postData = JSON.stringify({ query: gqlQuery });
+        const req = https.request('https://graphql.anilist.co', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        }, res => {
+          let body = '';
+          res.on('data', c => body += c);
+          res.on('end', () => {
+            try {
+              const json = JSON.parse(body);
+              if (json && json.data) resolve(json.data);
+              else reject(new Error('Invalid AniList GraphQL response'));
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
+
+        req.on('error', err => reject(err));
+        req.setTimeout(8000, () => {
+          req.destroy();
+          reject(new Error('AniList GraphQL trending query timed out'));
+        });
+        req.write(postData);
+        req.end();
+      });
+
+      const formatted = {
+        popularThisSeason: (aniListData.popular?.media || []).map(formatMedia).filter(Boolean),
+        trendingNow: (aniListData.trending?.media || []).map(formatMedia).filter(Boolean),
+        upcomingNextSeason: (aniListData.upcoming?.media || []).map(formatMedia).filter(Boolean)
+      };
+
+      if (formatted.popularThisSeason.length > 0 || formatted.trendingNow.length > 0) {
+        this.cache.set(cacheKey, { data: formatted, timestamp: Date.now() });
+        return formatted;
+      }
+    } catch (gqlErr) {
+      console.warn('[LunarX] AniList GraphQL trending query failed, trying upstream LunarX API:', gqlErr.message);
+    }
+
+    // Secondary fallback: upstream LunarX API
     try {
       const res = await this.get('/api/animes/trending');
       const data = res.data || {};
-
-      const formatMedia = (item) => {
-        if (!item) return null;
-        return {
-          anilistId: item.id,
-          title: item.title?.english || item.title?.romaji || 'Untitled Anime',
-          romajiTitle: item.title?.romaji,
-          englishTitle: item.title?.english,
-          poster: item.coverImage?.large || item.coverImage?.extraLarge || null,
-          banner: item.bannerImage || null,
-          popularity: item.popularity || 0,
-          trending: item.trending || 0,
-          isLunar: true
-        };
-      };
-
-      return {
+      const result = {
         popularThisSeason: (data.popularThisSeason?.media || []).map(formatMedia).filter(Boolean),
         trendingNow: (data.trendingNow?.media || []).map(formatMedia).filter(Boolean),
         upcomingNextSeason: (data.upcomingNextSeason?.media || []).map(formatMedia).filter(Boolean)
       };
+      this.cache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return result;
     } catch (err) {
       console.error('[LunarX] getTrending error:', err.message);
       return { popularThisSeason: [], trendingNow: [], upcomingNextSeason: [] };

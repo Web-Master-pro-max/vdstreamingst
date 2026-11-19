@@ -416,12 +416,70 @@ async function loadLunarTrending() {
 
   try {
     const res = await fetch(`${API_BASE}/lunarx/trending`);
-    if (!res.ok) return;
-    const data = await res.json();
-    globalLunarData = data;
-    renderLunarSection();
+    if (res.ok) {
+      const data = await res.json();
+      if (data && ((data.popularThisSeason && data.popularThisSeason.length > 0) || (data.trendingNow && data.trendingNow.length > 0))) {
+        globalLunarData = data;
+        renderLunarSection();
+        return;
+      }
+    }
   } catch (err) {
-    console.warn('Lunar trending fetch failed:', err);
+    console.warn('Lunar trending backend fetch failed:', err);
+  }
+
+  // Direct client-side AniList fallback if backend endpoint returned empty or is unreachable
+  try {
+    const gql = `
+      query {
+        trending: Page(page: 1, perPage: 10) {
+          media(sort: TRENDING_DESC, type: ANIME, isAdult: false) {
+            id title { english romaji userPreferred }
+            coverImage { extraLarge large } bannerImage averageScore format seasonYear
+          }
+        }
+        popular: Page(page: 1, perPage: 10) {
+          media(sort: POPULARITY_DESC, type: ANIME, isAdult: false) {
+            id title { english romaji userPreferred }
+            coverImage { extraLarge large } bannerImage averageScore format seasonYear
+          }
+        }
+        upcoming: Page(page: 1, perPage: 10) {
+          media(status: NOT_YET_RELEASED, sort: POPULARITY_DESC, type: ANIME, isAdult: false) {
+            id title { english romaji userPreferred }
+            coverImage { extraLarge large } bannerImage averageScore format seasonYear
+          }
+        }
+      }
+    `;
+    const res = await fetch('https://graphql.anilist.co', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query: gql })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const mapItem = (m) => ({
+        anilistId: m.id,
+        title: m.title?.english || m.title?.romaji || m.title?.userPreferred || 'Anime Masterpiece',
+        englishTitle: m.title?.english,
+        romajiTitle: m.title?.romaji,
+        poster: m.coverImage?.extraLarge || m.coverImage?.large,
+        banner: m.bannerImage,
+        score: m.averageScore,
+        format: m.format,
+        seasonYear: m.seasonYear,
+        isLunar: true
+      });
+      globalLunarData = {
+        popularThisSeason: (json.data?.popular?.media || []).map(mapItem),
+        trendingNow: (json.data?.trending?.media || []).map(mapItem),
+        upcomingNextSeason: (json.data?.upcoming?.media || []).map(mapItem)
+      };
+      renderLunarSection();
+    }
+  } catch (clientErr) {
+    console.warn('Direct AniList client fallback failed:', clientErr);
   }
 }
 
