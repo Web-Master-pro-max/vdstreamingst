@@ -523,8 +523,8 @@ router.get(['/hls/live.m3u8', '/proxy/m3u8', '/proxy/playlist.m3u8'], async (req
         return res.send(outputLines.join('\n'));
       }
 
-      // Check if this media playlist uses a dedicated CDN edge vault (e.g. vault-*.surgecdn.top, vault-*.prismcdn.top, *.playercdn.net)
-      const cdnVaultMatch = body.match(/https:\/\/([a-zA-Z0-9-]+\.(?:surgecdn\.top|prismcdn\.top|playercdn\.net|matrixcdn|fallencdn|vividcdn|furrycdn))/);
+      // Check if this media playlist uses a dedicated CDN edge vault (e.g. vault-*.surgecdn.top, vault-*.prismcdn.top, vault-*.vividcdn.top)
+      const cdnVaultMatch = body.match(/https:\/\/([a-zA-Z0-9-]+\.(?:surgecdn|prismcdn|playercdn|matrixcdn|fallencdn|vividcdn|furrycdn)\.[a-zA-Z0-9]+)/);
       const cdnVaultHost = cdnVaultMatch ? cdnVaultMatch[1] : null;
 
       // Handle Media Playlists (segments)
