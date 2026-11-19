@@ -1160,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           }
 
           if (!streamUrl) {
-            for (const altHost of ['sora', '3rdprovider']) {
+            for (const altHost of ['yuki', '3rdprovider', 'sora']) {
               try {
                 const altRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode?.anilistId || lunarId}/${targetEpNum}?host=${altHost}&type=sub`);
                 if (altRes.ok) {
@@ -6962,9 +6962,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.warn('[Player] Fallback to sub failed:', fbErr);
               }
             }
-            // If still no streamUrl, try alternative hosts (sora, 3rdprovider)
+            // If still no streamUrl, try alternative hosts (yuki, 3rdprovider, sora)
             if (!initialVideoUrl) {
-              for (const altHost of ['sora', '3rdprovider']) {
+              for (const altHost of ['yuki', '3rdprovider', 'sora']) {
                 try {
                   const altRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${altHost}&type=sub`);
                   if (altRes.ok) {

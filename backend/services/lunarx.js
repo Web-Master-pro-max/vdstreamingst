@@ -7,8 +7,8 @@ const { execSync } = require('child_process');
 const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = 'NR4aO0wnFbEr8H9fgriGS1y5LgH6lF1xMCDHmafNBJYazyz5JuOKgmFx0Jl4i6FFxfYB9miSzmkgy4E3xU4';
-const DEFAULT_PITCH = 'd121ClteiHMfLWyWkrxVInq8G3jFhlZ326Cy5TX2ghciMTVMuYNKquoStUgPUosUe5kAHaR80iPLb2gnE60D03';
+const DEFAULT_AXIS = '5KQwE5T1ARzLoTj9QYFf4ibfb6NN0yLBijrjQ18NicKgu0LPVidxl65iykrqhQbkbbkwLjYdgalOQKXT';
+const DEFAULT_PITCH = '5vTB7k7NHoOeoIHSKgybdBrXbvjRmjfbENVU53SKoEXRqNK4Z01jo';
 const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {
@@ -1033,10 +1033,13 @@ class LunarXService {
       if (remoteRaw) {
         const parsed = JSON.parse(remoteRaw);
         if (parsed && parsed.axis && parsed.pitch) {
-          // Guard against stale remote repository keys overwriting fresh verified local keys
+          const isSame = this.axis === parsed.axis && this.pitch === parsed.pitch;
           const currentTimestamp = this.globalKeys?.timestamp || 0;
           const remoteTimestamp = parsed.updatedAt || 0;
-          if (currentTimestamp > 0 && remoteTimestamp > 0 && remoteTimestamp < currentTimestamp) {
+
+          if (isSame) {
+            console.log('[LunarX] Remote keys match current keys');
+          } else if (!forceRefresh && currentTimestamp > 0 && remoteTimestamp > 0 && remoteTimestamp < currentTimestamp) {
             console.log('[LunarX] Remote keys are older than current live keys, keeping current verified keys');
           } else {
             console.log('[LunarX] Successfully synced cipher keys from remote repository');
@@ -1052,6 +1055,40 @@ class LunarXService {
       console.warn('[LunarX] Remote key sync failed:', remoteErr.message);
     }
 
+    // 5. Alternate CDN fallback (jsDelivr CDN mirror of GitHub)
+    try {
+      const cdnRaw = await new Promise((resolve) => {
+        const req = https.get('https://cdn.jsdelivr.net/gh/Web-Master-pro-max/vdstreamingst@main/backend/data/lunarx_keys.json', {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          timeout: 5000
+        }, res => {
+          if (res.statusCode === 200) {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => resolve(body));
+          } else {
+            resolve(null);
+          }
+        });
+        req.on('error', () => resolve(null));
+        req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+      });
+      if (cdnRaw) {
+        const parsed = JSON.parse(cdnRaw);
+        if (parsed && parsed.axis && parsed.pitch) {
+          const isSame = this.axis === parsed.axis && this.pitch === parsed.pitch;
+          if (!isSame) {
+            console.log('[LunarX] Successfully synced cipher keys from jsDelivr CDN');
+            this.globalKeys = { axis: parsed.axis, pitch: parsed.pitch, timestamp: parsed.updatedAt || Date.now() };
+            this.axis = parsed.axis;
+            this.pitch = parsed.pitch;
+            this.saveKeysToDisk(parsed.axis, parsed.pitch);
+            return [parsed.axis, parsed.pitch];
+          }
+        }
+      }
+    } catch (cdnErr) { }
+
     // Fallback to loaded or default keys
     return [this.axis, this.pitch];
   }
@@ -1059,6 +1096,10 @@ class LunarXService {
   // Verify stream manifest playability
   verifyM3u8(url, referer, origin) {
     if (!url) return Promise.resolve(false);
+    // Unplayable CDN hosts (krussdomi / advancedairesearchlab has Cloudflare Super Bot Fight mode blocking all segments)
+    if (url.includes('krussdomi') || url.includes('advancedairesearchlab')) {
+      return Promise.resolve(false);
+    }
     const checkOnce = (ref, orig) => new Promise(resolve => {
       try {
         const client = url.startsWith('https://') ? https : http;
@@ -1380,7 +1421,7 @@ class LunarXService {
         (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna' && h !== 'yuki'
       );
     } else {
-      hostsToTry = [requestedHost, 'zuna', 'yuki', 'sora', 'loli', '3rdprovider'].filter(
+      hostsToTry = [requestedHost, 'zuna', 'yuki', '3rdprovider', 'loli', 'sora'].filter(
         (h, idx, self) => self.indexOf(h) === idx
       );
     }

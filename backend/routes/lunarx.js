@@ -111,6 +111,28 @@ router.get('/seasons/:anilistId', async (req, res) => {
 });
 
 
+// 5b. Decryption Keys status and remote sync
+router.get('/keys/sync', async (req, res) => {
+  try {
+    const keys = await lunarx.getDecryptionKeys(null, true);
+    res.json({ success: true, keys, source: 'synced' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/keys', (req, res) => {
+  const { axis, pitch } = req.body || {};
+  if (!axis || !pitch) {
+    return res.status(400).json({ success: false, error: 'axis and pitch required' });
+  }
+  lunarx.axis = axis;
+  lunarx.pitch = pitch;
+  lunarx.globalKeys = { axis, pitch, timestamp: Date.now() };
+  lunarx.saveKeysToDisk(axis, pitch);
+  res.json({ success: true, message: 'Keys updated' });
+});
+
 // 6. Get Decrypted Video Stream with Timestamps & Subtitles
 router.get(['/stream/:anilistId/:epNum', '/watch/:anilistId/:epNum'], async (req, res) => {
   try {
