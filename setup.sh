@@ -96,8 +96,8 @@ case "${1:-}" in
         ;;
     --restart|restart)
         log_step "Restarting Infinx Services"
-        docker compose restart
-        systemctl restart nginx
+        docker compose up -d --build backend worker
+        systemctl restart nginx || true
         log_success "All services restarted successfully."
         exit 0
         ;;
@@ -148,9 +148,11 @@ case "${1:-}" in
         check_root
         log_step "Updating Infinx Application"
         if [ -d ".git" ]; then
+            git stash || true
             git pull || log_warn "Git pull failed or local changes present. Continuing with build..."
         fi
-        docker compose up --build -d
+        docker compose up --build -d backend worker
+        systemctl restart nginx || true
         log_success "Update complete."
         exit 0
         ;;

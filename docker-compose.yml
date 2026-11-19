@@ -59,6 +59,10 @@ services:
       - ./uploads:/app/uploads
       - ./frontend:/app/frontend
       - ./backend/data:/app/data
+      - ./backend/routes:/app/routes
+      - ./backend/services:/app/services
+      - ./backend/utils:/app/utils
+      - ./backend/server.js:/app/server.js
       - ./worker:/worker
       - ./worker:/app/worker
 
