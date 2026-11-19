@@ -2635,9 +2635,25 @@ document.addEventListener('DOMContentLoaded', async function () {
         const epNumVal = currentEpisode?.episodeNumber || epNum || 1;
         const anilistIdVal = currentEpisode?.anilistId || lunarId;
         const hostParam = targetType === 'dub' ? '3rdprovider' : 'zuna';
-        const res = await fetch(`${API_BASE}/lunarx/stream/${anilistIdVal}/${epNumVal}?host=${hostParam}&type=${targetType}`);
+        let res = await fetch(`${API_BASE}/lunarx/stream/${anilistIdVal}/${epNumVal}?host=${hostParam}&type=${targetType}`);
 
-        if (res.ok) {
+        // If primary dub provider returned non-200, retry with alternate dub host (yuki)
+        if (!res.ok && targetType === 'dub') {
+          console.warn(`[Player] Dub stream on ${hostParam} returned status ${res.status}, retrying with host yuki...`);
+          try {
+            res = await fetch(`${API_BASE}/lunarx/stream/${anilistIdVal}/${epNumVal}?host=yuki&type=dub`);
+          } catch (retryErr) { }
+        }
+
+        // If dub is completely unavailable on all providers, gracefully fall back to clear sub stream
+        if (!res.ok && targetType === 'dub') {
+          console.warn(`[Player] Dub stream unavailable on all hosts, falling back to Japanese Sub...`);
+          try {
+            res = await fetch(`${API_BASE}/lunarx/stream/${anilistIdVal}/${epNumVal}?host=zuna&type=sub`);
+          } catch (subErr) { }
+        }
+
+        if (res && res.ok) {
           const data = await res.json();
           if (data && data.streamUrl) {
             // Also sync active server indicator with the chosen audio
@@ -6874,8 +6890,14 @@ document.addEventListener('DOMContentLoaded', async function () {
           }
           const host = (currentAudioType === 'dub') ? '3rdprovider' : (initialServer?.host || 'zuna');
           const epNumVal = currentEpisode.episodeNumber || epNum || 1;
-          const sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${host}&type=${currentAudioType}`);
-          if (sRes.ok) {
+          let sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=${host}&type=${currentAudioType}`);
+          if (!sRes.ok && currentAudioType === 'dub') {
+            console.warn(`[Player] Dub stream initial fetch on ${host} returned status ${sRes.status}, retrying with host yuki...`);
+            try {
+              sRes = await fetch(`${API_BASE}/lunarx/stream/${currentEpisode.anilistId}/${epNumVal}?host=yuki&type=dub`);
+            } catch (retryE) { }
+          }
+          if (sRes && sRes.ok) {
             const sData = await sRes.json();
             if (sData.streamUrl) {
               initialVideoUrl = sData.streamUrl;

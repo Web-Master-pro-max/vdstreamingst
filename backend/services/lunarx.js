@@ -3,12 +3,12 @@ const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const { encryptStreamToken } = require('./StreamSecurity');
 
 // Verified extraction keys for LunarX vermillion cipher
-const DEFAULT_AXIS = 'dYAJnhYq1W2nsJ4IzeHqXsLOvN6pkHkPDOqcwca7u4WNeUDB5B8qIywzIQXtBtA08up68MsIp';
-const DEFAULT_PITCH = 'uCw4lWbBvm4yFzY2CH2dc1xyjconkajmIez4hb4D6wawtqjsPcVP2oHd0gbnSLVBfTSJz6PkFmu9F';
+const DEFAULT_AXIS = 'LHPxSLa5Tc7sVx5aA15QdkdprWT8smbON1pXqtKf4K4HXmokoGqw3ohkyNq4qx9QMUkaTeNBKnEBunWeX';
+const DEFAULT_PITCH = 'jLdR9pzaskmxWAL4KeXfzATNfp4z8J0DgdDDzJKlwk64UFxgDbt87pyWu2qP7oqmszvPVFG';
 const KEYS_CACHE_FILE = path.join(__dirname, '..', 'data', 'lunarx_keys.json');
 
 class LunarXService {
@@ -22,6 +22,14 @@ class LunarXService {
     this.aniSkipCache = new Map();
     this.cacheTTL = 15 * 60 * 1000; // 15 minutes TTL for metadata
     this.loadCachedKeysFromDisk();
+
+    // Periodic background key maintenance (runs every 10 minutes to keep live keys hot and fresh)
+    this.keyRefreshInterval = setInterval(() => {
+      this.getDecryptionKeys(21, true).catch(err => {
+        console.warn('[LunarX] Background key refresh warning:', err.message);
+      });
+    }, 10 * 60 * 1000);
+    if (this.keyRefreshInterval.unref) this.keyRefreshInterval.unref();
   }
 
   loadCachedKeysFromDisk() {
@@ -1000,14 +1008,60 @@ class LunarXService {
     return null;
   }
 
-  // Universal HTML fetcher with cross-platform fallback for dynamic key extraction
+  // Universal HTML fetcher with cross-platform multi-engine fallback for dynamic key extraction
   async fetchHtml(targetUrl) {
-    // 1. Try native https.get first (fast, cross-platform, works on Linux EC2 without external dependencies)
+    // Engine 1: Python requests via child_process.execFileSync
+    // Python requests uses browser-standard TLS negotiation (urllib3) that passes Cloudflare effortlessly on Linux EC2 & Windows, and handles automatic decompression.
+    try {
+      const pyScript = `
+import requests, sys
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+}
+try:
+    r = requests.get(sys.argv[1], headers=headers, timeout=8)
+    if r.status_code == 200:
+        sys.stdout.write(r.text)
+except Exception:
+    pass
+`;
+      const pyBin = process.platform === 'win32' ? 'python' : 'python3';
+      const output = execFileSync(pyBin, ['-c', pyScript, targetUrl], {
+        encoding: 'utf8',
+        maxBuffer: 20 * 1024 * 1024,
+        timeout: 9000
+      });
+      if (output && (output.includes('$L') || output.includes('self.__next_f'))) {
+        return output;
+      }
+    } catch (pyErr) { }
+
+    // Engine 2: Cross-platform curl with --compressed and modern browser headers
+    try {
+      const curlBin = process.platform === 'win32' ? 'curl.exe' : 'curl';
+      const cmd = [
+        '-s', '-L', '--compressed',
+        '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        targetUrl
+      ];
+      const output = execFileSync(curlBin, cmd, {
+        encoding: 'utf8',
+        maxBuffer: 20 * 1024 * 1024,
+        timeout: 9000
+      });
+      if (output && (output.includes('$L') || output.includes('self.__next_f'))) {
+        return output;
+      }
+    } catch (curlErr) { }
+
+    // Engine 3: Native https.get with redirects
     try {
       const html = await new Promise((resolve, reject) => {
         const client = targetUrl.startsWith('https://') ? https : http;
         const headers = {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         };
         const req = client.get(targetUrl, { headers }, res => {
@@ -1033,21 +1087,13 @@ class LunarXService {
       }
     } catch (e) { }
 
-    // 2. Cross-platform curl fallback (curl on Linux/EC2, curl.exe on Windows)
-    try {
-      const curlBin = process.platform === 'win32' ? 'curl.exe' : 'curl';
-      const cmd = `${curlBin} -s -L -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" -H "Accept: text/html" "${targetUrl}"`;
-      const html = execSync(cmd, { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024, timeout: 8000 });
-      return html;
-    } catch (e) {
-      return '';
-    }
+    return '';
   }
 
   // Obtain live decryption keys with automatic multi-slug fallback and disk persistence
   async getDecryptionKeys(anilistId, forceRefresh = false) {
-    // 1. Check cached session keys (valid for 24 hours unless forceRefresh requested)
-    if (!forceRefresh && this.globalKeys && (Date.now() - this.globalKeys.timestamp < 24 * 60 * 60 * 1000)) {
+    // 1. Check cached session keys (valid for 15 minutes unless forceRefresh requested)
+    if (!forceRefresh && this.globalKeys && (Date.now() - this.globalKeys.timestamp < 15 * 60 * 1000)) {
       return [this.globalKeys.axis, this.globalKeys.pitch];
     }
 
@@ -1063,10 +1109,10 @@ class LunarXService {
 
     // Known stable high-traffic slugs that always have full player hydration on LunarX
     const stableSlugs = [
-      'jujutsu-kaisen',
-      'solo-leveling',
-      'naruto',
       'one-piece',
+      'solo-leveling',
+      'jujutsu-kaisen',
+      'naruto',
       'attack-on-titan',
       'demon-slayer',
       'bleach',
@@ -1485,15 +1531,16 @@ class LunarXService {
 
     // Determine host order based on audio type (sub vs dub)
     // Providers with verified clean MPEG-TS streams for ExoPlayer:
-    // 1. zuna (Megaplay / Nexabloom - clean 1080p TS)
-    // 2. loli (Echovideo - clean 1080p/720p TS)
-    // 3. sora (Krussdomi - clean TS)
-    // Obfuscated / fallback providers: yuki, 3rdprovider
+    // 1. zuna (Megaplay / Nexabloom - clean 1080p TS for sub)
+    // 2. 3rdprovider (Flixcloud / Zen - primary verified dub & multi-audio)
+    // 3. yuki (Megaplay / Nexabloom - clean 1080p/720p TS for sub & dub)
+    // 4. loli (Echovideo - clean 1080p/720p TS)
+    // 5. sora (Krussdomi - clean TS)
     let hostsToTry = [];
     if (type === 'dub') {
-      const preferredHost = (requestedHost && requestedHost !== 'zuna' && requestedHost !== 'yuki') ? requestedHost : '3rdprovider';
-      hostsToTry = [preferredHost, '3rdprovider', 'loli', 'sora'].filter(
-        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna' && h !== 'yuki'
+      const preferredHost = (requestedHost && requestedHost !== 'zuna') ? requestedHost : '3rdprovider';
+      hostsToTry = [preferredHost, '3rdprovider', 'yuki', 'loli', 'sora'].filter(
+        (h, idx, self) => self.indexOf(h) === idx && h !== 'zuna'
       );
     } else {
       hostsToTry = [requestedHost, 'zuna', 'yuki', '3rdprovider', 'loli', 'sora'].filter(
@@ -1676,13 +1723,18 @@ class LunarXService {
     }
 
     // If dub was requested but no playable dub stream exists, gracefully fall back to clear Japanese sub stream
-    if (type === 'dub') {
+    if (type === 'dub' && !visitedIds.has(`${id}:sub_fallback`)) {
       console.log(`[LunarX] Dub unavailable for Anime #${id} Ep #${ep}, falling back to clear sub stream...`);
-      const fallbackResult = await this.getStream(id, ep, 'zuna', 'sub', new Set([id]));
-      return {
-        ...fallbackResult,
-        isFallbackSub: true
-      };
+      const safeVisited = new Set(visitedIds);
+      safeVisited.add(`${id}:sub_fallback`);
+      safeVisited.delete(id); // Allow resolving the sub stream for the same anime without triggering self-recursion guard
+      const fallbackResult = await this.getStream(id, ep, 'zuna', 'sub', safeVisited);
+      if (fallbackResult && fallbackResult.streamUrl) {
+        return {
+          ...fallbackResult,
+          isFallbackSub: true
+        };
+      }
     }
 
     // Safety net 2: If no sources found for this specific ID (common for upcoming seasonal / franchise stubs),
